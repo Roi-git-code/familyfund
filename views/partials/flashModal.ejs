@@ -1,0 +1,56 @@
+<div id="flashModal" class="modal <%= (flash.error.length || flash.success.length) ? 'show' : '' %>">
+  <div class="modal-content">
+    <% if (flash.error.length) { %>
+      <% flash.error.forEach(err => { %>
+        <p class="error"><%= err %></p>
+      <% }) %>
+    <% } %>
+    <% if (flash.success.length) { %>
+      <% flash.success.forEach(msg => { %>
+        <p class="success"><%= msg %></p>
+      <% }) %>
+    <% } %>
+    <button id="closeFlashModal">OK</button>
+  </div>
+</div>
+
+<style>
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+}
+.modal.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-content {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 10px;
+  text-align: center;
+  min-width: 300px;
+  max-width: 500px;
+}
+.modal-content p.error { color: red; font-weight: bold; }
+.modal-content p.success { color: green; font-weight: bold; }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById("flashModal");
+  const closeBtn = document.getElementById("closeFlashModal");
+  if (modal && modal.classList.contains("show")) {
+    modal.style.display = "flex";
+    closeBtn.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+    setTimeout(() => {
+      modal.style.display = "none";
+    }, 5000);
+  }
+});
+</script>

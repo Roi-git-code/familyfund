@@ -1,0 +1,295 @@
+/* ================== Base Layout ================== */
+body { 
+  display: flex; 
+  margin: 0; 
+  font-family: Arial, sans-serif; 
+  background: #f5f5f5; 
+}
+
+.container {
+  padding-bottom: 300px;
+  max-width: 1200px;
+  margin: auto;
+  padding-top: 120px;
+  display: block;
+  justify-content: center;
+  align-items: center;
+  flex: 1; 
+  padding: 0px;
+}
+
+/* ================== Form & Card Containers ================== */
+.form-container,
+.fund-summary-container {
+  max-width: 800px;
+  margin: 50px auto;
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-container h2 {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-size: 1.8em;
+}
+
+/* ================== Content & Cards ================== */
+.content { flex: 1; padding: 20px; }
+
+.summary-cards {
+  display: flex; 
+  gap: 20px; 
+  margin-bottom: 20px; 
+  flex-wrap: wrap;
+}
+
+.card {
+  flex: 1; 
+  min-width: 250px;
+  background: white; 
+  border-radius: 10px; 
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  display: flex; 
+  align-items: center; 
+  gap: 15px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.card-icon {
+  font-size: 2em; 
+  padding: 15px; 
+  border-radius: 50%; 
+  color: white;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+}
+
+.card-content h3 {
+  margin: 0; 
+  font-size: 1.1em; 
+  color: #555;
+}
+
+.card-content p {
+  margin: 5px 0 0; 
+  font-size: 1.4em; 
+  font-weight: bold;
+}
+
+/* ================== Tables ================== */
+table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  margin-right:10px; 
+}
+th, td { 
+  padding: 8px; 
+  border: 1px solid #ccc; 
+  text-align: center; 
+}
+th { background: #2980b9; color: white; }
+tr:hover { background-color: #eaf4ff; }
+tr:nth-child(even) { background-color: #f9f9f9; }
+
+/* ================== Flash Messages ================== */
+.flash-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  max-width: 400px;
+  z-index: 1000;
+  display: flex;            /* make it a flex column */
+  flex-direction: column;
+  gap: 10px;
+}
+
+.flash-message {
+  display: block;           /* ensure messages take full width */
+  width: 100%;
+  padding: 15px 40px 15px 20px;
+  margin-bottom: 5px;
+  border-radius: 5px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  position: relative;
+  opacity: 0;
+  transform: translateX(100px);
+  animation: slideIn 0.5s forwards, fadeOut 0.5s forwards 4s;
+}
+
+.success { background-color: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+.error   { background-color: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+
+.close-flash {
+  position: absolute;
+  top: 30px;
+  right: 25px;
+  background: none;
+  border: none;
+  font-size: 2.5rem;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+}
+.close-flash:hover { opacity: 1; }
+
+@keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+@keyframes fadeOut { to { opacity: 0; transform: translateX(100px); } }
+
+/* ================== Buttons & Links ================== */
+.button-link {
+  display: block;
+  text-align: center;
+  margin-top: 20px;
+  color: white;
+  background-color: #2ecc71;
+  padding: 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+.button-link:hover { background-color: #27ae60; }
+
+/* ================== Forms ================== */
+form {
+  background: #fff;
+  padding: 25px 20px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  max-width: 600px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+form label {
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #333;
+}
+
+form input[type="text"],
+form input[type="date"],
+form input[type="email"],
+form input[type="tel"],
+form input[type="number"],
+form textarea,
+form select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.8px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+
+form input:focus,
+form textarea:focus,
+form select:focus {
+  border-color: #2980b9;
+  box-shadow: 0 0 6px rgba(41, 128, 185, 0.4);
+}
+
+form button[type="submit"] {
+  background-color: #2980b9;
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 12px 0;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+}
+form button[type="submit"]:hover {
+  background-color: #1c5980;
+}
+
+/* ================== Contribution Form Validation ================== */
+.validation-error {
+  color: #dc3545;
+  font-size: 0.9em;
+  margin-top: 5px;
+  display: none;
+}
+
+/* ================== Back Link ================== */
+.back {
+  display: block;
+  margin: 20px auto 0;
+  text-decoration: none;
+  color: #3498db;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ================== Modals ================== */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 6000;
+}
+
+.modal-overlay.show {
+  opacity: 0.8;
+  visibility: visible;
+}
+
+.modal-overlay .modal-content {
+  background: #fff;
+  width: auto;
+  max-width: 80%;
+  padding: 30px 25px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  transform: translateY(-50px);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.modal-overlay.show .modal-content {
+  transform: translateY(0);
+  opacity: 0.8;
+}
+
+.input-feedback {
+  font-size: 0.85em;
+  margin-left: 4px;
+}
+
+.strength-meter {
+  margin-top: 4px;
+}
+.strength-meter .bar {
+  height: 6px;
+  width: 0;
+  background: red;
+  border-radius: 4px;
+  transition: width 0.3s, background 0.3s;
+}
+.strength-meter .label {
+  font-size: 0.8em;
+  margin-left: 4px;
+}
+
+/* ================== End of Custom Styles ================== */

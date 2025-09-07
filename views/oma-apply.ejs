@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Apply - Family Fund</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+<style>
+
+ .success {
+      color: green;
+      font-weight: bold;
+    }
+
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+
+</head>
+<body class="d-flex flex-column min-vh-100 bg-light">
+
+  <%- include('partials/oma-header', { omaUser: omaUser }) %>
+
+  <div class="d-flex flex-grow-1">
+    <%- include('partials/oma-sidebar', { active: 'apply', omaUser: omaUser, user: user }) %>
+
+    <div class="flex-grow-1 p-4">
+      <div class="card shadow-lg rounded-3">
+        <div class="card-header bg-primary text-white text-center">
+          <h2>Online Member Application</h2>
+        </div>
+        <div class="card-body">
+          
+           <!-- Backend feedback -->
+      <% if (flash.error?.length) { %>
+        <p class="error"><%= flash.error[0] %></p>
+      <% } %>
+      <% if (flash.success?.length) { %>
+        <p class="success"><%= flash.success[0] %></p>
+      <% } %>
+
+          <form id="omaApplyForm" method="POST" action="/oma/apply" class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">First Name</label>
+              <input type="text" class="form-control" name="first_name" value="<%= formData.first_name || '' %>" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Middle Name</label>
+              <input type="text" class="form-control" name="middle_name" value="<%= formData.middle_name || '' %>">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Surname</label>
+              <input type="text" class="form-control" name="sur_name" value="<%= formData.sur_name || '' %>" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Date of Birth</label>
+              <input type="date" class="form-control" name="date_of_birth" value="<%= formData.date_of_birth || '' %>" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Phone</label>
+              <input type="text" class="form-control" name="phone" value="<%= formData.phone || '' %>" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" name="email" value="<%= formData.email || '' %>" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Address</label>
+              <textarea class="form-control" name="address" rows="2" required><%= formData.address || '' %></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Marital Status</label>
+              <select class="form-select" name="marital_status">
+                <option value="">-- Select --</option>
+                <option value="single" <%= formData.marital_status === 'single' ? 'selected' : '' %>>Single</option>
+                <option value="married" <%= formData.marital_status === 'married' ? 'selected' : '' %>>Married</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Number of Children</label>
+              <input type="number" class="form-control" name="number_of_children" min="0" value="<%= formData.number_of_children || 0 %>">
+            </div>
+            <div class="col-md-6 form-check">
+              <input type="checkbox" class="form-check-input" id="fatherAlive" name="father_alive" <%= formData.father_alive ? 'checked' : '' %>>
+              <label class="form-check-label" for="fatherAlive">Father Alive</label>
+            </div>
+            <div class="col-md-6 form-check">
+              <input type="checkbox" class="form-check-input" id="motherAlive" name="mother_alive" <%= formData.mother_alive ? 'checked' : '' %>>
+              <label class="form-check-label" for="motherAlive">Mother Alive</label>
+            </div>
+            <div class="col-12 text-center mt-3">
+              <button type="submit" class="btn btn-success px-5">Submit Application</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%- include('partials/oma-footer') %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+ <script src="/script/oma-validation.js"></script>
+</body>
+</html>

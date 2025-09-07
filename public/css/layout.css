@@ -1,0 +1,76 @@
+/* ===== Layout Styles for Header & Footer ===== */
+
+/* HEADER */
+.app-header {
+  background: #004080;
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.app-header .logo-section {
+  display: flex;
+  align-items: center;
+}
+
+.app-header .logo-section img {
+  height: 40px;
+  margin-right: 10px;
+}
+
+.app-header .logo-section h1 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.app-header .profile-section {
+  display: flex;
+  align-items: center;
+}
+
+.app-header .profile-section span {
+  margin-right: 10px;
+}
+
+.app-header .profile-section img {
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+}
+
+.app-header .logout-btn {
+  background: white;
+  color: #004080;
+  padding: 5px 10px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+/* FOOTER */
+.app-footer {
+  background: #f8f8f8;
+  color: #555;
+  padding: 20px;
+  text-align: center;
+  border-top: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.app-footer a {
+  color: #004080;
+  text-decoration: none;
+}
+
+.app-footer a:hover {
+  text-decoration: underline;
+}
+
+.app-footer p {
+  margin: 5px 0;
+}

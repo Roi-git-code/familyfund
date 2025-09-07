@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Update My Profile</title>
+
+  <link rel="stylesheet" href="/css/update_profile.css" />
+  <link rel="stylesheet" href="/css/footer.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/header.css" />
+  <link rel="stylesheet" href="/css/sidebar.css" />
+
+
+<style>
+    :root {
+      --primary: #2980b9;
+      --secondary: #27ae60;
+      --danger: #e74c3c;
+      --dark: #2c3e50;
+      --light: #ecf0f1;
+      --gray: #95a5a6;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+      color: #333;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+    
+    header {
+      text-align: center;
+      padding: 30px 20px;
+      background: linear-gradient(to right, var(--primary), #1a5276);
+      color: white;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .subtitle {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+    
+    .tabs-container {
+      padding: 0 20px;
+    }
+    
+    .tabs {
+      display: flex;
+      background: var(--light);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 25px 0;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    
+    .tab-btn {
+      flex: 1;
+      padding: 18px 0;
+      background: transparent;
+      border: none;
+      color: var(--dark);
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    
+    .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.7);
+    }
+    
+    .tab-btn.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--primary);
+    }
+    
+    .form-section {
+      padding: 0 20px 30px;
+      display: none;
+    }
+    
+    .form-section.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .form-title {
+      color: var(--dark);
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid var(--primary);
+      font-size: 1.8rem;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--dark);
+      font-size: 1.1rem;
+    }
+    
+    input, select, textarea {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: #f9f9f9;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+      background: #fff;
+    }
+    
+    input[type="file"] {
+      padding: 10px;
+      background: #fff;
+      border: 2px dashed #ddd;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .checkbox-group input {
+      width: auto;
+      margin-right: 10px;
+    }
+    
+    .btn-submit {
+      background: linear-gradient(to right, var(--secondary), #2ecc71);
+      color: white;
+      border: none;
+      padding: 16px 30px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 20px;
+      box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+      display: block;
+      width: 100%;
+      max-width: 300px;
+      margin: 30px auto 0;
+    }
+    
+    .btn-submit:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 7px 20px rgba(46, 204, 113, 0.4);
+    }
+    
+    .btn-submit:active {
+      transform: translateY(1px);
+    }
+    
+    .form-note {
+      text-align: center;
+      margin-top: 20px;
+      color: var(--gray);
+      font-style: italic;
+    }
+    
+    .file-note {
+      font-size: 0.85rem;
+      color: var(--gray);
+      margin-top: 5px;
+    }
+    
+    footer {
+      text-align: center;
+      color: var(--gray);
+      padding: 20px;
+      margin-top: 30px;
+      font-size: 0.9rem;
+      border-top: 1px solid #eee;
+    }
+    
+    .visual-guide {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+      gap: 10px;
+    }
+    
+    .guide-step {
+      background: var(--gray);
+      border-radius: 50%;
+      width: 12px;
+      height: 12px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    .guide-step.active {
+      background: var(--primary);
+    }
+    
+    @media (max-width: 768px) {
+      .tabs {
+        flex-direction: column;
+      }
+      
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+    }
+
+  .required { color: red; }
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+  }
+  .form-full-width {
+    grid-column: 1 / -1;
+  }
+  .file-note {
+    font-size: 0.85em;
+    color: #666;
+  }
+</style>   
+
+</head>
+<body>
+   <%- include('partials/sidebar', { user: user }) %>
+      <div class="container">
+    <%- include('partials/header') %>
+     <div class="form-container">    
+
+      <header>
+      <h1>Family Fund Request System</h1>
+      <p class="subtitle">Submit your profile updates or funding requests</p>
+    </header>
+    
+    <div class="tabs-container">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="profile">Profile Update</button>
+        <button class="tab-btn" data-tab="fund">Fund Request</button>
+      </div>
+      
+      <!-- Profile Update Form -->
+      <div id="profile-form" class="form-section active">
+        <h2 class="form-title">Update Your Profile</h2>
+        <form action="/update-profile" method="POST" enctype="multipart/form-data">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="firstName">First Name</label>
+              <input type="text" id="firstName" name="first_name" value="John" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label for="middleName">Middle Name</label>
+              <input type="text" id="middleName" name="middle_name" value="Robert" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label for="surName">Surname</label>
+              <input type="text" id="surName" name="sur_name" value="Doe" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" value="john.doe@example.com" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label for="phone">Phone</label>
+              <input type="tel" id="phone" name="phone" value="+255 123 456 789" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label for="dob">Date of Birth</label>
+              <input type="date" id="dob" name="date_of_birth" value="1985-05-15">
+              <label for="dobProof" class="file-note">Upload Proof (PDF, JPG, PNG)</label>
+              <input type="file" id="dobProof" name="dob_proof" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+            
+            <div class="form-group">
+              <label for="address">Address</label>
+              <textarea id="address" name="address" rows="3">123 Main Street, Dar es Salaam</textarea>
+            </div>
+            
+            <div class="form-group">
+              <label for="maritalStatus">Marital Status</label>
+              <select id="maritalStatus" name="marital_status">
+                <option value="single">Single</option>
+                <option value="married" selected>Married</option>
+                <option value="divorced">Divorced</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="children">Number of Children</label>
+              <input type="number" id="children" name="number_of_children" value="2" min="0">
+              <label for="childrenProof" class="file-note">Upload Proof (PDF, JPG, PNG)</label>
+              <input type="file" id="childrenProof" name="children_proof" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+            
+            <div class="form-group">
+              <label>Family Status</label>
+              <div class="checkbox-group">
+                <input type="checkbox" id="fatherAlive" name="father_alive" checked>
+                <label for="fatherAlive" style="display: inline; font-weight: normal;">Father Alive</label>
+              </div>
+              <label for="fatherProof" class="file-note">Upload Proof</label>
+              <input type="file" id="fatherProof" name="father_proof" accept=".pdf,.jpg,.jpeg,.png">
+              
+              <div class="checkbox-group" style="margin-top: 10px;">
+                <input type="checkbox" id="motherAlive" name="mother_alive" checked>
+                <label for="motherAlive" style="display: inline; font-weight: normal;">Mother Alive</label>
+              </div>
+              <label for="motherProof" class="file-note">Upload Proof</label>
+              <input type="file" id="motherProof" name="mother_proof" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+          </div>
+          
+          <button type="submit" class="btn-submit">Submit Profile Update</button>
+        </form>
+        <p class="form-note">Your request will be reviewed by the family chairman</p>
+      </div>
+      
+     <!-- Fund Request Form -->
+<div id="fund-form" class="form-section">
+  <h2 class="form-title">Request Family Funds</h2>
+  
+  <form action="/submit-fund-request" method="POST" enctype="multipart/form-data" class="fund-request-form">
+    <div class="form-grid">
+
+      <!-- Request Type -->
+      <div class="form-group">
+        <label for="requestType">Request Type <span class="required">*</span></label>
+        <select id="requestType" name="requestType" required>
+          <option value="">-- Select request type --</option>
+          <option value="Emergency">Emergency</option>
+          <option value="Sickness/Hospital Bill">Sickness / Hospital Bill</option>
+          <option value="School Fees">School Fees</option>
+          <option value="Investment">Investment</option>
+          <option value="Business Backup">Business Backup</option>
+          <option value="Funeral Cost">Funeral Cost</option>
+          <option value="Marriage">Marriage</option>
+         <% if (['chairman', 'chief_signatory', 'assistant_signatory'].includes(user.role)) { %>
+         <option value="Expenses">Expenses</option>
+         <% } %>
+          <option value="Other">Other</option>
+
+        </select>
+      </div>
+
+      <!-- Amount -->
+      <div class="form-group">
+        <label for="amount">Amount Requested (TSh) <span class="required">*</span></label>
+        <input 
+          type="number" 
+          id="amount" 
+          name="amount" 
+          min="10000" 
+          step="10000" 
+          placeholder="Minimum 10,000" 
+          required
+        >
+      </div>
+
+      <!-- Bank Account -->
+      <div class="form-group">
+        <label for="bankAccount">Bank Account Number <span class="required">*</span></label>
+        <input 
+          type="text" 
+          id="bankAccount" 
+          name="bankAccount" 
+          placeholder="Enter your account number" 
+          pattern="\d{6,20}" 
+          title="Bank account number must be between 6 and 20 digits" 
+          required
+        >
+      </div>
+
+      <!-- Bank Name -->
+      <div class="form-group">
+        <label for="bankName">Bank Name <span class="required">*</span></label>
+        <input 
+          type="text" 
+          id="bankName" 
+          name="bankName" 
+          placeholder="Enter your bank name" 
+          required
+        >
+      </div>
+
+      <!-- Additional Info -->
+      <div class="form-group form-full-width">
+        <label for="additionalInfo">Additional Information</label>
+        <textarea 
+          id="additionalInfo" 
+          name="additionalInfo" 
+          rows="4" 
+          placeholder="Explain why you need this funding..."></textarea>
+      </div>
+
+      <!-- Supporting Documents -->
+      <div class="form-group form-full-width">
+        <label for="supportingDoc">Supporting Documents</label>
+        <input 
+          type="file" 
+          id="supportingDoc" 
+          name="supportingDoc" 
+          multiple 
+          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+        >
+        <small class="file-note">Max 5 files allowed. Accepted: PDF, DOC, DOCX, JPG, PNG</small>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="btn-submit">Submit Fund Request</button>
+  </form>
+
+  <p class="form-note">Your request will be reviewed by the chief signatory.</p>
+</div>
+
+
+    </div>
+    
+    <div class="visual-guide">
+      <div class="guide-step active" data-tab="profile"></div>
+      <div class="guide-step" data-tab="fund"></div>
+    </div>
+
+
+<%- include('partials/change_password_modal') %>
+  
+<%- include('partials/footer') %>
+
+<script src="/script/update_profie.js"></script>
+<script src="/script/dashboard.js"></script>
+<script src="/script/sidebar.js"></script>
+<script src="/script.js"></script>
+
+ <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get all tab buttons and form sections
+      const tabButtons = document.querySelectorAll('.tab-btn');
+      const formSections = document.querySelectorAll('.form-section');
+      const guideSteps = document.querySelectorAll('.guide-step');
+      
+      // Function to switch tabs
+      function switchTab(tabId) {
+        // Update active tab button
+        tabButtons.forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.tab === tabId);
+        });
+        
+        // Show corresponding form section
+        formSections.forEach(section => {
+          section.classList.toggle('active', section.id === `${tabId}-form`);
+        });
+        
+        // Update visual guide
+        guideSteps.forEach(step => {
+          step.classList.toggle('active', step.dataset.tab === tabId);
+        });
+      }
+      
+      // Add click event to tab buttons
+      tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          switchTab(button.dataset.tab);
+        });
+      });
+      
+      // Add click event to visual guide steps
+      guideSteps.forEach(step => {
+        step.addEventListener('click', () => {
+          switchTab(step.dataset.tab);
+        });
+      });
+      
+      // Add animation to form inputs on focus
+      const inputs = document.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+          this.parentElement.style.transform = 'translateY(-5px)';
+          this.parentElement.style.transition = 'transform 0.3s ease';
+        });
+        
+        input.addEventListener('blur', function() {
+          this.parentElement.style.transform = 'translateY(0)';
+        });
+      });
+      
+      // Form validation and submission feedback
+      const forms = document.querySelectorAll('form');
+      forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+          const submitBtn = this.querySelector('.btn-submit');
+          const originalText = submitBtn.textContent;
+          
+          // Show visual feedback
+          submitBtn.textContent = 'Processing...';
+          submitBtn.disabled = true;
+          submitBtn.style.opacity = '0.8';
+          
+          // In a real app, you would actually submit the form
+          // This is just a simulation
+          setTimeout(() => {
+            submitBtn.textContent = '✓ Submitted!';
+            submitBtn.style.background = 'linear-gradient(to right, #27ae60, #2ecc71)';
+            
+            setTimeout(() => {
+              submitBtn.textContent = originalText;
+              submitBtn.disabled = false;
+              submitBtn.style.opacity = '1';
+              submitBtn.style.background = 'linear-gradient(to right, #2980b9, #3498db)';
+              
+              // Reset form after successful submission
+              if(form.id === 'fund-request-form') {
+                form.reset();
+              }
+            }, 2000);
+          }, 1500);
+        });
+      });
+    });
+  </script>
+
+
+</body>
+</html>

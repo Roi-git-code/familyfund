@@ -1,0 +1,196 @@
+/* ------------------------
+   General Layout Overrides
+--------------------------- */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ------------------------
+   HEADER
+--------------------------- */
+.app-header {
+  background: #2c3e50;
+  color: white;
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 80px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1050; /* stays above sidebar */
+  width: 100%;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.logo-section img {
+  height: 50px;
+}
+
+.logo-section h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.profile-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.profile-section img {
+  height: 45px;
+  width: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+}
+
+.logout-btn {
+  background: #e74c3c;
+  color: white;
+  padding: 7px 14px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: background 0.3s ease;
+}
+
+.logout-btn:hover {
+  background: #c0392b;
+}
+
+/* ------------------------
+   SIDEBAR
+--------------------------- */
+.sidebar-toggle {
+  position: fixed;
+  top: 20px;
+  left: 55px;
+  z-index: 1100;
+  background:#2980b9;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  font-size: 1.6rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.sidebar {
+  position: fixed;
+  top: 80px; /* below header */
+  left: -240px;
+  width: 200px;
+  height: calc(100% - 80px);
+  background: #2c3e50;
+  color: white;
+  padding: 15px;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.2);
+  transition: left 0.3s ease;
+  overflow-y: auto;
+  z-index: 1040;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.sidebar h3 {
+  margin: 0 0 15px 0;
+  color: #ecf0f1;
+  font-size: 1.2rem;
+}
+
+.sidebar a {
+  display: block;
+  color: #ecf0f1;
+  padding: 10px;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.sidebar a:hover {
+  background: #34495e;
+}
+
+.sidebar.show {
+  left: 0;
+}
+
+.content {
+  margin-left: 0;
+  transition: margin-left 0.3s ease;
+  padding-bottom: 70px; /* for footer space */
+}
+
+.content.shift {
+  margin-left: 200px;
+}
+
+@media (max-width: 768px) {
+  .content.shift {
+    margin-left: 0;
+  }
+}
+
+/* ------------------------
+   FOOTER
+--------------------------- */
+.app-footer {
+  background: #2980b9;
+  color: white;
+  padding: 12px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+  z-index: 1050;
+}
+
+.app-footer a {
+  color: #ecf0f1;
+  text-decoration: none;
+  margin-left: 10px;
+}
+
+.app-footer a:hover {
+  text-decoration: underline;
+}
+
+.app-footer button {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.3s ease;
+}
+
+.app-footer button:hover {
+  background: #2ecc71;
+}
+
+@media (max-width: 600px) {
+  .app-footer {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+    padding: 12px;
+  }
+}

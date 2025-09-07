@@ -1,0 +1,425 @@
+/* user_requests.css */
+
+/* Table Container */
+.table-container {
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* Styled Table */
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  color: #333;
+}
+
+.styled-table thead tr {
+  background-color: #0066cc;
+  color: #fff;
+  text-align: left;
+}
+
+.styled-table th,
+.styled-table td {
+  padding: 12px 15px;
+}
+
+.styled-table tbody tr {
+  border-bottom: 1px solid #ddd;
+}
+
+.styled-table tbody tr:hover {
+  background-color: #f5faff;
+}
+
+/* Status Badges */
+.status {
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-weight: bold;
+  font-size: 0.85rem;
+  display: inline-block;
+  text-transform: capitalize;
+}
+
+.status.pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status.approved {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status.rejected {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Updated Field Tags */
+.field-tag {
+  background: #e6f0ff;
+  color: #004085;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  margin: 2px;
+  display: inline-block;
+}
+
+/* Buttons */
+.btn-cancel {
+  background-color: #ff4d4d;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+
+.btn-cancel:hover {
+  background-color: #e60000;
+}
+
+.btn-disabled {
+  background-color: #ccc;
+  color: #666;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: not-allowed;
+}
+
+/* Flash Messages */
+.flash-container {
+  margin-bottom: 15px;
+}
+
+.flash-message {
+  padding: 10px;
+  border-radius: 5px;
+  position: relative;
+}
+
+.flash-message.success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.flash-message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.close-flash {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* Add these styles */
+.status-in-progress {
+  color: #e67e22;
+  font-weight: bold;
+}
+.status-approved {
+  color: #27ae60;
+  font-weight: bold;
+}
+.status-rejected {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+
+
+
+
+/* request_forms.css */
+.form-container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 25px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.request-tabs {
+  display: flex;
+  border-bottom: 2px solid #3498db;
+  margin-bottom: 25px;
+}
+
+.tab-btn {
+  padding: 12px 25px;
+  background: #f8f9fa;
+  border: none;
+  border-radius: 5px 5px 0 0;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-right: 5px;
+}
+
+.tab-btn.active {
+  background: #3498db;
+  color: white;
+}
+
+.request-form {
+  display: none;
+  padding: 20px;
+}
+
+.request-form.active {
+  display: block;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  flex: 1;
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="date"],
+input[type="number"],
+select,
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: border-color 0.3s;
+}
+
+input[type="file"] {
+  margin-top: 8px;
+  width: 100%;
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  font-weight: normal;
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.btn-submit {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-top: 15px;
+}
+
+.btn-submit:hover {
+  background: #219653;
+}
+
+
+
+
+/* my_requests.css */
+.requests-container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 25px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.request-tabs {
+  display: flex;
+  margin-bottom: 25px;
+}
+
+.tab-btn {
+  padding: 12px 25px;
+  background: #f8f9fa;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-right: 10px;
+}
+
+.tab-btn.active {
+  background: #3498db;
+  color: white;
+}
+
+.request-table {
+  display: none;
+}
+
+.request-table.active {
+  display: block;
+}
+
+h3 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 30px;
+}
+
+th {
+  background: #3498db;
+  color: white;
+  text-align: left;
+  padding: 12px 15px;
+  font-weight: 600;
+}
+
+td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+}
+
+tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+tr:hover {
+  background: #f1f7fd;
+}
+
+.status-pending {
+  color: #e67e22;
+  font-weight: 600;
+}
+
+.status-approved {
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.status-rejected {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+.btn-resubmit, .btn-view-reason {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-resubmit:hover, .btn-view-reason:hover {
+  background: #2980b9;
+}
+
+.no-requests {
+  text-align: center;
+  padding: 30px;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  display: none;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  padding: 25px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #7f8c8d;
+}
+
+.modal-body p {
+  line-height: 1.6;
+  color: #2c3e50;
+}

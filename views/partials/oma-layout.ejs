@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title><%= 'OMAS' %> </title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    body { min-height: 100vh; display: flex; flex-direction: column; }
+    main { flex-grow: 1; padding: 2rem; margin-left: 0; }
+    @media (min-width: 768px) { main { margin-left: 220px; } }
+  </style>
+</head>
+<body class="bg-light">
+
+  <!-- Header -->
+  <% include('oma-header') %>
+
+  <!-- Sidebar -->
+  <% include('oma-sidebar') %>
+
+  <!-- Main content -->
+  <main>
+    <%- body %>
+  </main>
+
+  <!-- Footer -->
+  <% include('oma-footer') %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

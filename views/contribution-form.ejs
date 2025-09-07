@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Add Member Contribution</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Optional custom CSS for minor tweaks -->
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+
+  <%- include('partials/header') %>
+
+<%- include('partials/sidebar', { user: user }) %>
+<div class="container my-4">
+
+  <div class="card p-4">
+    <% if (user) { %>
+      <p>
+        Logged in as <strong><%= user.username %></strong> (<%= user.role %>) |
+        <a href="/">Home</a> |
+        <a href="/auth/logout">Logout</a>
+      </p>
+    <% } %>
+
+    <h2>Add Contribution</h2>
+
+    <form id="contributionForm" method="POST" action="/contributions/add" class="mt-3">
+      <div class="mb-3">
+        <label for="member_id" class="form-label">Member ID:</label>
+        <input type="number" name="member_id" id="member_id" class="form-control" required>
+        <div id="memberIdError" class="text-danger small" style="display:none;">Please enter a valid Member ID.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="year" class="form-label">Year:</label>
+        <select name="year" id="year" class="form-select" required>
+          <% for(let y = new Date().getFullYear(); y >= 2000; y--) { %>
+            <option value="<%= y %>"><%= y %></option>
+          <% } %>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="month" class="form-label">Month:</label>
+        <select name="month" id="month" class="form-select" required>
+          <% ['January','February','March','April','May','June','July','August','September','October','November','December'].forEach((m,i) => { %>
+            <option value="<%= m.toLowerCase().slice(0,3) %>"><%= m %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="amount" class="form-label">Amount (Tsh):</label>
+        <input type="number" name="amount" id="amount" class="form-control" min="10000" max="100000" required>
+        <div id="amountError" class="text-danger small" style="display:none;">Amount must be between Tsh 10,000 and 100,000.</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Submit Contribution</button>
+    </form>
+  </div>
+
+  <a href="/" id="backHome" class="d-block mt-3">← Back to Home</a>
+
+  <div id="flashContainer" class="position-fixed top-0 end-0 m-3" style="z-index:2000;">
+    <% if (flash && flash.success) { %>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <%= flash.success[0] %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <% } %>
+    <% if (flash && flash.error) { %>
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <%= flash.error[0] %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Password Modal -->
+  <div id="passwordModal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content p-3">
+        <div class="modal-header">
+          <h5 class="modal-title">Change Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="changePasswordForm" action="/auth/change-password" method="POST" class="p-3">
+          <div class="mb-3">
+            <input type="password" name="oldPassword" id="oldPassword" class="form-control" placeholder="Old Password" required>
+          </div>
+          <div class="mb-3">
+            <input type="password" name="newPassword" id="newPassword" class="form-control" placeholder="New Password" required>
+          </div>
+          <div class="mb-3">
+            <input type="password" name="confirmNewPassword" id="confirmNewPassword" class="form-control" placeholder="Confirm New Password" required>
+          </div>
+          <p id="passwordMatchError" class="text-danger small" style="display:none;">Passwords do not match.</p>
+          <p id="feedbackMessage" class="text-success small" style="display:none;">Password updated successfully!</p>
+          <button type="submit" class="btn btn-primary w-100">Update Password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<%- include('partials/footer') %>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/script/dashboard.js"></script>
+<script src="/script/sidebar.js"></script>
+<script src="/script/layoutScript.js"></script>

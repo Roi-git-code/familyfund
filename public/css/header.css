@@ -1,0 +1,62 @@
+
+
+
+.app-header {
+  background: #2c3e50;
+  color: white;
+  padding: 15px 25px; 
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 80px; 
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  left:40%;
+}
+
+.logo-section img {
+  height: 50px;
+}
+
+.logo-section h1 {
+  margin: 0;
+  font-size: 2.5rem;
+}
+
+.profile-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.profile-section img {
+  height: 45px;
+  width: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+}
+
+.logout-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: background 0.3s ease;
+}
+
+.logout-btn:hover {
+  background: #c0392b;
+}

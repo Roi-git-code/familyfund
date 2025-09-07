@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login / Sign Up</title>
+
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/header.css" />
+  <link rel="stylesheet" href="/css/footer.css" />
+  <link rel="stylesheet" href="/css/sidebar.css" />
+
+  <style>
+    .auth-forms {
+      width: 100%;
+      max-width: 600px;
+      margin: 50px auto;
+      position: relative;
+    }
+
+    form {
+      display: none;
+      flex-direction: column;
+      gap: 15px;
+      background: #f9f9f9;
+      padding: 25px;
+      border-radius: 12px;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    form.active {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toggle-link {
+      margin-top: 15px;
+      text-align: center;
+      cursor: pointer;
+      color: blue;
+      text-decoration: underline;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .input-group input,
+    .input-group select {
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .input-feedback {
+      font-size: 0.85rem;
+      min-height: 18px;
+      margin-top: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .strength-meter {
+      height: 6px;
+      width: 100%;
+      background: #eee;
+      border-radius: 3px;
+      margin-top: 4px;
+      position: relative;
+    }
+
+    .strength-meter .bar {
+      height: 100%;
+      width: 0;
+      background: red;
+      border-radius: 3px;
+      transition: width 0.3s ease, background 0.3s ease;
+    }
+
+    .strength-meter .label {
+      font-size: 0.8rem;
+      margin-top: 2px;
+    }
+
+    .success {
+      color: green;
+      font-weight: bold;
+    }
+
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <%- include('partials/header') %>
+
+    <div class="form-container">
+      <h2>User Authentication</h2>
+
+      <!-- Backend feedback -->
+      <% if (flash.error?.length) { %>
+        <p class="error"><%= flash.error[0] %></p>
+      <% } %>
+      <% if (flash.success?.length) { %>
+        <p class="success"><%= flash.success[0] %></p>
+      <% } %>
+
+      <% if (user) { %>
+        <p>You are logged in as <strong><%= user.username %></strong> (<%= user.role.replace('_', ' ') %>)</p>
+        <a href="/">Go to Home</a> | <a href="/auth/logout">Logout</a>
+      <% } else { %>
+        <div class="auth-forms">
+
+          <!-- Login Form (default active) -->
+          <form id="loginForm" class="active" action="/auth/login" method="POST">
+            <h3>Login</h3>
+            <div class="input-group">
+              <input type="text" name="username" placeholder="Email" required />
+              <div class="input-feedback"></div>
+            </div>
+            <div class="input-group">
+              <input type="password" name="password" placeholder="Password" required />
+              <div class="input-feedback"></div>
+            </div>
+            <button type="submit">Login</button>
+            <div><a href="/auth/forgot-password">Forgot Password?</a></div>
+            <div class="toggle-link" onclick="toggleForms()">Don't have an account? Sign Up</div>
+          </form>
+
+          <!-- Sign Up Form -->
+          <form id="signupForm" action="/auth/signup" method="POST">
+            <h3>Sign Up</h3>
+
+            <div class="input-group">
+              <input type="text" name="username" placeholder="Email" required />
+              <div class="input-feedback"></div>
+            </div>
+
+            <div class="input-group">
+              <input type="password" name="password" placeholder="Password" required />
+              <div class="input-feedback"></div>
+              <div class="strength-meter">
+                <div class="bar"></div>
+                <small class="label"></small>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <input type="password" name="confirmPassword" placeholder="Confirm Password" required />
+              <div class="input-feedback"></div>
+            </div>
+
+            <div class="input-group">
+              <select name="role" required>
+                <option value="">Select Role</option>
+                <option value="member">Member</option>
+                <option value="chief_signatory">Chief Signatory</option>
+                <option value="assistant_signatory">Assistant Signatory</option>
+                <option value="chairman">Chairman</option>
+                <option value="admin">Admin</option>
+              </select>
+              <div class="input-feedback"></div>
+            </div>
+
+            <!-- Backend submission feedback restored -->
+            <% if (flash.signupError?.length) { %>
+              <p class="error"><%= flash.signupError[0] %></p>
+            <% } %>
+            <% if (flash.signupSuccess?.length) { %>
+              <p class="success"><%= flash.signupSuccess[0] %></p>
+            <% } %>
+
+            <button type="submit">Sign Up</button>
+            <div class="toggle-link" onclick="toggleForms()">Already have an account? Login</div>
+          </form>
+
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <%- include('partials/footer') %>
+
+  <script src="/script/dashboard.js"></script>
+  <script src="/script/sidebar.js"></script>
+  <script src="/script/auth.js"></script>
+</body>
+</html>

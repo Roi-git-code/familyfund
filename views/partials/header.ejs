@@ -1,0 +1,17 @@
+ 
+
+<header class="app-header">
+  <!-- Left: Logo -->
+  <div class="logo-section">
+    <img src="/images/logo.png" alt="FamilyFund Logo">
+    <h1>FamilyFund</h1>
+  </div>
+
+  <!-- Right: Profile -->
+  <div class="profile-section">
+    <span>Welcome, <%= user ? user.name : 'Guest' %></span>
+    <img src="<%= user && user.profilePicture ? user.profilePicture : '/images/default-avatar.png' %>" 
+         alt="Profile Picture">
+    <a href="/logout" class="logout-btn">Logout</a>
+  </div>
+</header>

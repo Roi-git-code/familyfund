@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit Contribution</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+
+  <%- include('partials/header') %>
+
+<%- include('partials/sidebar', { user: user }) %>
+<div class="container my-4">
+ 
+  <div class="card p-4">
+    <h2>Edit Contribution</h2>
+
+    <form id="editForm" method="POST" 
+          action="/contributions/update/<%= contribution.member_id %>/<%= contribution.year %>/<%= contribution.month %>" 
+          class="mt-3">
+
+      <div class="mb-3">
+        <label for="memberIdInput" class="form-label">Member ID</label>
+        <input type="number" id="memberIdInput" name="member_id" class="form-control" 
+               value="<%= contribution.member_id %>" readonly>
+      </div>
+
+      <div class="mb-3">
+        <label for="yearInput" class="form-label">Year</label>
+        <input type="number" id="yearInput" name="year" class="form-control" 
+               value="<%= contribution.year %>" readonly>
+      </div>
+
+      <div class="mb-3">
+        <label for="monthSelect" class="form-label">Month</label>
+        <select name="month" id="monthSelect" class="form-select" required>
+          <% const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']; %>
+          <% months.forEach(m => { %>
+            <option value="<%= m %>" <%= contribution.month === m ? 'selected' : '' %>>
+              <%= m.charAt(0).toUpperCase() + m.slice(1) %>
+            </option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="amountInput" class="form-label">Amount (Tsh)</label>
+        <input type="number" id="amountInput" name="amount" class="form-control" 
+               min="10000" max="100000" value="<%= contribution[contribution.month] || 0 %>" required>
+        <div id="amountError" class="text-danger small" style="display:none;">Amount must be between Tsh 10,000 and 100,000.</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Update Contribution</button>
+    </form>
+  </div>
+
+  <a href="/" id="backHome" class="d-block mt-3">← Back to Home</a>
+
+  <!-- Password Modal -->
+  <%- include('partials/change_password_modal') %>
+</div>
+
+<%- include('partials/footer') %>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/script/dashboard.js"></script>
+<script src="/script/sidebar.js"></script>
+<script src="/script/layoutScript.js"></script>
+
+<script>
+  const monthSelect = document.getElementById('monthSelect');
+  const editForm = document.getElementById('editForm');
+  const amountInput = document.getElementById('amountInput');
+  const amountError = document.getElementById('amountError');
+
+  // Update form action dynamically when month changes
+  monthSelect.addEventListener('change', () => {
+    const month = monthSelect.value;
+    const memberId = "<%= contribution.member_id %>";
+    const year = "<%= contribution.year %>";
+    editForm.action = `/contributions/update/${memberId}/${year}/${month}`;
+  });
+
+  // Client-side validation for amount
+  editForm.addEventListener('submit', (e) => {
+    const amt = parseInt(amountInput.value);
+    if (!amt || amt < 10000 || amt > 100000) {
+      e.preventDefault();
+      amountError.style.display = 'block';
+    } else {
+      amountError.style.display = 'none';
+    }
+  });
+</script>
+</body>
+</html>

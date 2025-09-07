@@ -1,0 +1,14 @@
+<div id="feedbackModal" class="modal-overlay">
+  <div class="modal-content">
+    <span id="closeModal" class="close">&times;</span>
+    <% if (flash.error?.length) { %>
+      <h3 class="modal-title error">Error</h3>
+      <p class="error"><%= flash.error[0] %></p>
+    <% } %>
+     <% if (flash.success?.length) { %>
+      <h3 class="modal-title success">Success</h3>
+      <p class="success"><%= flash.success[0] %></p>
+    <% } %>
+  </div>
+</div>
+

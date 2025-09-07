@@ -1,0 +1,68 @@
+<!-- Sidebar Toggle Button (visible only on small screens) -->
+<button id="sidebarToggle" class="sidebar-toggle d-md-none">
+  ☰
+</button>
+
+<!-- Sidebar -->
+<nav id="sidebar" class="sidebar">
+  <h3>Menu</h3>
+
+  <% if (user.role === 'admin') { %>
+    <a href="/admin">Dashboard</a>
+    <a href="/member/form">Register Member</a>
+    <a href="/member">Manage Members</a>
+  <% } %>
+
+  <% if (user.role !== 'admin') { %>
+    <a href="/dashboard">Dashboard</a>
+  <% } %>
+
+  <a href="/update-profile">Requsting system</a>
+
+  <% if (user.role === 'chairman') { %>
+    <a href="/oma/admin/list">OMAS</a>   
+    <a href="/member/form">Register Member</a>
+    <a href="/member">Manage Members</a>
+    <a href="/contributions">View Contributions</a>
+    <a href="/user-requests">Manage User Requests</a>
+  <% } %>
+
+  <% if (user.role === 'chief_signatory') { %>
+    <a href="/contributions/form">Add Contribution</a>
+    <a href="/contributions">Manage Contributions</a>
+  <% } %>
+
+  <% if (user.role === 'assistant_signatory') { %>
+    <a href="/contributions">View Contributions</a>
+  <% } %>
+
+  <li>
+    <a href="/update-requests">
+      <span class="icon">📝</span>
+      <span class="title">My Requests</span>
+    </a>
+  </li>
+
+  <% if (['chairman', 'chief_signatory', 'signatory'].includes(user.role)) { %>
+    <li>
+      <a href="/user-requests">
+        <span class="icon">👥</span>
+        <span class="title">Member Requests</span>
+      </a>
+    </li>
+    <li>
+      <a href="/fund-requests">
+        <span class="icon">💰</span>
+        <span class="title">Fund Requests</span>
+      </a>
+    </li>
+    <li>
+      <a href="/fund-management">
+        <span class="icon">💰</span>
+        <span class="title">Fund Management</span>
+      </a>
+    </li>
+  <% } %> 
+
+  <a href="#" id="changePasswordBtn">Manage Password</a>
+</nav>

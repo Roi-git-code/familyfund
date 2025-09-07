@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Page Not Found</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .error-container {
+      text-align: center;
+      padding: 50px 20px;
+    }
+    .error-code {
+      font-size: 120px;
+      font-weight: bold;
+      color: #e74c3c;
+      margin-bottom: 20px;
+    }
+    .error-message {
+      font-size: 24px;
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <div class="error-container">
+    <div class="error-code">404</div>
+    <div class="error-message"><%= message %></div>
+    <a href="/dashboard" class="btn">Go to Dashboard</a>
+  </div>
+
+  <%- include('partials/footer') %>
+</body>
+</html>

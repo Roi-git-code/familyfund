@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fund Requests</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/user_requests.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+  
+ </head>
+<body class="d-flex flex-column min-vh-100">
+
+
+        <!-- Header -->
+        <%- include('partials/header') %>
+
+  <!-- Sidebar -->
+  <%- include('partials/sidebar', { user: user }) %>
+
+  <div class="container-fluid">
+    <div class="row">
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+
+        <!-- Flash Messages -->
+        <div id="flashContainer">
+          <% if (flash.success?.length) { %>
+            <div class="alert alert-success alert-dismissible fade show">
+              <%= flash.success[0] %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          <% } %>
+          <% if (flash.error?.length) { %>
+            <div class="alert alert-danger alert-dismissible fade show">
+              <%= flash.error[0] %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          <% } %>
+        </div>
+
+        <!-- Fund Requests Section -->
+        <section class="mb-5">
+
+          <% if (fundRequests.length > 0) { %>
+
+            <!-- Filter Form -->
+            <form id="fundRequestsFilterForm" method="GET" action="/fund-requests" class="row g-3 align-items-end mb-3">
+              <div class="col-sm-6 col-md-3">
+                <label for="requestType" class="form-label">Request Type</label>
+                <select id="requestType" name="requestType" class="form-select">
+                  <option value="">All</option>
+                  <option value="Investment" <%= requestType==='Investment'?'selected':'' %>>Investment</option>
+                  <option value="School Fees" <%= requestType==='School Fees'?'selected':'' %>>School Fees</option>
+                  <option value="Medical" <%= requestType==='Medical'?'selected':'' %>>Medical</option>
+                  <option value="Marriage" <%= requestType==='Marriage'?'selected':'' %>>Marriage</option>
+                  <option value="Funeral" <%= requestType==='Funeral'?'selected':'' %>>Funeral</option>
+                  <option value="Emergency" <%= requestType==='Emergency'?'selected':'' %>>Emergency</option>
+                  <option value="Expenses" <%= requestType === 'Expenses' ? 'selected' : '' %>>Epenses</option>
+                  <option value="Other" <%= requestType==='Other'?'selected':'' %>>Other</option>
+                </select>
+              </div>
+              <div class="col-sm-6 col-md-3">
+                <label for="requestStatus" class="form-label">Status</label>
+                <select id="requestStatus" name="requestStatus" class="form-select">
+                  <option value="">All</option>
+                  <option value="In Progress" <%= requestStatus==='In Progress'?'selected':'' %>>In Progress</option>
+                  <option value="Approved" <%= requestStatus==='Approved'?'selected':'' %>>Approved</option>
+                  <option value="Rejected" <%= requestStatus==='Rejected'?'selected':'' %>>Rejected</option>
+                </select>
+              </div>
+              <div class="col-sm-6 col-md-3">
+                <label for="fromDate" class="form-label">From</label>
+                <input type="date" name="fromDate" id="fromDate" value="<%= fromDate||'' %>" class="form-control">
+              </div>
+              <div class="col-sm-6 col-md-3">
+                <label for="toDate" class="form-label">To</label>
+                <input type="date" name="toDate" id="toDate" value="<%= toDate||'' %>" class="form-control">
+              </div>
+              <div class="col-12 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="/fund-requests" class="btn btn-secondary">Reset</a>
+                <button type="button" id="downloadFundSummaryPDF" class="btn btn-outline-success">Download PDF</button>
+              </div>
+            </form>
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+              <h2 class="h4 mb-2">Fund Requests</h2>
+              <a href="/download/fund-requests/pdf?<%= requestType?'requestType='+requestType:'' %><%= requestStatus?'&requestStatus='+requestStatus:'' %><%= fromDate?'&fromDate='+fromDate:'' %><%= toDate?'&toDate='+toDate:'' %>"
+                 class="btn btn-sm btn-primary">
+                <i class="fa fa-download"></i> Download Fund Requests PDF
+              </a>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+              <table id="fundRequestsTable" class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                  <tr>
+                    <th>ID</th>
+                    <th>Member</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Bank Account</th>
+                    <th>Status</th>
+                    <th>Date Submitted</th>
+                    <% if (user.role === 'chief_signatory' || user.role==='chairman') { %>
+                      <th>Review</th>
+                    <% } %>
+                    <th>Download</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% fundRequests.forEach(request => { %>
+                    <tr data-request='<%- JSON.stringify(request) %>'>
+                      <td><%= request.id %></td>
+                      <td><%= request.first_name %> <%= request.sur_name %></td>
+                      <td><%= request.request_type %></td>
+                      <td>TSh <%= Number(request.amount).toLocaleString() %></td>
+                      <td><%= request.bank_account %></td>
+                      <td>
+                        <span class="badge 
+                          <% if(request.status==='Approved'){%>bg-success<%}else if(request.status==='Rejected'){%>bg-danger<%}else{%>bg-warning text-dark<%}%>">
+                          <%= request.status %>
+                        </span>
+                      </td>
+                      <td><%= new Date(request.created_at).toLocaleString() %></td>
+                      <td>
+                        <% if (request.request_type==='Expenses' && user.role==='chairman') { %>
+                          <button class="btn btn-primary btn-sm btn-review" data-id="<%= request.id %>">Review</button>
+                        <% } else if (request.request_type!=='Expenses' && user.role==='chief_signatory') { %>
+                          <button class="btn btn-primary btn-sm btn-review" data-id="<%= request.id %>">Review</button>
+                        <% } %>
+                      </td>
+                      <td>
+                        <a class="btn btn-outline-secondary btn-sm"
+                           href="/fund-requests/download/<%= request.id %>"
+                           target="_blank" rel="noopener">
+                          Download
+                        </a>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+
+          <% } else { %>
+            <p>No fund requests found.</p>
+          <% } %>
+        </section>
+
+        <!-- ✅ Modal (IDs + classes kept for scripts) -->
+        <div id="fundRequestModal" class="modal-overlay">
+          <div class="modal-content">
+            <div class="modal-header d-flex justify-content-between align-items-center">
+              <h5>Fund Request Details</h5>
+              <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+              <dl id="fundRequestDetails"></dl>
+              <div id="fundRejectReasonContainer" style="display:none; margin-top:20px;">
+                <label for="fundRejectReason" class="form-label"><strong>Reason for Rejection:</strong></label>
+                <textarea id="fundRejectReason" class="form-control" rows="3" placeholder="Explain why this request is being rejected..."></textarea>
+              </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-end">
+              <button class="btn btn-success btn-approve-fund">Approve</button>
+              <button class="btn btn-danger btn-reject-fund">Reject</button>
+              <button class="btn btn-outline-danger btn-confirm-reject-fund" style="display:none;">Confirm Rejection</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary Section -->
+        <section class="mb-5">
+          <h2 class="h4 mb-3">Fund Request Summary</h2>
+          <div class="d-flex gap-2 mb-3 flex-wrap">
+            <button id="btnType" class="btn btn-info">Summary by Type</button>
+            <button id="btnStatus" class="btn btn-info">Summary by Status</button>
+          </div>
+
+          <div id="summaryType" class="table-responsive">
+            <table class="table table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th>Request Type</th>
+                  <th>Total Requests</th>
+                  <th>Total Amount (TSh)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% summaryByType.forEach(row => { %>
+                  <tr>
+                    <td><%= row.request_type %></td>
+                    <td><%= row.total_requests %></td>
+                    <td><%= Number(row.total_amount).toLocaleString() %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="summaryStatus" class="table-responsive" style="display:none;">
+            <table class="table table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th>Status</th>
+                  <th>Total Requests</th>
+                  <th>Total Amount (TSh)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% summaryByStatus.forEach(row => { %>
+                  <tr>
+                    <td><%= row.status %></td>
+                    <td><%= row.total_requests %></td>
+                    <td><%= Number(row.total_amount).toLocaleString() %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Password Modal -->
+        <%- include('partials/change_password_modal') %>
+            </main>
+    </div>
+  </div>
+
+<%- include('partials/footer') %>
+ 
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  const fundRequests = <%- JSON.stringify(fundRequests || []) %>;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('fundRequestModal');
+    const modalCloseBtn = modal.querySelector('.modal-close');
+    const fundRequestDetails = document.getElementById('fundRequestDetails');
+    const rejectReasonContainer = document.getElementById('fundRejectReasonContainer');
+    const rejectReasonTextarea = document.getElementById('fundRejectReason');
+    const btnApproveFund = modal.querySelector('.btn-approve-fund');
+    const btnRejectFund = modal.querySelector('.btn-reject-fund');
+    const btnConfirmRejectFund = modal.querySelector('.btn-confirm-reject-fund');
+
+    let currentRequest = null;
+
+    // Only one "Review" button per row now
+    document.querySelectorAll('.btn-review').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const row = btn.closest('tr');
+        const request = row ? JSON.parse(row.dataset.request) : fundRequests.find(r => r.id == id);
+        if (request) {
+          currentRequest = request;
+          showModal(request);
+        }
+      });
+    });
+
+    function showModal(request) {
+      fundRequestDetails.innerHTML = `
+        <dt>Request ID:</dt><dd>${request.id}</dd>
+        <dt>Member:</dt><dd>${request.first_name} ${request.sur_name}</dd>
+        <dt>Type:</dt><dd>${request.request_type}</dd>
+        <dt>Amount:</dt><dd>TSh ${Number(request.amount).toLocaleString()}</dd>
+        <dt>Bank Account:</dt><dd>${request.bank_account}</dd>
+        ${request.bank_name ? `<dt>Bank Name:</dt><dd>${request.bank_name}</dd>` : ''}
+        <dt>Additional Info:</dt><dd>${request.additional_info || 'None'}</dd>
+        <dt>Status:</dt><dd>${request.status}</dd>
+        <dt>Submitted:</dt><dd>${new Date(request.created_at).toLocaleString()}</dd>
+      `;
+
+      rejectReasonTextarea.value = '';
+      rejectReasonContainer.style.display = 'none';
+      btnRejectFund.style.display = 'inline-block';
+      btnConfirmRejectFund.style.display = 'none';
+
+      modal.classList.add('show');
+    }
+
+    function closeModal() { modal.classList.remove('show'); }
+    modalCloseBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+    // Modal actions
+    btnRejectFund.addEventListener('click', () => {
+      rejectReasonContainer.style.display = 'block';
+      btnRejectFund.style.display = 'none';
+      btnConfirmRejectFund.style.display = 'inline-block';
+      rejectReasonTextarea.focus();
+    });
+
+    btnConfirmRejectFund.addEventListener('click', () => {
+      const reason = rejectReasonTextarea.value.trim();
+      if (!reason) { alert('Please provide a reason for rejection.'); return; }
+
+      if (confirm('Are you sure you want to REJECT this fund request?')) {
+        fetch('/fund-requests/update-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            requestId: currentRequest.id, 
+            status: 'Rejected',
+            reason
+          })
+        })
+        .then(r => r.ok ? location.reload() : alert('Failed to reject fund request'));
+      }
+    });
+
+    btnApproveFund.addEventListener('click', () => {
+      if (!currentRequest) return;
+      if (confirm('Are you sure you want to APPROVE this fund request?')) {
+        fetch('/fund-requests/update-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            requestId: currentRequest.id, 
+            status: 'Approved',
+            reason: ''
+          })
+        })
+        .then(r => r.ok ? location.reload() : alert('Failed to approve fund request'));
+      }
+    });
+
+  const btnType = document.getElementById('btnType');
+  const btnStatus = document.getElementById('btnStatus');
+  const summaryType = document.getElementById('summaryType');
+  const summaryStatus = document.getElementById('summaryStatus');
+
+  btnType.addEventListener('click', () => {
+    summaryType.style.display = 'block';
+    summaryStatus.style.display = 'none';
+  });
+
+  btnStatus.addEventListener('click', () => {
+    summaryStatus.style.display = 'block';
+    summaryType.style.display = 'none';
+  });
+});
+
+   document.addEventListener("DOMContentLoaded", () => {
+  const btnRequests = document.getElementById('downloadFundRequestsPDF');
+  if (btnRequests) {
+    btnRequests.addEventListener('click', () => {
+      const requestType = document.getElementById('requestType').value;
+      const requestStatus = document.getElementById('requestStatus').value;
+      const fromDate = document.getElementById('fromDate').value;
+      const toDate = document.getElementById('toDate').value;
+
+      const params = new URLSearchParams({ requestType, requestStatus, fromDate, toDate });
+      window.open(`/download/fund-requests/pdf?${params.toString()}`, '_blank');
+    });
+  }
+
+  const btnSummary = document.getElementById('downloadFundSummaryPDF');
+  if (btnSummary) {
+    btnSummary.addEventListener('click', () => {
+      const fromDate = document.getElementById('fromDateSummary').value;
+      const toDate = document.getElementById('toDateSummary').value;
+
+      const params = new URLSearchParams({ fromDate, toDate });
+      window.open(`/download/fund-summary/pdf?${params.toString()}`, '_blank');
+    });
+  }
+});
+</script>
+
+  <!-- Scripts -->
+  <script src="/script/dashboard.js"></script>
+  <script src="/script/sidebar.js"></script>
+  <script src="/script.js"></script>
+  <script src="/script/user_requests.js"></script>
+</body>
+</html>

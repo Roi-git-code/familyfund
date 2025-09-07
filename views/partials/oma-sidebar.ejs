@@ -1,0 +1,55 @@
+<!-- views/partials/oma-sidebar.ejs -->
+<!-- Sidebar for md+ screens -->
+<nav class="d-none d-md-block bg-light border-end" style="width: 220px; min-height: 100vh;">
+  <div class="p-3">
+    <h6 class="fw-bold text-primary">Navigation</h6>
+    <ul class="nav flex-column">
+      <li class="nav-item"><a href="/oma/home" class="nav-link">🏠 Home</a></li>
+      <li class="nav-item"><a href="/oma/guide" class="nav-link">📖 Guide</a></li>
+      <li class="nav-item"><a href="/oma/apply" class="nav-link">📝 Apply</a></li>
+
+<% if (typeof omaUser !== 'undefined' && omaUser) { %>      
+      <li class="nav-item">
+      <a href="/oma/applications/user/<%= omaUser.id %>" class="nav-link">📂 My Applications</a>
+      </li>
+<% } %>
+
+      <% if (typeof user !== 'undefined' && user && user.role === 'chairman') { %>
+        <li class="nav-item"><a href="/oma/admin/list" class="nav-link">👨‍💼 Admin Panel</a></li>
+      <% } %>
+    </ul>
+  </div>
+</nav>
+
+<!-- Offcanvas for small screens -->
+<nav class="d-md-none">
+  <button class="btn btn-primary m-2" data-bs-toggle="offcanvas" data-bs-target="#omaSidebarOffcanvas">
+    ☰ Menu
+  </button>
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="omaSidebarOffcanvas">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title">OMAS Menu</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+      <ul class="nav flex-column">
+        <li class="nav-item"><a href="/oma/home" class="nav-link">🏠 Home</a></li>
+        <li class="nav-item"><a href="/oma/guide" class="nav-link">📖 Guide</a></li>
+        <li class="nav-item"><a href="/oma/apply" class="nav-link">📝 Apply</a></li>
+       
+<% if (typeof omaUser !== 'undefined' && omaUser) { %>
+ 
+<li class="nav-item">
+  <a href="/oma/applications/user/<%= omaUser.id %>" class="nav-link">📂 My Applications</a>
+</li>
+
+<% } %>
+
+
+        <% if (typeof user !== 'undefined' && user && user.role === 'chairman') { %>
+          <li class="nav-item"><a href="/oma/admin/list" class="nav-link">👨‍💼 Admin Panel</a></li>
+        <% } %>
+      </ul>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,77 @@
+
+/* Sidebar toggle button */
+.sidebar-toggle {
+  position: fixed;
+  top: 5px;
+  left: 200px;
+  z-index: 1100;
+  background:#2980b9;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  font-size: 1.6rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Sidebar container */
+.sidebar {
+  position: fixed;
+  top: 5%;
+  left: -240px;
+  width: 180px;
+  height: 100%;
+  background: #2c3e50;
+  color: white;
+  padding: 5px;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.2);
+  transition: left 0.3s ease;
+  overflow-y: auto;
+  z-index: 1000;
+font-size: 24px;
+font-weight:600;
+}
+
+.sidebar h3 {
+  margin-top: 0;
+  color: #ecf0f1;
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+}
+
+.sidebar a {
+  display: block;
+  color: #ecf0f1;
+  padding: 10px;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.sidebar a:hover {
+  background: #34495e;
+}
+
+/* Sidebar open state */
+.sidebar.show {
+  left: 0;
+}
+
+/* Adjust main content so it’s still usable */
+.content {
+  margin-left: 0;
+  transition: margin-left 0.3s ease;
+   padding-bottom: 60px; 
+}
+
+.content.shift {
+  margin-left: 180px;
+}
+
+/* Mobile view */
+@media (max-width: 768px) {
+  .content.shift {
+    margin-left: 2%; /* don't push content on mobile */
+  }
+}
+

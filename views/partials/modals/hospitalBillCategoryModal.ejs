@@ -1,0 +1,19 @@
+<!-- Hospital Bill - Custom Modal -->
+<div id="hospitalBillCategoryModal" class="c-modal" aria-hidden="true" style="display:none;position:fixed;inset:0;z-index:1055;">
+  <div class="c-modal__backdrop" data-close style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"></div>
+  <div class="c-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="hospitalBillCategoryModalLabel"
+       style="position:relative;width:80%;height:100%;background:#fff;overflow:auto;">
+    <div class="c-modal__header" style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid #eee;">
+      <h1 id="hospitalBillCategoryModalLabel" class="modal-tittle"> </h1>
+      <button class="btn-close" data-close aria-label="Close" style="border:none;background:transparent;font-size:28px;line-height:1;cursor:pointer;">×</button>
+    </div>
+    <div class="c-modal__body" style="padding:16px;">
+      <%- include('../hospitalBill') %>
+    </div>
+    <div class="c-modal__footer" style="display:flex;gap:8px;justify-content:flex-end;padding:16px;border-top:1px solid #eee;">
+      <button type="button" class="btn btn-secondary" data-close>Close</button>
+      <a class="btn btn-primary" href="/funds/hospital-bill/pdf?<%= from ? 'from=' + from : '' %>&<%= to ? 'to=' + to : '' %>" target="_blank">Download PDF</a>
+    </div>
+  </div>
+</div>
+

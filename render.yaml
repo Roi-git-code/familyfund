@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: familyfund-web
+    env: node
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: familyfund-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        value: your_random_secure_secret
+      - key: FUND_CATEGORY_PERCENTS
+        value: '{"investment":0.2,"emergency":0.15,"school_fee":0.1,"mariage":0.05,"hospital_bill":0.12,"back_up":0.08,"reserve":0.15,"expenses":0.15}'
+      - key: SMTP_USER
+        value: wagundaisack@gmail.com
+      - key: SMTP_PASS
+        value: apuuysvfsooxxgzs
+      - key: FRONTEND_URL
+        value: 'https://your-app-url.onrender.com'
+databases:
+  - name: familyfund-db
+    engine: postgres
+    version: 15
+    plan: free
+    region: oregon

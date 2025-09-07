@@ -1,0 +1,26 @@
+<div class="fund-summary" 
+     style="background:#fff; padding:24px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08); margin-top:20px;">
+
+  <h3 style="text-align:center; font-size:1.8em; font-weight:600; color:#2c3e50; margin-bottom:24px;">
+    Fund Summary
+  </h3>
+
+  <div style="display:flex; gap:24px; align-items:stretch; flex-wrap:wrap; justify-content:center;">
+
+    <div style="flex:1; min-width:220px; max-width:300px; background:#f9f9f9; padding:20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.06); text-align:center;">
+      <strong style="display:block; font-size:1.1em; color:#555;">Total Fund (<%= timeRange || 'All time' %>)</strong>
+      <div style="font-size:1.7em; font-weight:bold; color:#27ae60; margin-top:8px;">
+        TSh <%= (totalFund || 0).toLocaleString() %>
+      </div>
+    </div>
+
+    <div style="flex:1; min-width:220px; max-width:300px; background:#f9f9f9; padding:20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.06); text-align:center;">
+      <strong style="display:block; font-size:1.1em; color:#555;">Available Fund (<%= new Date().toDateString() %>)</strong>
+      <div style="font-size:1.7em; font-weight:bold; color:#2980b9; margin-top:8px;">
+        TSh <%= (availableFund || 0).toLocaleString() %>
+      </div>
+    </div>
+
+  </div>
+</div>
+
