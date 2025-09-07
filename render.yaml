@@ -26,6 +26,5 @@ services:
         value: 'https://familyfund.onrender.com'
 databases:
   - name: familyfund-db
-    type: postgresql
     plan: free
     region: frankfurt
