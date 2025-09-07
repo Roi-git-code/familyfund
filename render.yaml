@@ -29,4 +29,3 @@ databases:
     type: postgresql
     plan: free
     region: frankfurt
-    version: "15"
