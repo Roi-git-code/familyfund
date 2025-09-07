@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: familyfund-web
+    name: familyfund
     env: node
     plan: free
     region: oregon
@@ -23,10 +23,10 @@ services:
       - key: SMTP_PASS
         value: apuuysvfsooxxgzs
       - key: FRONTEND_URL
-        value: 'https://your-app-url.onrender.com'
+        value: 'https://familyfund.onrender.com'
 databases:
   - name: familyfund-db
-    engine: postgres
-    version: 15
+    engine: postgresql
+    version: "15"
     plan: free
     region: oregon
