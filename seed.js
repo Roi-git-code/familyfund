@@ -1,8 +1,7 @@
 
-
 // seed.js
-require('dotenv').config();
-const pool = require("./db");
+const { pool } = require("./db");
+require("dotenv").config();
 
 async function seed() {
   try {
@@ -45,7 +44,6 @@ async function seed() {
       memberId = adminInsert.rows[0].id;
       console.log("✅ Admin inserted with ID:", memberId);
     } else {
-      // Admin existed already — fetch ID
       const existing = await pool.query(
         `SELECT id FROM member WHERE email = 'itzfamilyfund@gmail.com' LIMIT 1`
       );
@@ -54,7 +52,7 @@ async function seed() {
     }
 
     // -------------------------------------------------------
-    // 2. INSERT NEXT OF KIN (BROTHER + MOTHER)
+    // 2. NEXT OF KIN
     // -------------------------------------------------------
     console.log("➡️ Seeding next of kin...");
 
@@ -65,7 +63,8 @@ async function seed() {
         member_id, first_name, middle_name, sur_name,
         relationship, gender, phone, address, email
       )
-      VALUES ($1, 'PATRIC', 'SAMWEL', 'WAGUNDA',
+      VALUES (
+        $1, 'PATRIC', 'SAMWEL', 'WAGUNDA',
         'Brother', 'Male', '+255763724710',
         'P.O.BOX 822, MUSOMA', 'wagunda@gmail.com'
       )
@@ -81,7 +80,8 @@ async function seed() {
         member_id, first_name, middle_name, sur_name,
         relationship, gender, phone, address, email
       )
-      VALUES ($1, 'BHOKE', 'ALBERT', 'CHACHA',
+      VALUES (
+        $1, 'BHOKE', 'ALBERT', 'CHACHA',
         'Mother', 'Female', '+255757243353',
         'S.L.P 822, MUSOMA', 'bhoke@gmail.com'
       )
@@ -93,7 +93,7 @@ async function seed() {
     console.log("✅ Next of kin inserted successfully!");
 
     // -------------------------------------------------------
-    // 3. SEED FUND CATEGORIES
+    // 3. FUND CATEGORIES
     // -------------------------------------------------------
     console.log("➡️ Seeding fund categories...");
 
@@ -117,8 +117,8 @@ async function seed() {
   } catch (err) {
     console.error("❌ Seeding error:", err.message);
   } finally {
-    // Close connection
-    await pool.end();
+    console.log("🔌 Closing database...");
+    await pool.end(); // Now valid because we imported correctly
     console.log("🔌 Database connection closed.");
   }
 }
