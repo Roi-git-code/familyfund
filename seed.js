@@ -1,4 +1,7 @@
 
+
+// seed.js
+require('dotenv').config();
 const pool = require("./db");
 
 async function seed() {
@@ -62,8 +65,7 @@ async function seed() {
         member_id, first_name, middle_name, sur_name,
         relationship, gender, phone, address, email
       )
-      VALUES (
-        $1, 'PATRIC', 'SAMWEL', 'WAGUNDA',
+      VALUES ($1, 'PATRIC', 'SAMWEL', 'WAGUNDA',
         'Brother', 'Male', '+255763724710',
         'P.O.BOX 822, MUSOMA', 'wagunda@gmail.com'
       )
@@ -79,8 +81,7 @@ async function seed() {
         member_id, first_name, middle_name, sur_name,
         relationship, gender, phone, address, email
       )
-      VALUES (
-        $1, 'BHOKE', 'ALBERT', 'CHACHA',
+      VALUES ($1, 'BHOKE', 'ALBERT', 'CHACHA',
         'Mother', 'Female', '+255757243353',
         'S.L.P 822, MUSOMA', 'bhoke@gmail.com'
       )
@@ -116,6 +117,7 @@ async function seed() {
   } catch (err) {
     console.error("❌ Seeding error:", err.message);
   } finally {
+    // Close connection
     await pool.end();
     console.log("🔌 Database connection closed.");
   }
