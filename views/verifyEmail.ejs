@@ -1,0 +1,220 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Verify Email - FamilyFund</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/footer.css">
+  <link rel="stylesheet" href="/css/sidebar.css">
+
+  <style>
+    body {
+      background: #f5f7fb;
+      font-family: "Poppins", sans-serif;
+    }
+
+    .verify-container {
+      max-width: 500px;
+      margin: 60px auto;
+      background: #fff;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .verify-container h2 {
+      font-size: 1.8rem;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .verify-container p {
+      color: #555;
+      font-size: 0.95rem;
+    }
+
+    .otp-input {
+      font-size: 26px;
+      text-align: center;
+      letter-spacing: 10px;
+      padding: 15px;
+      border: 2px solid #007bff;
+      border-radius: 8px;
+      margin: 25px 0;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    .otp-input:focus {
+      border-color: #0056b3;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #007bff;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .btn-submit:hover {
+      background: #0056b3;
+    }
+
+    .timer {
+      text-align: center;
+      color: #777;
+      font-size: 0.9rem;
+      margin: 15px 0;
+    }
+
+    .resend-link a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .resend-link a:hover {
+      text-decoration: underline;
+    }
+
+    .success {
+      color: green;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .error {
+      color: red;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- ✅ Use shared header -->
+    <%- include('partials/header') %>
+
+    <main>
+      <div class="verify-container">
+        <h2>Verify Your Email</h2>
+
+        <% if (flash.error?.length) { %>
+          <p class="error"><%= flash.error[0] %></p>
+        <% } %>
+        <% if (flash.success?.length) { %>
+          <p class="success"><%= flash.success[0] %></p>
+        <% } %>
+
+        <p>We've sent a 6-digit verification code to <strong><%= email %></strong></p>
+        <p>Please check your inbox and enter the code below:</p>
+
+        <form action="/auth/verify-email" method="POST">
+          <input type="hidden" name="email" value="<%= email %>">
+
+          <input
+            type="text"
+            name="otp"
+            class="otp-input"
+            placeholder="------"
+            maxlength="6"
+            pattern="[0-9]{6}"
+            required
+            autocomplete="off"
+          >
+
+          <button type="submit" class="btn-submit">Verify Email</button>
+        </form>
+
+        <div class="timer" id="timer">
+          You can resend code in <span id="countdown">60</span> seconds
+        </div>
+
+        <div class="resend-link" id="resendLink" style="display: none;">
+          <a href="javascript:void(0)" onclick="resendOTP()">Resend Verification Code</a>
+        </div>
+
+        <a href="/auth" class="back-link">← Back to Login</a>
+      </div>
+    </main>
+
+    <!-- ✅ Use shared footer -->
+    <%- include('partials/footer') %>
+  </div>
+
+  <script>
+    let timeLeft = 60;
+    const countdownElement = document.getElementById('countdown');
+    const resendLink = document.getElementById('resendLink');
+    const timerElement = document.getElementById('timer');
+
+    function startTimer() {
+      const timer = setInterval(() => {
+        timeLeft--;
+        countdownElement.textContent = timeLeft;
+
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          timerElement.style.display = 'none';
+          resendLink.style.display = 'block';
+        }
+      }, 1000);
+    }
+
+    async function resendOTP() {
+      try {
+        const response = await fetch('/auth/resend-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email: '<%= email %>' }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          alert('New verification code sent!');
+          timeLeft = 60;
+          countdownElement.textContent = timeLeft;
+          timerElement.style.display = 'block';
+          resendLink.style.display = 'none';
+          startTimer();
+        } else {
+          alert(result.message || 'Failed to resend code');
+        }
+      } catch (error) {
+        alert('Error resending code');
+      }
+    }
+
+    startTimer();
+  </script>
+</body>
+</html>
+
+

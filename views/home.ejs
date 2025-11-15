@@ -1,56 +1,192 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Family Saving Fund</title>
+  <title>Family Saving Fund - FamilyFund</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <link href="/css/footer.css" rel="stylesheet">
+  <style>
+    .gradient-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .gradient-nav {
+      background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    }
+    
+    .gradient-footer {
+      background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    }
+    
+    .section-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border: none;
+    }
+    
+    .feature-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      color: white;
+      font-size: 1.5rem;
+    }
+    
+    .emergency-level {
+      border-left: 4px solid;
+      padding-left: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .level-a { border-color: #dc3545; }
+    .level-b { border-color: #ffc107; }
+    .level-c { border-color: #28a745; }
+    
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.5rem;
+    }
+    
+    .nav-link {
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .nav-link:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Mobile-specific header adjustments */
+    @media (max-width: 768px) {
+      .gradient-header {
+        padding: 1.5rem 0 !important;
+      }
+      
+      .header-title h1 {
+        font-size: 1.8rem !important;
+        margin-bottom: 0.5rem !important;
+      }
+      
+      .header-title p {
+        font-size: 1rem !important;
+        margin-bottom: 0.5rem !important;
+      }
+      
+      .header-icon {
+        font-size: 2rem !important;
+      }
+      
+      .mobile-hamburger {
+        font-size: 1.5rem !important;
+      }
+    }
+
+    /* Desktop header adjustments */
+    @media (min-width: 769px) {
+      .gradient-header {
+        padding: 3rem 0 !important;
+      }
+    }
+.footer-links a {
+  transition: all 0.3s ease;
+}
+
+.footer-links a:hover {
+  opacity: 1 !important;
+  text-decoration: underline !important;
+}
+  </style>
 </head>
 <body class="bg-light">
 
-<!-- Flash messages container -->
-<div class="container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
-  <% if (flash && flash.success) { %>
-    <div class="alert alert-success alert-dismissible fade show shadow" role="alert">
-      <%= flash.success[0] %>
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-  <% } %>
-  <% if (flash && flash.error) { %>
-    <div class="alert alert-danger alert-dismissible fade show shadow" role="alert">
-      <%= flash.error[0] %>
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-  <% } %>
-</div>
-
-<!-- Header -->
-<header class="bg-primary text-white text-center py-5 mb-3">
+<!-- Header with Gradient - Minimized for Mobile -->
+<header class="gradient-header text-center py-3 py-lg-4 mb-3">
   <div class="container">
-    <h1 class="fw-bold">Family Saving Fund</h1>
-    <p class="lead">Empowering Families Through Collective Support</p>
+    <div class="row align-items-center">
+      <!-- Hamburger Button for Mobile -->
+      <div class="col-2 d-lg-none text-start">
+        <button class="navbar-toggler text-white border-0 bg-transparent mobile-hamburger" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+      
+      <!-- Title Section -->
+      <div class="col-8 col-lg-12 header-title">
+        <h1 class="fw-bold mb-2 display-5 display-lg-4">Family Saving Fund</h1>
+        <p class="lead mb-2 opacity-90 fs-6 fs-lg-4">Empowering Families Through Collective Support</p>
+        <div class="header-icon">
+          <i class="fas fa-hands-helping opacity-75 fa-2x fa-lg-3x"></i>
+        </div>
+      </div>
+      
+      <!-- Spacer for alignment -->
+      <div class="col-2 d-lg-none"></div>
+    </div>
   </div>
 </header>
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+<!-- Navbar with Gradient -->
+<nav class="navbar navbar-expand-lg gradient-nav navbar-dark sticky-top">
   <div class="container">
-    <a class="navbar-brand fw-bold" href="#">FamilyFund</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
+    <a class="navbar-brand fw-bold d-none d-lg-block" href="#">
+      <i class="fas fa-hands-helping me-2"></i>FamilyFund
+    </a>
+    
+    <!-- Desktop Nav Links -->
     <div class="collapse navbar-collapse" id="mainNav">
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link" href="#about">About Us</a></li>
-        <li class="nav-item"><a class="nav-link" href="#emergencies">Emergencies</a></li>
-        <li class="nav-item"><a class="nav-link" href="#contribution">Contribution</a></li>
-        <li class="nav-item"><a class="nav-link" href="#benefits">Benefits</a></li>
-        <li class="nav-item"><a class="nav-link" href="/oma/home">OMA (Apply Online)</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="#about">
+            <i class="fas fa-info-circle me-1"></i>About Us
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#emergencies">
+            <i class="fas fa-exclamation-triangle me-1"></i>Emergencies
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#contribution">
+            <i class="fas fa-money-bill-wave me-1"></i>Contribution
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#benefits">
+            <i class="fas fa-hand-holding-heart me-1"></i>Benefits
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/oma/home">
+            <i class="fas fa-laptop me-1"></i>OMA (Apply Online)
+          </a>
+        </li>
+        
+        <!-- Authentication Links -->
         <% if (!user) { %>
-          <li class="nav-item"><a class="nav-link" href="/auth">Login / Sign Up</a></li>
+          <li class="nav-item">
+            <a class="nav-link" href="/auth">
+              <i class="fas fa-sign-in-alt me-1"></i>Login / Sign Up
+            </a>
+          </li>
         <% } else { %>
-          <li class="nav-item"><a class="nav-link" href="/auth/logout">Logout</a></li>
+          <li class="nav-item">
+            <a class="nav-link" href="/auth/logout">
+              <i class="fas fa-sign-out-alt me-1"></i>Logout
+            </a>
+          </li>
         <% } %>
       </ul>
     </div>
@@ -60,74 +196,166 @@
 <!-- Main Content -->
 <main class="container my-4">
 
+  <!-- User Login Status Alert -->
   <% if (user) { %>
     <div class="alert alert-info text-center">
-      Logged in as <strong><%= user.username %></strong> (<%= user.role.replace('_', ' ') %>)
+      <i class="fas fa-user me-2"></i>
+      Logged in as <strong><%= user.username %></strong> 
+      (<%= user.role.replace('_', ' ') %>)
     </div>
   <% } %>
 
   <!-- About -->
-  <section id="about" class="mb-5">
-    <h2 class="text-primary mb-3">About Us</h2>
-    <p>The Family Saving Fund is a dedicated initiative designed to help families navigate social and financial emergencies through mutual support and trust...</p>
+  <section id="about" class="section-card">
+    <div class="row align-items-center">
+      <div class="col-md-2 text-center">
+        <div class="feature-icon">
+          <i class="fas fa-info"></i>
+        </div>
+      </div>
+      <div class="col-md-10">
+        <h2 class="text-primary mb-3">About Us</h2>
+        <p class="lead">The Family Saving Fund is a dedicated initiative designed to help families navigate social and financial emergencies through mutual support and trust. Our mission is to create a sustainable support system where every family member can rely on collective strength during challenging times.</p>
+      </div>
+    </div>
   </section>
 
   <!-- Emergencies -->
-  <section id="emergencies" class="mb-5">
-    <h2 class="text-primary mb-3">Types of Emergencies</h2>
-    <ul class="list-group">
-      <li class="list-group-item"><strong>Level A (Very Serious):</strong> Major surgery, funerals, severe accidents.</li>
-      <li class="list-group-item"><strong>Level B (Moderate):</strong> Hospitalization, short-term challenges.</li>
-      <li class="list-group-item"><strong>Level C (Minor):</strong> Routine medical care, urgent school needs.</li>
-    </ul>
+  <section id="emergencies" class="section-card">
+    <h2 class="text-primary mb-4 text-center">
+      <i class="fas fa-exclamation-triangle me-2"></i>Types of Emergencies
+    </h2>
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <div class="emergency-level level-a">
+          <h5 class="text-danger">Level A (Very Serious)</h5>
+          <p class="mb-0">Major surgery, funerals, severe accidents, critical medical conditions requiring extensive treatment.</p>
+        </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="emergency-level level-b">
+          <h5 class="text-warning">Level B (Moderate)</h5>
+          <p class="mb-0">Hospitalization, short-term challenges, urgent home repairs, educational emergencies.</p>
+        </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="emergency-level level-c">
+          <h5 class="text-success">Level C (Minor)</h5>
+          <p class="mb-0">Routine medical care, urgent school needs, minor household emergencies, temporary support.</p>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- Contribution -->
-  <section id="contribution" class="mb-5">
-    <h2 class="text-primary mb-3">Contribution</h2>
-    <p>Monthly contribution: <strong>Tsh 10,000</strong> (minimum)</p>
-    <p>Funds are transferred electronically via bank or mobile money (e.g., M-Pesa, HaloPesa).</p>
-    <p>Allocation of savings:</p>
-    <ul class="list-group">
-      <li class="list-group-item">60% - Emergency assistance</li>
-      <li class="list-group-item">30% - Future reserve</li>
-      <li class="list-group-item">10% - Fund operations</li>
-    </ul>
+  <section id="contribution" class="section-card">
+    <div class="row align-items-center">
+      <div class="col-md-2 text-center">
+        <div class="feature-icon">
+          <i class="fas fa-piggy-bank"></i>
+        </div>
+      </div>
+      <div class="col-md-10">
+        <h2 class="text-primary mb-3">Contribution System</h2>
+        <div class="mb-4">
+          <h5 class="text-success">
+            <i class="fas fa-money-bill-wave me-2"></i>
+            Monthly Contribution: <strong>Tsh 20,000</strong> (minimum). The amount may change with time.
+          </h5>
+          <p class="mb-2">Funds are transferred electronically via bank or mobile money (e.g.AzamPesa via AzamPay, M-Pesa, HaloPesa, Tigo Pesa).</p>
+        </div>
+        
+        <h5 class="mb-3">Allocation of Savings:</h5>
+        <div class="row">
+          <div class="col-md-4">
+            <div class="card border-primary mb-3">
+              <div class="card-body text-center">
+                <h3 class="text-primary">60%</h3>
+                <p class="mb-0">Different fund categories in different ratio</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card border-success mb-3">
+              <div class="card-body text-center">
+                <h3 class="text-success">30%</h3>
+                <p class="mb-0">Future Reserve</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card border-warning mb-3">
+              <div class="card-body text-center">
+                <h3 class="text-warning">10%</h3>
+                <p class="mb-0">Fund Operations</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- Benefits -->
-  <section id="benefits" class="mb-5">
-    <h2 class="text-primary mb-3">How to Benefit</h2>
-    <p>Members are eligible after six (6) months of contributions.</p>
-    <ul class="list-group">
-      <li class="list-group-item">Full contributors can receive up to 25% of the emergency fund balance.</li>
-      <li class="list-group-item">Partial contributors receive up to 25% of their contribution ratio.</li>
-    </ul>
-    <p class="mt-2">Assistance decisions are made through a voting committee based on urgency, need, and contribution.</p>
+  <section id="benefits" class="section-card">
+    <div class="row align-items-center">
+      <div class="col-md-2 text-center">
+        <div class="feature-icon">
+          <i class="fas fa-hand-holding-usd"></i>
+        </div>
+      </div>
+      <div class="col-md-10">
+        <h2 class="text-primary mb-3">How to Benefit</h2>
+        <div class="alert alert-warning">
+          <i class="fas fa-clock me-2"></i>
+          <strong>Eligibility:</strong> Members are eligible after five (5) months of consistent contributions.
+        </div>
+        
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title text-success">
+                  <i class="fas fa-check-circle me-2"></i>Full Contributors
+                </h5>
+                <p class="card-text">Can receive up to 25% of the fund category balance for allocated fund.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title text-info">
+                  <i class="fas fa-user-clock me-2"></i>Partial Contributors
+                </h5>
+                <p class="card-text">Receive up to 25% of their contribution ratio to the available fund category balance based on participation history.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="alert alert-info">
+          <i class="fas fa-users me-2"></i>
+          <strong>Decision Process:</strong> Urgent decisions are made through a voting committee based on urgency, need, and contribution history.
+        </div>
+      </div>
+    </div>
   </section>
-
-  <!-- Buttons -->
+    
+  <!-- OMA Button -->
   <div class="text-center my-4">
-    <% if (user?.role === 'chairman') { %>
-      <a href="/member/form" class="btn btn-primary m-2">Register Member</a>
-      <a href="/member" class="btn btn-outline-primary m-2">View Registered Member</a>
-    <% } %>
-
-    <% if (['chairman', 'chief_signatory', 'assistant_signatory'].includes(user?.role)) { %>
-      <a href="/contributions" class="btn btn-success m-2">View Contributions</a>
-    <% } %>
-
-    <% if (user?.role === 'chief_signatory') { %>
-      <a href="/contributions/form" class="btn btn-warning m-2">Add Member Contribution</a>
-    <% } %>
+    <a href="/oma/home" class="btn btn-info btn-lg">
+      <i class="fas fa-laptop me-2"></i>Apply Online (OMA)
+    </a>
   </div>
 </main>
 
-<!-- Footer -->
-<footer class="bg-primary text-white text-center py-3 mt-4">
-  &copy; <%= new Date().getFullYear() %> Family Saving Fund. All rights reserved.
-</footer>
-
+         <!-- Footer with Gradient -->
+    <!-- Footer -->
+    <%- include('partials/footer') %>
+    
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+

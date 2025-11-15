@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +10,7 @@
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/header.css" />
   <link rel="stylesheet" href="/css/sidebar.css" />
+  <link rel="stylesheet" href="/css/flash.css">
 
 
 <style>
@@ -283,10 +285,10 @@
 
 </head>
 <body>
-   <%- include('partials/sidebar', { user: user }) %>
       <div class="container">
     <%- include('partials/header') %>
      <div class="form-container">    
+     <%- include('partials/flash') %>
 
       <header>
       <h1>Family Fund Request System</h1>
@@ -494,6 +496,8 @@
 <script src="/script/update_profie.js"></script>
 <script src="/script/dashboard.js"></script>
 <script src="/script/sidebar.js"></script>
+  <script src="/js/flash.js"></script>
+
 <script src="/script.js"></script>
 
  <script>

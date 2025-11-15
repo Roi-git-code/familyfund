@@ -1,124 +1,746 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Chairman Panel</title>
-
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  
-  <!-- Unified custom CSS -->
-  <link href="/css/app.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chairman Panel</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Unified custom CSS -->
+    <link href="/css/app.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/flash.css">
+    <style>
+        /* Table overflow styling */
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            position: relative;
+        }
+        .table-container thead th {
+            position: sticky;
+            top: 0;
+            background-color: #212529;
+            z-index: 10;
+        }
+        /* Pagination styling */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        /* Filter section styling */
+        .filter-section {
+            background-color: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #dee2e6;
+        }
+        .filter-toggle {
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .filter-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .filter-toggle .icon {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.9em;
+        }
+        .filter-toggle.collapsed .icon {
+            transform: rotate(-90deg);
+        }
+        /* Loading state for table */
+        .table-loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        /* Search input styling */
+        .search-input-group {
+            position: relative;
+        }
+        .search-input-group .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            z-index: 5;
+        }
+        .search-input-group input {
+            padding-left: 40px;
+        }
+        /* Next of kin styling */
+        .kin-section {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        /* Action dropdown styling */
+        .action-dropdown-btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        .action-dropdown-menu {
+            min-width: 140px;
+        }
+        .action-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+        }
+        .action-dropdown-item i {
+            width: 16px;
+            text-align: center;
+        }
+        /* Modal styling */
+        .member-detail-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        .member-detail-item:last-child {
+            border-bottom: none;
+        }
+        .kin-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        /* Table action column */
+        .action-column {
+            width: 80px;
+        }
+    </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
+    <!-- Header -->
+    <%- include('partials/header') %>
+    
+    <!-- Sidebar -->
+    <%- include('partials/sidebar', { user: user }) %>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="text-center mb-4">Registered Members</h2>
+                        
+               <%- include('partials/flash') %>
 
-       <!-- Header -->
-        <%- include('partials/header') %>
-
-  <!-- Sidebar -->
-  <%- include('partials/sidebar', { user: user }) %>
-
-  <div class="container-fluid">
-    <div class="row">
-
-      <!-- Main content -->
-      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
-
-        <% if (user) { %>
-          <div class="alert alert-info">
-            You are logged in as <strong><%= user.username %></strong> (<%= user.role %>) |
-            <a href="/">Home</a> |
-            <a href="/auth/logout">Logout</a>
-          </div>
-        <% } %>
-
-        <div class="card mb-4 shadow-sm">
-          <div class="card-body">
-
-            <h2 class="text-center mb-4">Registered Members</h2>
-
-            <!-- Backend feedback -->
-            <% if (flash.error?.length) { %>
-              <div class="alert alert-danger"><%= flash.error[0] %></div>
-            <% } %>
-            <% if (flash.success?.length) { %>
-              <div class="alert alert-success"><%= flash.success[0] %></div>
-            <% } %>
-
-            <!-- Table -->
-            <div class="table-responsive">
-              <table class="table table-striped table-hover align-middle">
-                <thead class="table-dark">
-                  <tr>
-                    <th>ID</th><th>First</th><th>Middle</th><th>Surname</th><th>DOB</th>
-                    <th>Email</th><th>Phone</th><th>Address</th><th>Marital</th>
-                    <th>Children</th><th>Father Alive</th><th>Mother Alive</th>
-                    <% if (user && user.role === 'chairman') { %>
-                      <th colspan="2">Actions</th>
-                    <% } %>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% members.forEach(m => { %>
-                    <tr>
-                      <td><%= m.id %></td>
-                      <td><%= m.first_name %></td>
-                      <td><%= m.middle_name || '' %></td>
-                      <td><%= m.sur_name %></td>
-                      <td><%= m.date_of_birth %></td>
-                      <td><%= m.email || '' %></td>
-                      <td><%= m.phone || '' %></td>
-                      <td><%= m.address %></td>
-                      <td><%= m.marital_status %></td>
-                      <td><%= m.number_of_children %></td>
-                      <td><%= m.father_alive ? 'Yes' : 'No' %></td>
-                      <td><%= m.mother_alive ? 'Yes' : 'No' %></td>
-                      
-                      <% if (user && user.role === 'chairman') { %>
-                        <td>
-                          <a href="/member/edit/<%= m.id %>" class="btn btn-warning btn-sm w-100 mb-1">Edit</a>
-                        </td>
-                        <td>
-                          <button type="button" class="btn btn-danger btn-sm w-100" 
-                                  data-bs-toggle="modal" 
-                                  data-bs-target="#deleteMemberModal" 
-                                  data-member-id="<%= m.id %>" 
-                                  data-member-name="<%= m.first_name %> <%= m.middle_name %> <%= m.sur_name %>">
-                            Delete
-                          </button>
-                        </td>
-                      <% } %>
-                    </tr>
-                  <% }) %>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="text-center mt-3">
-              <a href="/member" class="btn btn-success">← Back to Registration</a>
-            </div>
-
-          </div>
+                        <!-- Filter Toggle Button -->
+                        <button class="filter-toggle collapsed" id="filterToggle" data-bs-toggle="collapse" data-bs-target="#filterSection" aria-expanded="false" aria-controls="filterSection">
+                            <span class="icon">▼</span>
+                            <span>Show Filters & Search</span>
+                        </button>
+                        
+                        <!-- Filter Section -->
+                        <div class="collapse" id="filterSection">
+                            <div class="filter-section">
+                                <div class="row g-3 align-items-end">
+                                    <!-- Search by Name -->
+                                    <div class="col-md-6">
+                                        <label for="searchName" class="form-label">Search by Name</label>
+                                        <div class="search-input-group">
+                                            <span class="search-icon">🔍</span>
+                                            <input type="text" class="form-control" id="searchName" placeholder="Search by first, middle, or surname...">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Filter by Gender -->
+                                    <div class="col-md-4">
+                                        <label for="filterGender" class="form-label">Filter by Gender</label>
+                                        <select class="form-select" id="filterGender">
+                                            <option value="">All Genders</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="col-md-2">
+                                        <div class="d-flex gap-2">
+                                            <button type="button" id="applyFilters" class="btn btn-primary w-100">Apply</button>
+                                            <button type="button" id="resetFilters" class="btn btn-outline-secondary">Reset</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Results Count -->
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="alert alert-light d-flex justify-content-between align-items-center">
+                                            <span id="resultsCount">Showing all <strong><%= members.length %></strong> members</span>
+                                            <small class="text-muted" id="activeFilters"></small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Table Container -->
+                        <div class="table-container mb-3">
+                            <table class="table table-striped table-hover align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>First</th>
+                                        <th>Middle</th>
+                                        <th>Surname</th>
+                                        <th>Gender</th>
+                                        <th>DOB</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Address</th>
+                                        <th>Marital</th>
+                                        <th>Children</th>
+                                        <th>Father Alive</th>
+                                        <th>Mother Alive</th>
+                                        <% if (user && user.role === 'chairman') { %>
+                                        <th class="action-column">Actions</th>
+                                        <% } %>
+                                    </tr>
+                                </thead>
+                                <tbody id="membersTableBody">
+                                    <!-- Table content will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination Controls -->
+                        <div class="pagination-container">
+                            <nav>
+                                <ul class="pagination" id="pagination">
+                                    <!-- Pagination will be generated by JavaScript -->
+                                </ul>
+                            </nav>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <a href="/member/form" class="btn btn-success">← Back to Registration</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Modals -->
+                <%- include('partials/change_password_modal') %>
+                <%- include('partials/modals/deleteMemberModal') %>
+                
+                <!-- View Member Modal -->
+                <div class="modal fade" id="viewMemberModal" tabindex="-1" aria-labelledby="viewMemberModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="viewMemberModalLabel">Member Details</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body" id="memberDetailsContent">
+                                <!-- Content will be populated by JavaScript -->
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
         </div>
-
-        <!-- Modals -->
-        <%- include('partials/change_password_modal') %>
-        <%- include('partials/modals/deleteMemberModal') %>
-
-      </main>
     </div>
-  </div>
+    
+    <!-- Footer -->
+    <%- include('partials/footer') %>
+    
+    <!-- Scripts -->
+        <script src="/js/flash.js"></script>
 
-  <!-- Footer -->
-  <%- include('partials/footer') %>
-
-  <!-- Scripts -->
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/script/dashboard.js"></script>
-  <script src="/script/sidebar.js"></script>
-  <script src="/script/update_profie.js"></script>
-
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/script/dashboard.js"></script>
+    <script src="/script/sidebar.js"></script>
+    <script src="/script/update_profie.js"></script>
+    
+    <script>
+        // Pagination configuration
+        const rowsPerPage = 10;
+        let currentPage = 1;
+        let filteredMembers = [];
+        
+        // All members data from server
+        const allMembers = [
+            <% members.forEach(m => { %>
+            {
+                id: <%= m.id %>,
+                first_name: `<%= m.first_name %>`,
+                middle_name: `<%= m.middle_name || '' %>`,
+                sur_name: `<%= m.sur_name %>`,
+                gender: `<%= m.gender || '' %>`,
+                date_of_birth: `<%= m.date_of_birth %>`,
+                email: `<%= m.email || '' %>`,
+                phone: `<%= m.phone || '' %>`,
+                address: `<%= m.address %>`,
+                marital_status: `<%= m.marital_status %>`,
+                number_of_children: `<%= m.number_of_children %>`,
+                father_alive: <%= m.father_alive %>,
+                mother_alive: <%= m.mother_alive %>,
+                editUrl: `/member/edit/<%= m.id %>`,
+                deleteData: {
+                    id: <%= m.id %>,
+                    name: `<%= m.first_name %> <%= m.middle_name || '' %> <%= m.sur_name %>`
+                }
+            },
+            <% }) %>
+        ];
+        
+        // Format date to short format (DD/MM/YYYY)
+        function formatShortDate(dateString) {
+            if (!dateString) return '';
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return dateString;
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`;
+            } catch (e) {
+                return dateString;
+            }
+        }
+        
+        // Format date to long format for modal
+        function formatLongDate(dateString) {
+            if (!dateString) return 'N/A';
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return dateString;
+                return date.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+            } catch (e) {
+                return dateString;
+            }
+        }
+        
+        // Filter members based on criteria
+        function filterMembers() {
+            const searchTerm = document.getElementById('searchName').value.toLowerCase().trim();
+            const genderFilter = document.getElementById('filterGender').value;
+            
+            filteredMembers = allMembers.filter(member => {
+                // Search filter
+                const matchesSearch = !searchTerm ||
+                    member.first_name.toLowerCase().includes(searchTerm) ||
+                    (member.middle_name && member.middle_name.toLowerCase().includes(searchTerm)) ||
+                    member.sur_name.toLowerCase().includes(searchTerm);
+                
+                // Gender filter
+                const matchesGender = !genderFilter || member.gender === genderFilter;
+                
+                return matchesSearch && matchesGender;
+            });
+            
+            updateResultsCount();
+            currentPage = 1; // Reset to first page when filtering
+            renderTable();
+            renderPagination();
+        }
+        
+        // Update results count display
+        function updateResultsCount() {
+            const resultsCount = document.getElementById('resultsCount');
+            const activeFilters = document.getElementById('activeFilters');
+            const searchTerm = document.getElementById('searchName').value.trim();
+            const genderFilter = document.getElementById('filterGender').value;
+            
+            let filterText = '';
+            if (searchTerm) filterText += `Search: "${searchTerm}" `;
+            if (genderFilter) filterText += `Gender: ${genderFilter}`;
+            
+            resultsCount.innerHTML = `Showing <strong>${filteredMembers.length}</strong> of <strong>${allMembers.length}</strong> members`;
+            activeFilters.textContent = filterText ? `Active filters: ${filterText}` : 'No active filters';
+        }
+        
+        // Initialize table and pagination
+        function initializeTable() {
+            filteredMembers = [...allMembers];
+            renderTable();
+            renderPagination();
+            updateResultsCount();
+        }
+        
+        // Render table rows for current page
+        function renderTable() {
+            const tableBody = document.getElementById('membersTableBody');
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            const currentRows = filteredMembers.slice(startIndex, endIndex);
+            
+            let html = '';
+            
+            currentRows.forEach(member => {
+                html += `
+                    <tr>
+                        <td>${member.id}</td>
+                        <td>${member.first_name}</td>
+                        <td>${member.middle_name}</td>
+                        <td>${member.sur_name}</td>
+                        <td>${member.gender || ''}</td>
+                        <td>${formatShortDate(member.date_of_birth)}</td>
+                        <td>${member.email}</td>
+                        <td>${member.phone}</td>
+                        <td>${member.address}</td>
+                        <td>${member.marital_status}</td>
+                        <td>${member.number_of_children}</td>
+                        <td>${member.father_alive ? 'Yes' : 'No'}</td>
+                        <td>${member.mother_alive ? 'Yes' : 'No'}</td>
+                        <% if (user && user.role === 'chairman') { %>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-sm action-dropdown-btn dropdown-toggle" 
+                                        type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                                        data-member-id="${member.id}">
+                                    <i class="bi bi-gear"></i>
+                                </button>
+                                <ul class="dropdown-menu action-dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item action-dropdown-item view-member-action" 
+                                           href="#" data-member-id="${member.id}">
+                                            <i class="bi bi-eye text-primary"></i>
+                                            View Details
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item action-dropdown-item" 
+                                           href="${member.editUrl}">
+                                            <i class="bi bi-pencil text-warning"></i>
+                                            Edit
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item action-dropdown-item text-danger delete-member-action" 
+                                           href="#" data-bs-toggle="modal" data-bs-target="#deleteMemberModal"
+                                           data-member-id="${member.deleteData.id}" 
+                                           data-member-name="${member.deleteData.name}">
+                                            <i class="bi bi-trash"></i>
+                                            Delete
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                        <% } %>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+            attachActionButtonListeners();
+        }
+        
+        // Render pagination controls
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredMembers.length / rowsPerPage);
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            
+            // Previous button
+            html += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1})" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            `;
+            
+            // Page numbers - show limited pages with ellipsis
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            // First page + ellipsis if needed
+            if (startPage > 1) {
+                html += `
+                    <li class="page-item">
+                        <a class="page-link" href="#" onclick="changePage(1)">1</a>
+                    </li>
+                `;
+                if (startPage > 2) {
+                    html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+            }
+            
+            // Page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                html += `
+                    <li class="page-item ${currentPage === i ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                    </li>
+                `;
+            }
+            
+            // Last page + ellipsis if needed
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+                html += `
+                    <li class="page-item">
+                        <a class="page-link" href="#" onclick="changePage(${totalPages})">${totalPages}</a>
+                    </li>
+                `;
+            }
+            
+            // Next button
+            html += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1})" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            `;
+            
+            pagination.innerHTML = html;
+        }
+        
+        // Change page function
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredMembers.length / rowsPerPage);
+            if (page < 1 || page > totalPages) return;
+            
+            // Add loading state
+            const tableContainer = document.querySelector('.table-container');
+            tableContainer.classList.add('table-loading');
+            
+            setTimeout(() => {
+                currentPage = page;
+                renderTable();
+                renderPagination();
+                tableContainer.classList.remove('table-loading');
+                
+                // Scroll to top of table
+                tableContainer.scrollTop = 0;
+            }, 150);
+        }
+        
+        // View member functionality
+        function loadMemberDetails(memberId) {
+            // Show loading state
+            document.getElementById('memberDetailsContent').innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading member details...</p>
+                </div>
+            `;
+            
+            fetch(`/member/details/${memberId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch member details');
+                    }
+                    return response.json();
+                })
+                .then(member => {
+                    const content = document.getElementById('memberDetailsContent');
+                    content.innerHTML = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">Personal Information</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="member-detail-item">
+                                            <strong>Full Name:</strong> ${member.first_name} ${member.middle_name || ''} ${member.sur_name}
+                                        </div>
+                                        <div class="member-detail-item">
+                                            <strong>Gender:</strong> ${member.gender || 'N/A'}
+                                        </div>
+                                        <div class="member-detail-item">
+                                            <strong>Date of Birth:</strong> ${formatLongDate(member.date_of_birth)}
+                                        </div>
+                                        <div class="member-detail-item">
+                                            <strong>Marital Status:</strong> ${member.marital_status}
+                                        </div>
+                                        <div class="member-detail-item">
+                                            <strong>Number of Children:</strong> ${member.number_of_children}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">Contact Information</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="member-detail-item">
+                                            <strong>Email:</strong> ${member.email}
+                                        </div>
+                                        <div class="member-detail-item">
+                                            <strong>Phone:</strong> ${member.phone}
+                                        </div>
+                                        <div class="member-detail-item">
+                                            <strong>Address:</strong> ${member.address}
+                                        </div>
+                                        <div class="member-detail-item">
+                                            <strong>Father Alive:</strong> ${member.father_alive ? 'Yes' : 'No'}
+                                        </div>
+                                        <div class="member-detail-item">
+                                            <strong>Mother Alive:</strong> ${member.mother_alive ? 'Yes' : 'No'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">Next of Kin Information</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        ${member.next_of_kins && member.next_of_kins.length > 0 ? 
+                                            member.next_of_kins.map(kin => `
+                                                <div class="kin-card">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <strong>Name:</strong> ${kin.first_name} ${kin.middle_name || ''} ${kin.sur_name}<br>
+                                                            <strong>Relationship:</strong> ${kin.relationship}<br>
+                                                            <strong>Gender:</strong> ${kin.gender}
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <strong>Phone:</strong> ${kin.phone}<br>
+                                                            <strong>Email:</strong> ${kin.email || 'N/A'}<br>
+                                                            <strong>Address:</strong> ${kin.address}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            `).join('') 
+                                            : '<p class="text-muted mb-0">No next of kin information available.</p>'
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    console.error('Error loading member details:', error);
+                    document.getElementById('memberDetailsContent').innerHTML = 
+                        '<div class="alert alert-danger">Failed to load member details. Please try again.</div>';
+                });
+        }
+        
+        // Attach event listeners to action buttons
+        function attachActionButtonListeners() {
+            // View member action
+            document.querySelectorAll('.view-member-action').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const memberId = this.getAttribute('data-member-id');
+                    loadMemberDetails(memberId);
+                    const modal = new bootstrap.Modal(document.getElementById('viewMemberModal'));
+                    modal.show();
+                });
+            });
+            
+            // Delete member action
+            document.querySelectorAll('.delete-member-action').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const memberId = this.getAttribute('data-member-id');
+                    const memberName = this.getAttribute('data-member-name');
+                    
+                    // Update modal content
+                    document.getElementById('deleteMemberName').textContent = memberName;
+                    document.getElementById('confirmDeleteBtn').onclick = function() {
+                        window.location.href = `/member/delete/${memberId}`;
+                    };
+                });
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.dropdown')) {
+                    const openDropdowns = document.querySelectorAll('.dropdown-menu.show');
+                    openDropdowns.forEach(dropdown => {
+                        dropdown.classList.remove('show');
+                    });
+                }
+            });
+        }
+        
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Filter toggle functionality
+            const filterToggle = document.getElementById('filterToggle');
+            const filterSection = document.getElementById('filterSection');
+            
+            filterToggle.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+                const isCollapsed = this.classList.contains('collapsed');
+                this.querySelector('span:last-child').textContent = isCollapsed ? 
+                    'Show Filters & Search' : 'Hide Filters & Search';
+            });
+            
+            // Filter functionality
+            document.getElementById('applyFilters').addEventListener('click', filterMembers);
+            
+            document.getElementById('resetFilters').addEventListener('click', function() {
+                document.getElementById('searchName').value = '';
+                document.getElementById('filterGender').value = '';
+                filterMembers();
+            });
+            
+            // Real-time search (optional - debounced)
+            let searchTimeout;
+            document.getElementById('searchName').addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(filterMembers, 300);
+            });
+            
+            // Initialize table
+            initializeTable();
+        });
+    </script>
 </body>
 </html>
+
+

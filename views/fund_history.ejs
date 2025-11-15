@@ -1,4 +1,6 @@
 
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,6 +12,8 @@
 
   <!-- Unified custom CSS -->
   <link href="/css/app.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/flash.css">
+
 
 </head>
 <body class="bg-light">
@@ -18,7 +22,8 @@
 
   <%- include('partials/sidebar', { user: user }) %>
   <div class="main-container">
-  
+  <%- include('partials/flash') %>
+
     <div class="container py-4">
       <h2 class="mb-3"><%= categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1) %> Fund History</h2>
       <% if (from || to) { %>
@@ -65,10 +70,17 @@
       <a href="/fund-management" class="btn btn-secondary mt-3">Back to Fund Management</a>
     </div>
   </div>
+   <%- include('partials/change_password_modal') %>
+
 
   <%- include('partials/footer') %>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/flash.js"></script>
+    <script src="/script/sidebar.js"></script>
+ <script src="/script/dashboard.js"></script>
+   
 </body>
 </html>
+

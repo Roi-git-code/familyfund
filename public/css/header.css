@@ -60,3 +60,12 @@
 .logout-btn:hover {
   background: #c0392b;
 }
+
+.login-btn {
+  background: linear-gradient(135deg, #27ae60, #219a52);
+}
+
+.login-btn:hover {
+  background: #219a52;
+}
+

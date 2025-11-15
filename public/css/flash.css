@@ -1,40 +1,226 @@
+
+
+/* public/css/flash.css */
+/* Modern Flash Message System */
 .flash-container {
-  margin: 10px 0;
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 9999;
+  max-width: 400px;
+  width: 100%;
+  pointer-events: none;
 }
 
 .flash-message {
-  padding: 10px 15px;
-  border-radius: 5px;
-  margin-bottom: 10px;
   position: relative;
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-left: 4px solid;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  pointer-events: all;
+  transform: translateX(400px);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  overflow: hidden;
+}
+
+.flash-message.show {
+  transform: translateX(0);
   opacity: 1;
-  transition: opacity 0.3s ease;
 }
 
-.flash-message.success {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+.flash-message.hiding {
+  transform: translateX(400px);
+  opacity: 0;
 }
 
-.flash-message.error {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+/* Flash Types */
+.flash-success {
+  border-left-color: #10b981;
+  background: linear-gradient(135deg, #f0fdf4, #ffffff);
 }
 
-.flash-message .close-flash {
+.flash-error {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2, #ffffff);
+}
+
+.flash-warning {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, #fffbeb, #ffffff);
+}
+
+.flash-info {
+  border-left-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+}
+
+.flash-alert {
+  border-left-color: #8b5cf6;
+  background: linear-gradient(135deg, #faf5ff, #ffffff);
+}
+
+/* Flash Icon */
+.flash-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 14px;
+}
+
+.flash-success .flash-icon {
+  background: #10b981;
+  color: white;
+}
+
+.flash-error .flash-icon {
+  background: #ef4444;
+  color: white;
+}
+
+.flash-warning .flash-icon {
+  background: #f59e0b;
+  color: white;
+}
+
+.flash-info .flash-icon {
+  background: #3b82f6;
+  color: white;
+}
+
+.flash-alert .flash-icon {
+  background: #8b5cf6;
+  color: white;
+}
+
+/* Flash Content */
+.flash-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.flash-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: #1f2937;
+}
+
+.flash-text {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+/* Progress Bar */
+.flash-progress {
   position: absolute;
-  top: 5px;
-  right: 10px;
-  border: none;
-  background: none;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  color: inherit;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-.fade-out {
-  opacity: 0 !important;
+.flash-progress-bar {
+  height: 100%;
+  width: 100%;
+  transform-origin: left;
+  animation: progress linear forwards;
 }
+
+.flash-success .flash-progress-bar {
+  background: #10b981;
+}
+
+.flash-error .flash-progress-bar {
+  background: #ef4444;
+}
+
+.flash-warning .flash-progress-bar {
+  background: #f59e0b;
+}
+
+.flash-info .flash-progress-bar {
+  background: #3b82f6;
+}
+
+.flash-alert .flash-progress-bar {
+  background: #8b5cf6;
+}
+
+/* Close Button */
+.flash-close {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #9ca3af;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flash-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #6b7280;
+}
+
+/* Animations */
+@keyframes progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .flash-container {
+    top: 70px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+  
+  .flash-message {
+    padding: 14px;
+  }
+}
+
+/* Accessibility */
+.flash-message:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .flash-message {
+    transition: opacity 0.3s ease;
+  }
+  
+  .flash-progress-bar {
+    animation: none;
+  }
+}
+
+

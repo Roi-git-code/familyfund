@@ -1,0 +1,32 @@
+
+<%
+  const layoutData = {
+    title: 'Server Error - FamilyFund',
+    stylesheets: []
+  };
+%>
+
+<%- include('layouts/layout', {
+  ...layoutData,
+  body: `
+    <div class="container-fluid">
+      <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+          <div class="error-container py-5">
+            <div class="error-code display-1 fw-bold text-muted">500</div>
+            <div class="error-message h3 text-secondary mb-4">Server Error</div>
+            <p class="text-muted mb-4">Something went wrong on our end. Please try again later.</p>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+              <a href="/dashboard" class="btn btn-primary me-md-2">
+                <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+              </a>
+              <a href="/" class="btn btn-outline-secondary">
+                <i class="fas fa-home me-2"></i>Go Home
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}) %>

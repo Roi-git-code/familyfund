@@ -1,14 +1,37 @@
+
+
 <!-- views/partials/oma-header.ejs -->
-<header class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm px-3">
+<header class="navbar navbar-expand-lg navbar-dark bg-purple-gradient shadow-sm px-3">
   <div class="container-fluid">
     <!-- Logo / Title -->
     <a class="navbar-brand d-flex align-items-center" href="/oma/home">
       <img src="/images/logo.png" alt="OMAS Logo" width="36" height="36" class="me-2 rounded-circle">
-      <span class="fw-bold">OMAS - Online Member Application System</span>
+      <span class="fw-bold d-none d-sm-inline">OMAS - Online Member Application System</span>
+      <span class="fw-bold d-sm-none">OMAS</span>
     </a>
 
+    <!-- Mobile menu toggle -->
+    <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMobile">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
     <!-- Right side: User info -->
-    <div class="d-flex align-items-center ms-auto">
+    <div class="collapse navbar-collapse d-lg-none" id="navbarMobile">
+      <div class="navbar-nav ms-auto">
+        <% if (typeof omaUser !== 'undefined' && omaUser) { %>
+          <span class="nav-item nav-link text-white">
+            <i class="bi bi-person-circle me-1"></i>
+            Welcome, <%= omaUser.first_name %>
+          </span>
+          <a href="/oma/auth" class="nav-link text-white">Logout</a>
+        <% } else { %>
+          <a href="/oma/auth" class="nav-link text-white">Login</a>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Desktop user info -->
+    <div class="d-none d-lg-flex align-items-center ms-auto">
       <% if (typeof omaUser !== 'undefined' && omaUser) { %>
         <span class="me-3 text-white">
           <i class="bi bi-person-circle me-1"></i>
@@ -21,3 +44,5 @@
     </div>
   </div>
 </header>
+
+

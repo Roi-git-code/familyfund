@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,13 +12,311 @@
   <!-- Custom CSS -->
   <link rel="stylesheet" href="/css/user_requests.css" />
   <link rel="stylesheet" href="/css/app.css" />
-  
- </head>
+  <link rel="stylesheet" href="/css/flash.css">
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* Table overflow styling */
+    .table-container {
+      max-height: 500px;
+      overflow-y: auto;
+      border: 1px solid #dee2e6;
+      border-radius: 0.375rem;
+      position: relative;
+    }
+
+    .table-container thead th {
+      position: sticky;
+      top: 0;
+      background-color: #212529;
+      z-index: 10;
+    }
+
+    /* Pagination styling */
+    .pagination-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+
+    /* Filter toggle styling */
+    .filter-toggle {
+      cursor: pointer;
+      padding: 0.75rem 1rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .filter-toggle:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .filter-toggle .icon {
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 0.9em;
+    }
+
+    .filter-toggle.collapsed .icon {
+      transform: rotate(-90deg);
+    }
+
+    /* Summary toggle buttons */
+    .summary-toggle-btn {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+
+    .summary-toggle-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .summary-toggle-btn.active {
+      border-color: #0d6efd;
+      background-color: #0d6efd;
+      color: white;
+    }
+
+    /* Smooth collapse transitions */
+    .collapse {
+      transition: all 0.3s ease-in-out;
+    }
+
+    /* Summary table container */
+    .summary-container {
+      position: relative;
+      min-height: 300px;
+    }
+
+    .summary-table {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease-in-out;
+      pointer-events: none;
+    }
+
+    .summary-table.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: all;
+      position: relative;
+    }
+
+    /* Loading state for table */
+    .table-loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    /* Already reviewed message styling */
+    .already-reviewed-message {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 0.375rem;
+      padding: 1rem;
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    .already-reviewed-message .badge {
+      font-size: 0.875em;
+      margin-right: 0.5rem;
+    }
+
+    /* Disabled button styling */
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Signature badge styling */
+    .signature-badge {
+      font-size: 0.75em;
+      padding: 0.25em 0.5em;
+    }
+
+    .signature-count {
+      font-size: 0.85em;
+      font-weight: 500;
+    }
+
+    .signature-up {
+      color: #198754;
+    }
+
+    .signature-down {
+      color: #dc3545;
+    }
+
+    /* Signature modal styling */
+    .signature-item {
+      border-left: 4px solid transparent;
+    }
+
+    .signature-item.up {
+      border-left-color: #198754;
+      background-color: rgba(25, 135, 84, 0.05);
+    }
+
+    .signature-item.down {
+      border-left-color: #dc3545;
+      background-color: rgba(220, 53, 69, 0.05);
+    }
+
+    .signature-summary {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 0.5rem;
+    }
+
+    /* Signature button states */
+    .btn-sign {
+      transition: all 0.3s ease;
+    }
+
+    .btn-sign:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-sign.active {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    /* Request description styling */
+    .request-description {
+      background-color: #f8f9fa;
+      border-left: 4px solid #0d6efd;
+      padding: 1rem;
+      border-radius: 0.375rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Mobile responsive modal */
+    @media (max-width: 768px) {
+      .modal-content {
+        margin: 1rem;
+        width: auto;
+      }
+      
+      .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+      
+      .signatures-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+      
+      .modal-footer {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      
+      .modal-footer .btn {
+        flex: 1;
+        min-width: 120px;
+      }
+    }
+
+    /* Action dropdown styling */
+    .action-dropdown {
+      position: relative;
+    }
+
+    .action-dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      z-index: 1000;
+      min-width: 160px;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 0.375rem;
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    .action-dropdown-menu.show {
+      display: block;
+    }
+
+    .action-dropdown-item {
+      display: block;
+      width: 100%;
+      padding: 0.5rem 1rem;
+      clear: both;
+      font-weight: 400;
+      color: #212529;
+      text-align: inherit;
+      text-decoration: none;
+      white-space: nowrap;
+      background-color: transparent;
+      border: 0;
+      border-bottom: 1px solid #f8f9fa;
+    }
+
+    .action-dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .action-dropdown-item:hover {
+      background-color: #f8f9fa;
+      color: #0d6efd;
+    }
+
+    .action-dropdown-item:disabled {
+      color: #6c757d;
+      background-color: transparent;
+      cursor: not-allowed;
+    }
+
+    /* Signatures grid for better mobile display */
+    .signatures-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .signature-card {
+      border: 1px solid #dee2e6;
+      border-radius: 0.375rem;
+      padding: 1rem;
+      background: #f8f9fa;
+    }
+
+    .signature-card.up {
+      border-left: 4px solid #198754;
+    }
+
+    .signature-card.down {
+      border-left: 4px solid #dc3545;
+    }
+  </style>
+</head>
 <body class="d-flex flex-column min-vh-100">
 
-
-        <!-- Header -->
-        <%- include('partials/header') %>
+  <!-- Header -->
+  <%- include('partials/header') %>
 
   <!-- Sidebar -->
   <%- include('partials/sidebar', { user: user }) %>
@@ -26,66 +325,59 @@
     <div class="row">
       <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
 
-        <!-- Flash Messages -->
-        <div id="flashContainer">
-          <% if (flash.success?.length) { %>
-            <div class="alert alert-success alert-dismissible fade show">
-              <%= flash.success[0] %>
-              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-          <% } %>
-          <% if (flash.error?.length) { %>
-            <div class="alert alert-danger alert-dismissible fade show">
-              <%= flash.error[0] %>
-              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-          <% } %>
-        </div>
-
+       <%- include('partials/flash') %>
+         
         <!-- Fund Requests Section -->
         <section class="mb-5">
 
           <% if (fundRequests.length > 0) { %>
 
-            <!-- Filter Form -->
-            <form id="fundRequestsFilterForm" method="GET" action="/fund-requests" class="row g-3 align-items-end mb-3">
-              <div class="col-sm-6 col-md-3">
-                <label for="requestType" class="form-label">Request Type</label>
-                <select id="requestType" name="requestType" class="form-select">
-                  <option value="">All</option>
-                  <option value="Investment" <%= requestType==='Investment'?'selected':'' %>>Investment</option>
-                  <option value="School Fees" <%= requestType==='School Fees'?'selected':'' %>>School Fees</option>
-                  <option value="Medical" <%= requestType==='Medical'?'selected':'' %>>Medical</option>
-                  <option value="Marriage" <%= requestType==='Marriage'?'selected':'' %>>Marriage</option>
-                  <option value="Funeral" <%= requestType==='Funeral'?'selected':'' %>>Funeral</option>
-                  <option value="Emergency" <%= requestType==='Emergency'?'selected':'' %>>Emergency</option>
-                  <option value="Expenses" <%= requestType === 'Expenses' ? 'selected' : '' %>>Epenses</option>
-                  <option value="Other" <%= requestType==='Other'?'selected':'' %>>Other</option>
-                </select>
-              </div>
-              <div class="col-sm-6 col-md-3">
-                <label for="requestStatus" class="form-label">Status</label>
-                <select id="requestStatus" name="requestStatus" class="form-select">
-                  <option value="">All</option>
-                  <option value="In Progress" <%= requestStatus==='In Progress'?'selected':'' %>>In Progress</option>
-                  <option value="Approved" <%= requestStatus==='Approved'?'selected':'' %>>Approved</option>
-                  <option value="Rejected" <%= requestStatus==='Rejected'?'selected':'' %>>Rejected</option>
-                </select>
-              </div>
-              <div class="col-sm-6 col-md-3">
-                <label for="fromDate" class="form-label">From</label>
-                <input type="date" name="fromDate" id="fromDate" value="<%= fromDate||'' %>" class="form-control">
-              </div>
-              <div class="col-sm-6 col-md-3">
-                <label for="toDate" class="form-label">To</label>
-                <input type="date" name="toDate" id="toDate" value="<%= toDate||'' %>" class="form-control">
-              </div>
-              <div class="col-12 d-flex flex-wrap gap-2">
-                <button type="submit" class="btn btn-primary">Filter</button>
-                <a href="/fund-requests" class="btn btn-secondary">Reset</a>
-                <button type="button" id="downloadFundSummaryPDF" class="btn btn-outline-success">Download PDF</button>
-              </div>
-            </form>
+            <!-- Filter Toggle Button -->
+            <button class="filter-toggle collapsed" id="filterToggle" data-bs-toggle="collapse" data-bs-target="#filterFormContainer" aria-expanded="false" aria-controls="filterFormContainer">
+              <span class="icon">▼</span>
+              <span>Show Filters & Import Options</span>
+            </button>
+
+            <!-- Filter Form Container -->
+            <div class="collapse" id="filterFormContainer">
+              <form id="fundRequestsFilterForm" method="GET" action="/fund-requests" class="row g-3 align-items-end mb-3 p-4 border rounded bg-light">
+                <div class="col-sm-6 col-md-3">
+                  <label for="requestType" class="form-label">Request Type</label>
+                  <select id="requestType" name="requestType" class="form-select">
+                    <option value="">All</option>
+                    <option value="Investment" <%= requestType==='Investment'?'selected':'' %>>Investment</option>
+                    <option value="School Fees" <%= requestType==='School Fees'?'selected':'' %>>School Fees</option>
+                    <option value="Medical" <%= requestType==='Medical'?'selected':'' %>>Medical</option>
+                    <option value="Marriage" <%= requestType==='Marriage'?'selected':'' %>>Marriage</option>
+                    <option value="Funeral" <%= requestType==='Funeral'?'selected':'' %>>Funeral</option>
+                    <option value="Emergency" <%= requestType==='Emergency'?'selected':'' %>>Emergency</option>
+                    <option value="Expenses" <%= requestType === 'Expenses' ? 'selected' : '' %>>Expenses</option>
+                    <option value="Other" <%= requestType==='Other'?'selected':'' %>>Other</option>
+                  </select>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                  <label for="requestStatus" class="form-label">Status</label>
+                  <select id="requestStatus" name="requestStatus" class="form-select">
+                    <option value="">All</option>
+                    <option value="In Progress" <%= requestStatus==='In Progress'?'selected':'' %>>In Progress</option>
+                    <option value="Approved" <%= requestStatus==='Approved'?'selected':'' %>>Approved</option>
+                    <option value="Rejected" <%= requestStatus==='Rejected'?'selected':'' %>>Rejected</option>
+                  </select>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                  <label for="fromDate" class="form-label">From</label>
+                  <input type="date" name="fromDate" id="fromDate" value="<%= fromDate||'' %>" class="form-control">
+                </div>
+                <div class="col-sm-6 col-md-3">
+                  <label for="toDate" class="form-label">To</label>
+                  <input type="date" name="toDate" id="toDate" value="<%= toDate||'' %>" class="form-control">
+                </div>
+                <div class="col-12 d-flex flex-wrap gap-2">
+                  <button type="submit" class="btn btn-primary">Apply Filters</button>
+                  <a href="/fund-requests" class="btn btn-outline-secondary">Reset Filters</a>
+                </div>
+              </form>
+            </div>
 
             <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
               <h2 class="h4 mb-2">Fund Requests</h2>
@@ -95,8 +387,8 @@
               </a>
             </div>
 
-            <!-- Table -->
-            <div class="table-responsive">
+            <!-- Table Container with Overflow -->
+            <div class="table-container mb-3">
               <table id="fundRequestsTable" class="table table-striped table-hover align-middle">
                 <thead class="table-dark">
                   <tr>
@@ -106,54 +398,99 @@
                     <th>Amount</th>
                     <th>Bank Account</th>
                     <th>Status</th>
+                    <th>Signatures</th>
+                    <th>Actions</th>
                     <th>Date Submitted</th>
-                    <% if (user.role === 'chief_signatory' || user.role==='chairman') { %>
-                      <th>Review</th>
-                    <% } %>
-                    <th>Download</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <% fundRequests.forEach(request => { %>
-                    <tr data-request='<%- JSON.stringify(request) %>'>
-                      <td><%= request.id %></td>
-                      <td><%= request.first_name %> <%= request.sur_name %></td>
-                      <td><%= request.request_type %></td>
-                      <td>TSh <%= Number(request.amount).toLocaleString() %></td>
-                      <td><%= request.bank_account %></td>
-                      <td>
-                        <span class="badge 
-                          <% if(request.status==='Approved'){%>bg-success<%}else if(request.status==='Rejected'){%>bg-danger<%}else{%>bg-warning text-dark<%}%>">
-                          <%= request.status %>
-                        </span>
-                      </td>
-                      <td><%= new Date(request.created_at).toLocaleString() %></td>
-                      <td>
-                        <% if (request.request_type==='Expenses' && user.role==='chairman') { %>
-                          <button class="btn btn-primary btn-sm btn-review" data-id="<%= request.id %>">Review</button>
-                        <% } else if (request.request_type!=='Expenses' && user.role==='chief_signatory') { %>
-                          <button class="btn btn-primary btn-sm btn-review" data-id="<%= request.id %>">Review</button>
-                        <% } %>
-                      </td>
-                      <td>
-                        <a class="btn btn-outline-secondary btn-sm"
-                           href="/fund-requests/download/<%= request.id %>"
-                           target="_blank" rel="noopener">
-                          Download
-                        </a>
-                      </td>
-                    </tr>
-                  <% }) %>
+                <tbody id="fundRequestsTableBody">
+                  <!-- Table content will be populated by JavaScript -->
                 </tbody>
               </table>
             </div>
 
+            <!-- Pagination Controls -->
+            <div class="pagination-container">
+              <nav>
+                <ul class="pagination" id="pagination">
+                  <!-- Pagination will be generated by JavaScript -->
+                </ul>
+              </nav>
+            </div>
+
           <% } else { %>
-            <p>No fund requests found.</p>
+            <div class="alert alert-info text-center">
+              <p class="mb-0">No fund requests found.</p>
+            </div>
           <% } %>
         </section>
 
-        <!-- ✅ Modal (IDs + classes kept for scripts) -->
+        <!-- Summary Section -->
+        <section class="mb-5">
+          <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+            <h2 class="h4 mb-2">Fund Request Summary</h2>
+            <div class="d-flex gap-2 flex-wrap">
+              <button id="btnType" class="btn summary-toggle-btn active">Summary by Type</button>
+              <button id="btnStatus" class="btn summary-toggle-btn">Summary by Status</button>
+            </div>
+          </div>
+
+          <!-- Summary Tables Container -->
+          <div class="summary-container">
+            <!-- Summary by Type Table -->
+            <div id="summaryType" class="summary-table active">
+              <div class="table-responsive">
+                <table class="table table-bordered">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Request Type</th>
+                      <th>Total Requests</th>
+                      <th>Total Amount (TSh)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% summaryByType.forEach(row => { %>
+                      <tr>
+                        <td><%= row.request_type %></td>
+                        <td><%= row.total_requests %></td>
+                        <td><%= Number(row.total_amount).toLocaleString() %></td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Summary by Status Table -->
+            <div id="summaryStatus" class="summary-table">
+              <div class="table-responsive">
+                <table class="table table-bordered">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Status</th>
+                      <th>Total Requests</th>
+                      <th>Total Amount (TSh)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% summaryByStatus.forEach(row => { %>
+                      <tr>
+                        <td><%= row.status %></td>
+                        <td><%= row.total_requests %></td>
+                        <td><%= Number(row.total_amount).toLocaleString() %></td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <button type="button" id="downloadFundSummaryPDF" class="btn btn-outline-success">
+              <i class="fa fa-download"></i> Download PDF  
+            </button>
+          </div>
+        </section>
+
+        <!-- Fund Request Details Modal -->
         <div id="fundRequestModal" class="modal-overlay">
           <div class="modal-content">
             <div class="modal-header d-flex justify-content-between align-items-center">
@@ -162,12 +499,28 @@
             </div>
             <div class="modal-body">
               <dl id="fundRequestDetails"></dl>
+              
+              <!-- Signatures Section -->
+              <div id="signaturesSection" class="mt-4" style="display: none;">
+                <h6>Officer Signatures:</h6>
+                <div id="signaturesList" class="signatures-grid">
+                  <!-- Signatures will be populated here -->
+                </div>
+              </div>
+
               <div id="fundRejectReasonContainer" style="display:none; margin-top:20px;">
                 <label for="fundRejectReason" class="form-label"><strong>Reason for Rejection:</strong></label>
                 <textarea id="fundRejectReason" class="form-control" rows="3" placeholder="Explain why this request is being rejected..."></textarea>
               </div>
+              <!-- Already Reviewed Message -->
+              <div id="alreadyReviewedMessage" class="already-reviewed-message" style="display: none;">
+                <p class="mb-0">
+                  <span class="badge bg-secondary">Already Reviewed</span>
+                  This application has already been reviewed and cannot be modified.
+                </p>
+              </div>
             </div>
-            <div class="modal-footer d-flex justify-content-end">
+            <div class="modal-footer d-flex justify-content-end flex-wrap gap-2">
               <button class="btn btn-success btn-approve-fund">Approve</button>
               <button class="btn btn-danger btn-reject-fund">Reject</button>
               <button class="btn btn-outline-danger btn-confirm-reject-fund" style="display:none;">Confirm Rejection</button>
@@ -175,205 +528,661 @@
           </div>
         </div>
 
-        <!-- Summary Section -->
-        <section class="mb-5">
-          <h2 class="h4 mb-3">Fund Request Summary</h2>
-          <div class="d-flex gap-2 mb-3 flex-wrap">
-            <button id="btnType" class="btn btn-info">Summary by Type</button>
-            <button id="btnStatus" class="btn btn-info">Summary by Status</button>
-          </div>
+        <!-- Signature Modal -->
+        <div id="signatureModal" class="modal fade" tabindex="-1">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Sign Fund Request #<span id="signatureRequestId"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <!-- Request Description -->
+                <div class="request-description mb-4">
 
-          <div id="summaryType" class="table-responsive">
-            <table class="table table-bordered">
-              <thead class="table-light">
-                <tr>
-                  <th>Request Type</th>
-                  <th>Total Requests</th>
-                  <th>Total Amount (TSh)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% summaryByType.forEach(row => { %>
-                  <tr>
-                    <td><%= row.request_type %></td>
-                    <td><%= row.total_requests %></td>
-                    <td><%= Number(row.total_amount).toLocaleString() %></td>
-                  </tr>
-                <% }) %>
-              </tbody>
-            </table>
-          </div>
+                <%- include('partials/flash') %>
 
-          <div id="summaryStatus" class="table-responsive" style="display:none;">
-            <table class="table table-bordered">
-              <thead class="table-light">
-                <tr>
-                  <th>Status</th>
-                  <th>Total Requests</th>
-                  <th>Total Amount (TSh)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% summaryByStatus.forEach(row => { %>
-                  <tr>
-                    <td><%= row.status %></td>
-                    <td><%= row.total_requests %></td>
-                    <td><%= Number(row.total_amount).toLocaleString() %></td>
-                  </tr>
-                <% }) %>
-              </tbody>
-            </table>
+                  <h6>Request Description:</h6>
+                  <p><strong>Member:</strong> <span id="signatureMemberName"></span></p>
+                  <p><strong>Type:</strong> <span id="signatureRequestType"></span></p>
+                  <p><strong>Amount:</strong> TSh <span id="signatureAmount"></span></p>
+                  <p><strong>Bank Account:</strong> <span id="signatureBankAccount"></span></p>
+                  <p><strong>Additional Info:</strong> <span id="signatureAdditionalInfo"></span></p>
+                </div>
+
+                <div class="current-signatures mb-4">
+                  <h6>Current Signatures:</h6>
+                  <div id="signaturesContainer" class="signatures-grid">
+                    <!-- Signatures will be populated here -->
+                  </div>
+                </div>
+
+                <div class="signature-actions">
+                  <h6>Provide Your Signature:</h6>
+                  <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn btn-success btn-sign" data-sign-type="up">
+                      <i class="fas fa-thumbs-up"></i> SIGN UP (Approve)
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sign" data-sign-type="down">
+                      <i class="fas fa-thumbs-down"></i> SIGN DOWN (Reject)
+                    </button>
+                  </div>
+                </div>
+
+                <div class="signature-rules mt-3">
+                  <small class="text-muted">
+                    <strong>Signature Rules:</strong> All three officers (Assistant Signatory, Chief Signatory, Chairman) must sign. 
+                    Approval requires 3 UP signatures. Rejection requires 3 DOWN signatures.
+                  </small>
+                </div>
+              </div>
+            </div>
           </div>
-        </section>
+        </div>
 
         <!-- Password Modal -->
         <%- include('partials/change_password_modal') %>
-            </main>
+      </main>
     </div>
   </div>
 
-<%- include('partials/footer') %>
+  <%- include('partials/footer') %>
  
   <!-- Bootstrap JS -->
+  <script src="/js/flash.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<script>
-  const fundRequests = <%- JSON.stringify(fundRequests || []) %>;
+  <script>
+    // Pagination configuration
+    const rowsPerPage = 10;
+    let currentPage = 1;
+    const allFundRequests = [
+      <% fundRequests.forEach(request => { %>
+        {
+          id: <%= request.id %>,
+          member: `<%= request.first_name %> <%= request.sur_name %>`,
+          type: `<%= request.request_type %>`,
+          amount: `TSh <%= Number(request.amount).toLocaleString() %>`,
+          bankAccount: `<%= request.bank_account %>`,
+          status: `<%= request.status %>`,
+          dateSubmitted: `<%= new Date(request.created_at).toLocaleString() %>`,
+          rawData: <%- JSON.stringify(request) %>,
+          canReview: <%= (request.request_type === 'Expenses' && user.role === 'chairman') || (request.request_type !== 'Expenses' && user.role === 'chief_signatory') %>,
+          downloadUrl: `/fund-requests/download/<%= request.id %>`,
+          vote_count: <%= request.vote_count || 0 %>,
+          up_votes: <%= request.up_votes || 0 %>,
+          down_votes: <%= request.down_votes || 0 %>
+        },
+      <% }) %>
+    ];
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const modal = document.getElementById('fundRequestModal');
-    const modalCloseBtn = modal.querySelector('.modal-close');
-    const fundRequestDetails = document.getElementById('fundRequestDetails');
-    const rejectReasonContainer = document.getElementById('fundRejectReasonContainer');
-    const rejectReasonTextarea = document.getElementById('fundRejectReason');
-    const btnApproveFund = modal.querySelector('.btn-approve-fund');
-    const btnRejectFund = modal.querySelector('.btn-reject-fund');
-    const btnConfirmRejectFund = modal.querySelector('.btn-confirm-reject-fund');
-
-    let currentRequest = null;
-
-    // Only one "Review" button per row now
-    document.querySelectorAll('.btn-review').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.dataset.id;
-        const row = btn.closest('tr');
-        const request = row ? JSON.parse(row.dataset.request) : fundRequests.find(r => r.id == id);
-        if (request) {
-          currentRequest = request;
-          showModal(request);
-        }
-      });
-    });
-
-    function showModal(request) {
-      fundRequestDetails.innerHTML = `
-        <dt>Request ID:</dt><dd>${request.id}</dd>
-        <dt>Member:</dt><dd>${request.first_name} ${request.sur_name}</dd>
-        <dt>Type:</dt><dd>${request.request_type}</dd>
-        <dt>Amount:</dt><dd>TSh ${Number(request.amount).toLocaleString()}</dd>
-        <dt>Bank Account:</dt><dd>${request.bank_account}</dd>
-        ${request.bank_name ? `<dt>Bank Name:</dt><dd>${request.bank_name}</dd>` : ''}
-        <dt>Additional Info:</dt><dd>${request.additional_info || 'None'}</dd>
-        <dt>Status:</dt><dd>${request.status}</dd>
-        <dt>Submitted:</dt><dd>${new Date(request.created_at).toLocaleString()}</dd>
-      `;
-
-      rejectReasonTextarea.value = '';
-      rejectReasonContainer.style.display = 'none';
-      btnRejectFund.style.display = 'inline-block';
-      btnConfirmRejectFund.style.display = 'none';
-
-      modal.classList.add('show');
+    // Initialize table and pagination
+    function initializeTable() {
+      renderTable();
+      renderPagination();
     }
 
-    function closeModal() { modal.classList.remove('show'); }
-    modalCloseBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    // Render table rows for current page
+    function renderTable() {
+      const tableBody = document.getElementById('fundRequestsTableBody');
+      const startIndex = (currentPage - 1) * rowsPerPage;
+      const endIndex = startIndex + rowsPerPage;
+      const currentRows = allFundRequests.slice(startIndex, endIndex);
 
-    // Modal actions
-    btnRejectFund.addEventListener('click', () => {
-      rejectReasonContainer.style.display = 'block';
-      btnRejectFund.style.display = 'none';
-      btnConfirmRejectFund.style.display = 'inline-block';
-      rejectReasonTextarea.focus();
-    });
+      let html = '';
+      
+      currentRows.forEach(row => {
+        const canSign = ['Pending', 'Under Review'].includes(row.rawData.status) && 
+                       ['assistant_signatory', 'chief_signatory', 'chairman'].includes('<%= user.role %>');
+        
+        html += `
+          <tr data-request='${JSON.stringify(row.rawData)}'>
+            <td>${row.id}</td>
+            <td>${row.member}</td>
+            <td>${row.type}</td>
+            <td>${row.amount}</td>
+            <td>${row.bankAccount}</td>
+            <td>
+              <span class="badge ${
+                row.rawData.status === 'Approved' ? 'bg-success' : 
+                row.rawData.status === 'Rejected' ? 'bg-danger' : 
+                'bg-warning text-dark'
+              }">
+                ${row.status}
+              </span>
+            </td>
+            <td>
+              <div class="signature-count">
+                <span class="signature-up"><i class="fas fa-thumbs-up"></i> ${row.up_votes}</span> | 
+                <span class="signature-down"><i class="fas fa-thumbs-down"></i> ${row.down_votes}</span>
+                <br>
+                <small class="text-muted">${row.vote_count}/3 signatures</small>
+              </div>
+            </td>
+            <td>
+              <div class="action-dropdown">
+                <button class="btn btn-outline-primary btn-sm dropdown-toggle" 
+                        type="button" 
+                        data-bs-toggle="dropdown" 
+                        aria-expanded="false">
+                  Actions
+                </button>
+                <ul class="dropdown-menu">
+                  ${canSign ? 
+                    `<li>
+                      <button class="dropdown-item btn-sign-request" data-request-id="${row.id}">
+                        <i class="fas fa-signature me-2"></i>Sign
+                      </button>
+                    </li>` : 
+                    ''
+                  }
+                  ${row.canReview ? 
+                    `<li>
+                      <button class="dropdown-item btn-review" data-id="${row.id}" 
+                              ${row.vote_count < 3 ? 'disabled' : ''}>
+                        <i class="fas fa-clipboard-check me-2"></i>Review
+                      </button>
+                    </li>` : 
+                    ''
+                  }
+                  <li>
+                    <a class="dropdown-item" href="${row.downloadUrl}" target="_blank" rel="noopener">
+                      <i class="fas fa-download me-2"></i>Download
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </td>
+            <td>${row.dateSubmitted}</td>
+          </tr>
+        `;
+      });
 
-    btnConfirmRejectFund.addEventListener('click', () => {
-      const reason = rejectReasonTextarea.value.trim();
-      if (!reason) { alert('Please provide a reason for rejection.'); return; }
+      tableBody.innerHTML = html;
+      attachReviewButtonListeners();
+      attachSignButtonListeners();
+    }
 
-      if (confirm('Are you sure you want to REJECT this fund request?')) {
-        fetch('/fund-requests/update-status', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            requestId: currentRequest.id, 
-            status: 'Rejected',
-            reason
-          })
-        })
-        .then(r => r.ok ? location.reload() : alert('Failed to reject fund request'));
+    // Render pagination controls
+    function renderPagination() {
+      const totalPages = Math.ceil(allFundRequests.length / rowsPerPage);
+      const pagination = document.getElementById('pagination');
+      
+      if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+
+      // Previous button
+      html += `
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+          <a class="page-link" href="#" onclick="changePage(${currentPage - 1})" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+      `;
+
+      // Page numbers - show limited pages with ellipsis
+      const maxVisiblePages = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+
+      // First page + ellipsis if needed
+      if (startPage > 1) {
+        html += `
+          <li class="page-item">
+            <a class="page-link" href="#" onclick="changePage(1)">1</a>
+          </li>
+        `;
+        if (startPage > 2) {
+          html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+      }
+
+      // Page numbers
+      for (let i = startPage; i <= endPage; i++) {
+        html += `
+          <li class="page-item ${currentPage === i ? 'active' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+          </li>
+        `;
+      }
+
+      // Last page + ellipsis if needed
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+        html += `
+          <li class="page-item">
+            <a class="page-link" href="#" onclick="changePage(${totalPages})">${totalPages}</a>
+          </li>
+        `;
+      }
+
+      // Next button
+      html += `
+        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+          <a class="page-link" href="#" onclick="changePage(${currentPage + 1})" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      `;
+
+      pagination.innerHTML = html;
+    }
+
+    // Change page function
+    function changePage(page) {
+      const totalPages = Math.ceil(allFundRequests.length / rowsPerPage);
+      if (page < 1 || page > totalPages) return;
+      
+      // Add loading state
+      const tableContainer = document.querySelector('.table-container');
+      tableContainer.classList.add('table-loading');
+      
+      setTimeout(() => {
+        currentPage = page;
+        renderTable();
+        renderPagination();
+        tableContainer.classList.remove('table-loading');
+        
+        // Scroll to top of table
+        tableContainer.scrollTop = 0;
+      }, 150);
+    }
+
+    // Attach event listeners to review buttons
+    function attachReviewButtonListeners() {
+      document.querySelectorAll('.btn-review').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          const request = allFundRequests.find(r => r.id == id);
+          if (request) {
+            showModal(request.rawData);
+          }
+        });
+      });
+    }
+
+    // Attach event listeners to sign buttons
+    function attachSignButtonListeners() {
+      document.querySelectorAll('.btn-sign-request').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const requestId = btn.dataset.requestId;
+          openSignatureModal(requestId);
+        });
+      });
+    }
+
+    // Signature functionality
+    async function openSignatureModal(requestId) {
+      try {
+        const [requestResponse, signaturesResponse] = await Promise.all([
+          fetch(`/requests/fund/${requestId}/details`).then(r => r.json()),
+          fetch(`/fund-requests/${requestId}/signatures`).then(r => r.json())
+        ]);
+
+        populateSignatureModal(requestResponse, signaturesResponse);
+        new bootstrap.Modal(document.getElementById('signatureModal')).show();
+      } catch (error) {
+        console.error('Error loading signature data:', error);
+        alert('Error loading signature information');
+      }
+    }
+
+    function populateSignatureModal(request, signaturesData) {
+      document.getElementById('signatureRequestId').textContent = request.id;
+      document.getElementById('signatureMemberName').textContent = request.member_name;
+      document.getElementById('signatureRequestType').textContent = request.request_type;
+      document.getElementById('signatureAmount').textContent = Number(request.amount).toLocaleString();
+      document.getElementById('signatureBankAccount').textContent = request.bank_account;
+      document.getElementById('signatureAdditionalInfo').textContent = request.additional_info || 'None';
+
+      renderSignatures(signaturesData.signatures, signaturesData.votingSummary);
+    }
+
+    function renderSignatures(signatures, summary) {
+      const container = document.getElementById('signaturesContainer');
+      
+      if (signatures.length === 0) {
+        container.innerHTML = '<p class="text-muted">No signatures recorded yet.</p>';
+        return;
+      }
+
+      const signaturesHtml = signatures.map(signature => `
+        <div class="signature-card ${signature.vote_type}">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <strong>${signature.first_name} ${signature.sur_name}</strong>
+              <br><small class="text-muted">${signature.officer_role}</small>
+            </div>
+            <span class="badge ${signature.vote_type === 'up' ? 'bg-success' : 'bg-danger'}">
+              ${signature.vote_type === 'up' ? 'SIGNED UP' : 'SIGNED DOWN'}
+            </span>
+          </div>
+          <small class="text-muted">
+            <i class="fas fa-clock me-1"></i>
+            ${new Date(signature.signed_at).toLocaleString()}
+          </small>
+        </div>
+      `).join('');
+
+      const summaryHtml = `
+        <div class="signature-summary mt-3 p-3 rounded w-100">
+          <strong>Signature Summary:</strong><br>
+          <span class="text-success"><i class="fas fa-thumbs-up"></i> ${summary.up_votes} UP Signatures</span> | 
+          <span class="text-danger"><i class="fas fa-thumbs-down"></i> ${summary.down_votes} DOWN Signatures</span><br>
+          <small class="text-muted">${summary.total_votes} total signatures from ${summary.unique_officers} officers</small>
+        </div>
+      `;
+
+      container.innerHTML = signaturesHtml + summaryHtml;
+    }
+
+    // Handle signing
+    document.addEventListener('click', async function(e) {
+      if (e.target.closest('.btn-sign')) {
+        const signBtn = e.target.closest('.btn-sign');
+        const signType = signBtn.dataset.signType;
+        const requestId = document.getElementById('signatureRequestId').textContent;
+
+        try {
+          const response = await fetch('/fund-requests/sign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              requestId: requestId,
+              voteType: signType
+            })
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            // Update signatures display
+            const signaturesResponse = await fetch(`/fund-requests/${requestId}/signatures`).then(r => r.json());
+            renderSignatures(signaturesResponse.signatures, signaturesResponse.votingSummary);
+            
+            // Show success message
+            showSignatureMessage('Signature recorded successfully!', 'success');
+            
+            // Close modal and reload page after delay
+            setTimeout(() => {
+              bootstrap.Modal.getInstance(document.getElementById('signatureModal')).hide();
+              location.reload();
+            }, 1500);
+          } else {
+            showSignatureMessage(result.error || 'Failed to record signature', 'error');
+          }
+        } catch (error) {
+          console.error('Error recording signature:', error);
+          showSignatureMessage('Failed to record signature', 'error');
+        }
       }
     });
 
-    btnApproveFund.addEventListener('click', () => {
-      if (!currentRequest) return;
-      if (confirm('Are you sure you want to APPROVE this fund request?')) {
-        fetch('/fund-requests/update-status', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            requestId: currentRequest.id, 
-            status: 'Approved',
-            reason: ''
+    function showSignatureMessage(message, type) {
+      const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+      const alert = document.createElement('div');
+      alert.className = `alert ${alertClass} alert-dismissible fade show`;
+      alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      
+      document.querySelector('#signatureModal .modal-body').prepend(alert);
+      
+      setTimeout(() => {
+        alert.remove();
+      }, 5000);
+    }
+
+    // Filter toggle functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const filterToggle = document.getElementById('filterToggle');
+      const filterFormContainer = document.getElementById('filterFormContainer');
+      
+      filterToggle.addEventListener('click', function() {
+        this.classList.toggle('collapsed');
+        const isCollapsed = this.classList.contains('collapsed');
+        this.querySelector('span:last-child').textContent = isCollapsed ? 
+          'Show Filters & Import Options' : 'Hide Filters & Import Options';
+      });
+
+      // Initialize table and pagination
+      if (allFundRequests.length > 0) {
+        initializeTable();
+      }
+
+      // Summary toggle functionality
+      const btnType = document.getElementById('btnType');
+      const btnStatus = document.getElementById('btnStatus');
+      const summaryType = document.getElementById('summaryType');
+      const summaryStatus = document.getElementById('summaryStatus');
+
+      function showSummaryTable(showType) {
+        if (showType) {
+          summaryType.classList.add('active');
+          summaryStatus.classList.remove('active');
+          btnType.classList.add('active');
+          btnStatus.classList.remove('active');
+        } else {
+          summaryType.classList.remove('active');
+          summaryStatus.classList.add('active');
+          btnType.classList.remove('active');
+          btnStatus.classList.add('active');
+        }
+      }
+
+      btnType.addEventListener('click', () => showSummaryTable(true));
+      btnStatus.addEventListener('click', () => showSummaryTable(false));
+
+      // Initialize modal functionality
+      initializeModal();
+    });
+
+    // Modal functionality
+    function initializeModal() {
+      const modal = document.getElementById('fundRequestModal');
+      const modalCloseBtn = modal.querySelector('.modal-close');
+      const fundRequestDetails = document.getElementById('fundRequestDetails');
+      const rejectReasonContainer = document.getElementById('fundRejectReasonContainer');
+      const rejectReasonTextarea = document.getElementById('fundRejectReason');
+      const btnApproveFund = modal.querySelector('.btn-approve-fund');
+      const btnRejectFund = modal.querySelector('.btn-reject-fund');
+      const btnConfirmRejectFund = modal.querySelector('.btn-confirm-reject-fund');
+      const alreadyReviewedMessage = document.getElementById('alreadyReviewedMessage');
+      const signaturesSection = document.getElementById('signaturesSection');
+      const signaturesList = document.getElementById('signaturesList');
+
+      let currentRequest = null;
+
+      async function showModal(request) {
+        // Load signatures for this request
+        const signaturesResponse = await fetch(`/fund-requests/${request.id}/signatures`).then(r => r.json());
+        
+        fundRequestDetails.innerHTML = `
+          <div class="row">
+            <div class="col-md-6">
+              <dt>Request ID:</dt><dd>${request.id}</dd>
+              <dt>Member:</dt><dd>${request.first_name} ${request.sur_name}</dd>
+              <dt>Type:</dt><dd>${request.request_type}</dd>
+            </div>
+            <div class="col-md-6">
+              <dt>Amount:</dt><dd>TSh ${Number(request.amount).toLocaleString()}</dd>
+              <dt>Bank Account:</dt><dd>${request.bank_account}</dd>
+              ${request.bank_name ? `<dt>Bank Name:</dt><dd>${request.bank_name}</dd>` : ''}
+            </div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-12">
+              <dt>Additional Info:</dt><dd>${request.additional_info || 'None'}</dd>
+              <dt>Status:</dt><dd>${request.status}</dd>
+              <dt>Submitted:</dt><dd>${new Date(request.created_at).toLocaleString()}</dd>
+            </div>
+          </div>
+        `;
+
+        // Display signatures if any exist
+        if (signaturesResponse.signatures && signaturesResponse.signatures.length > 0) {
+          const signaturesHtml = signaturesResponse.signatures.map(sig => `
+            <div class="signature-card ${sig.vote_type}">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <strong>${sig.first_name} ${sig.sur_name}</strong>
+                  <br><small class="text-muted">${sig.officer_role}</small>
+                </div>
+                <span class="badge ${sig.vote_type === 'up' ? 'bg-success' : 'bg-danger'}">
+                  ${sig.vote_type === 'up' ? 'SIGNED UP' : 'SIGNED DOWN'}
+                </span>
+              </div>
+              <small class="text-muted">
+                <i class="fas fa-clock me-1"></i>
+                ${new Date(sig.signed_at).toLocaleString()}
+              </small>
+            </div>
+          `).join('');
+          
+          signaturesList.innerHTML = signaturesHtml;
+          signaturesSection.style.display = 'block';
+        } else {
+          signaturesSection.style.display = 'none';
+        }
+
+        rejectReasonTextarea.value = '';
+        rejectReasonContainer.style.display = 'none';
+        btnRejectFund.style.display = 'inline-block';
+        btnConfirmRejectFund.style.display = 'none';
+
+        // Check if request is already reviewed (Approved or Rejected)
+        const isAlreadyReviewed = request.status === 'Approved' || request.status === 'Rejected';
+        
+        if (isAlreadyReviewed) {
+          // Disable action buttons
+          btnApproveFund.disabled = true;
+          btnRejectFund.disabled = true;
+          btnConfirmRejectFund.disabled = true;
+          
+          // Show already reviewed message
+          alreadyReviewedMessage.style.display = 'block';
+          
+          // Update button text to show they're disabled
+          btnApproveFund.textContent = 'Already Approved';
+          btnRejectFund.textContent = 'Already Rejected';
+          
+          // Add visual indication for disabled state
+          btnApproveFund.classList.add('btn-outline-success');
+          btnApproveFund.classList.remove('btn-success');
+          btnRejectFund.classList.add('btn-outline-danger');
+          btnRejectFund.classList.remove('btn-danger');
+        } else {
+          // Enable action buttons for pending requests
+          btnApproveFund.disabled = false;
+          btnRejectFund.disabled = false;
+          btnConfirmRejectFund.disabled = false;
+          
+          // Hide already reviewed message
+          alreadyReviewedMessage.style.display = 'none';
+          
+          // Reset button text and styling
+          btnApproveFund.textContent = 'Approve';
+          btnRejectFund.textContent = 'Reject';
+          btnApproveFund.classList.remove('btn-outline-success');
+          btnApproveFund.classList.add('btn-success');
+          btnRejectFund.classList.remove('btn-outline-danger');
+          btnRejectFund.classList.add('btn-danger');
+        }
+
+        modal.classList.add('show');
+        currentRequest = request;
+      }
+
+      function closeModal() { 
+        modal.classList.remove('show');
+        currentRequest = null;
+      }
+
+      modalCloseBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+      // Modal actions
+      btnRejectFund.addEventListener('click', () => {
+        // Only proceed if button is not disabled
+        if (btnRejectFund.disabled) return;
+        
+        rejectReasonContainer.style.display = 'block';
+        btnRejectFund.style.display = 'none';
+        btnConfirmRejectFund.style.display = 'inline-block';
+        rejectReasonTextarea.focus();
+      });
+
+      btnConfirmRejectFund.addEventListener('click', () => {
+        // Only proceed if button is not disabled
+        if (btnConfirmRejectFund.disabled) return;
+        
+        const reason = rejectReasonTextarea.value.trim();
+        if (!reason) { alert('Please provide a reason for rejection.'); return; }
+
+        if (confirm('Are you sure you want to REJECT this fund request?')) {
+          fetch('/fund-requests/update-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              requestId: currentRequest.id, 
+              status: 'Rejected',
+              reason
+            })
           })
-        })
-        .then(r => r.ok ? location.reload() : alert('Failed to approve fund request'));
+          .then(r => r.ok ? location.reload() : alert('Failed to reject fund request'));
+        }
+      });
+
+      btnApproveFund.addEventListener('click', () => {
+        // Only proceed if button is not disabled
+        if (btnApproveFund.disabled) return;
+        
+        if (!currentRequest) return;
+        if (confirm('Are you sure you want to APPROVE this fund request?')) {
+          fetch('/fund-requests/update-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              requestId: currentRequest.id, 
+              status: 'Approved',
+              reason: ''
+            })
+          })
+          .then(r => r.ok ? location.reload() : alert('Failed to approve fund request'));
+        }
+      });
+
+      window.showModal = showModal;
+    }
+
+    // PDF download functionality
+    document.addEventListener("DOMContentLoaded", () => {
+      const btnSummary = document.getElementById('downloadFundSummaryPDF');
+      if (btnSummary) {
+        btnSummary.addEventListener('click', () => {
+          const requestType = document.getElementById('requestType').value;
+          const requestStatus = document.getElementById('requestStatus').value;
+          const fromDate = document.getElementById('fromDate').value;
+          const toDate = document.getElementById('toDate').value;
+
+          const params = new URLSearchParams({ requestType, requestStatus, fromDate, toDate });
+          window.open(`/download/fund-summary/pdf?${params.toString()}`, '_blank');
+        });
       }
     });
-
-  const btnType = document.getElementById('btnType');
-  const btnStatus = document.getElementById('btnStatus');
-  const summaryType = document.getElementById('summaryType');
-  const summaryStatus = document.getElementById('summaryStatus');
-
-  btnType.addEventListener('click', () => {
-    summaryType.style.display = 'block';
-    summaryStatus.style.display = 'none';
-  });
-
-  btnStatus.addEventListener('click', () => {
-    summaryStatus.style.display = 'block';
-    summaryType.style.display = 'none';
-  });
-});
-
-   document.addEventListener("DOMContentLoaded", () => {
-  const btnRequests = document.getElementById('downloadFundRequestsPDF');
-  if (btnRequests) {
-    btnRequests.addEventListener('click', () => {
-      const requestType = document.getElementById('requestType').value;
-      const requestStatus = document.getElementById('requestStatus').value;
-      const fromDate = document.getElementById('fromDate').value;
-      const toDate = document.getElementById('toDate').value;
-
-      const params = new URLSearchParams({ requestType, requestStatus, fromDate, toDate });
-      window.open(`/download/fund-requests/pdf?${params.toString()}`, '_blank');
-    });
-  }
-
-  const btnSummary = document.getElementById('downloadFundSummaryPDF');
-  if (btnSummary) {
-    btnSummary.addEventListener('click', () => {
-      const fromDate = document.getElementById('fromDateSummary').value;
-      const toDate = document.getElementById('toDateSummary').value;
-
-      const params = new URLSearchParams({ fromDate, toDate });
-      window.open(`/download/fund-summary/pdf?${params.toString()}`, '_blank');
-    });
-  }
-});
-</script>
+  </script>
 
   <!-- Scripts -->
   <script src="/script/dashboard.js"></script>
@@ -382,3 +1191,5 @@
   <script src="/script/user_requests.js"></script>
 </body>
 </html>
+
+

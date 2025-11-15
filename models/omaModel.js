@@ -1,3 +1,4 @@
+
 // models/omaModel.js
 const pool = require('../db');
 
@@ -6,14 +7,14 @@ async function createApplication(data, userId) {
   const {
     first_name, middle_name, sur_name, date_of_birth,
     address, email, phone, marital_status, number_of_children,
-    father_alive, mother_alive
+    father_alive, mother_alive, gender
   } = data;
 
   const query = `
     INSERT INTO member_applications
       (user_id, first_name, middle_name, sur_name, date_of_birth, address, email, phone,
-       marital_status, number_of_children, father_alive, mother_alive)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       marital_status, number_of_children, father_alive, mother_alive, gender)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
     RETURNING *`;
   const params = [
     userId,
@@ -27,7 +28,8 @@ async function createApplication(data, userId) {
     marital_status || null,
     parseInt(number_of_children) || 0,
     father_alive === 'on' || father_alive === true,
-    mother_alive === 'on' || mother_alive === true
+    mother_alive === 'on' || mother_alive === true,
+    gender || null
   ];
 
   try {
@@ -40,6 +42,90 @@ async function createApplication(data, userId) {
     throw err;
   }
 }
+
+// Next of Kin functions for OMAS
+async function createNextOfKinForApplication(applicationId, kinData) {
+  const {
+    first_name, middle_name, sur_name, gender,
+    email, phone, address, relationship
+  } = kinData;
+
+  const result = await pool.query(
+    `INSERT INTO next_of_kin_applications (
+      application_id, first_name, middle_name, sur_name, gender,
+      email, phone, address, relationship
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    RETURNING *`,
+    [
+      applicationId,
+      first_name.trim(),
+      middle_name?.trim() || '',
+      sur_name.trim(),
+      gender,
+      email?.trim() || '',
+      phone.trim(),
+      address.trim(),
+      relationship
+    ]
+  );
+
+  return result.rows[0];
+}
+
+async function getNextOfKinsByApplicationId(applicationId) {
+  const result = await pool.query(
+    `SELECT * FROM next_of_kin_applications WHERE application_id = $1 ORDER BY id`,
+    [applicationId]
+  );
+  return result.rows;
+}
+
+
+async function getApplicationWithKins(id) {
+  console.log('[DEBUG] getApplicationWithKins:', id);
+  try {
+    // Get the application
+    const appRes = await pool.query(
+      'SELECT * FROM member_applications WHERE id=$1',
+      [id]
+    );
+    
+    if (appRes.rows.length === 0) {
+      console.log('[DEBUG] No application found with id:', id);
+      return null;
+    }
+    
+    const application = appRes.rows[0];
+    console.log('[DEBUG] Application found:', { 
+      id: application.id, 
+      name: `${application.first_name} ${application.sur_name}` 
+    });
+    
+    // Get next of kins
+    const kinsRes = await pool.query(
+      `SELECT * FROM next_of_kin_applications WHERE application_id = $1 ORDER BY id`,
+      [id]
+    );
+    
+    // ✅ CORRECT: Create a NEW object with next_of_kins property
+    const applicationWithKins = {
+      ...application,  // Spread all properties from the original application
+      next_of_kins: kinsRes.rows  // Add the next_of_kins property
+    };
+    
+    console.log('[DEBUG] Next of kins loaded:', { 
+      applicationId: applicationWithKins.id, 
+      kinsCount: applicationWithKins.next_of_kins.length,
+      kins: applicationWithKins.next_of_kins.map(k => `${k.first_name} ${k.sur_name}`)
+    });
+    
+    return applicationWithKins;  // ✅ Return the NEW object
+  } catch (err) {
+    console.error('[DEBUG] getApplicationWithKins error:', err);
+    throw err;
+  }
+}
+
 
 async function getApplicationById(id) {
   console.log('[DEBUG] getApplicationById:', id);
@@ -56,17 +142,36 @@ async function getApplicationById(id) {
   }
 }
 
-async function findByEmailOrPhone(email, phone) {
-  console.log('[DEBUG] findByEmailOrPhone email=%s, phone=%s', email, phone);
+
+// FIXED: Only check for existing MEMBERS (not applications) during application
+async function findExistingMember(email, phone) {
+  console.log('[DEBUG] findExistingMember email=%s, phone=%s', email, phone);
   try {
     const res = await pool.query(
-      `SELECT * FROM member_applications WHERE email=$1 OR phone=$2`,
+      `SELECT * FROM member WHERE email=$1 OR phone=$2`,
       [email?.trim() || '', phone?.trim() || '']
     );
-    console.log('[DEBUG] findByEmailOrPhone result count:', res.rows.length);
+    console.log('[DEBUG] findExistingMember result count:', res.rows.length);
     return res.rows;
   } catch (err) {
-    console.error('[DEBUG] findByEmailOrPhone error:', err);
+    console.error('[DEBUG] findExistingMember error:', err);
+    throw err;
+  }
+}
+
+// NEW: Check for pending applications from same user
+async function findPendingApplicationsByUserId(userId) {
+  console.log('[DEBUG] findPendingApplicationsByUserId:', userId);
+  try {
+    const res = await pool.query(
+      `SELECT * FROM member_applications 
+       WHERE user_id=$1 AND status IN ('Pending', 'Under Review')`,
+      [userId]
+    );
+    console.log('[DEBUG] findPendingApplicationsByUserId count:', res.rows.length);
+    return res.rows;
+  } catch (err) {
+    console.error('[DEBUG] findPendingApplicationsByUserId error:', err);
     throw err;
   }
 }
@@ -161,7 +266,7 @@ async function getOmaUserById(id) {
   }
 }
 
-/* ---------- New: user-linked application queries ---------- */
+/* ---------- user-linked application queries ---------- */
 async function getLatestApplicationByUserId(userId) {
   console.log('[DEBUG] getLatestApplicationByUserId for:', userId);
   const query = `
@@ -195,15 +300,38 @@ async function getApplicationsByUserId(userId) {
   }
 }
 
+// NEW: Get application by ID with user verification
+async function getApplicationByIdAndUserId(id, userId) {
+  console.log('[DEBUG] getApplicationByIdAndUserId:', { id, userId });
+  try {
+    const res = await pool.query(
+      'SELECT * FROM member_applications WHERE id=$1 AND user_id=$2',
+      [id, userId]
+    );
+    console.log('[DEBUG] getApplicationByIdAndUserId result:', res.rows[0]);
+    return res.rows[0];
+  } catch (err) {
+    console.error('[DEBUG] getApplicationByIdAndUserId error:', err);
+    throw err;
+  }
+}
+
+// Add this to module.exports
 module.exports = {
   createApplication,
   getApplicationById,
-  findByEmailOrPhone,
+  getApplicationByIdAndUserId,
+  getApplicationWithKins,
+  findExistingMember,
+  findPendingApplicationsByUserId,
   getAllApplications,
   updateApplicationStatus,
   createOmaUser,
   findOmaUserByPhone,
   getOmaUserById,
   getLatestApplicationByUserId,
-  getApplicationsByUserId
+  getApplicationsByUserId,
+  createNextOfKinForApplication,
+  getNextOfKinsByApplicationId
 };
+

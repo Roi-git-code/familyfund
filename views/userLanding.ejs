@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,170 +10,692 @@
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
   <!-- Unified custom CSS -->
   <link href="/css/app.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/flash.css">
+
+  <style>
+    .quick-action-card {
+      transition: all 0.3s ease;
+      border: none;
+      border-left: 4px solid #0d6efd;
+    }
+    .quick-action-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .card-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .stats-number {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 0;
+    }
+    .welcome-header {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-left: 4px solid #0d6efd;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .profile-badge {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+    .request-status-badge {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+    }
+    .sub-card {
+      border-left: 3px solid #dee2e6;
+      background-color: #f8f9fa;
+    }
+    .stat-card {
+      border: none;
+      border-radius: 10px;
+      transition: transform 0.2s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+    }
+    .combined-row {
+      margin-bottom: 2rem;
+    }
+    /* Profile Modal Styling */
+    .profile-detail-item {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #eee;
+    }
+    .profile-detail-item:last-child {
+      border-bottom: none;
+    }
+    .kin-card {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 0.375rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .profile-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 0.375rem 0.375rem 0 0;
+    }
+    .detail-label {
+      font-weight: 600;
+      color: #495057;
+      min-width: 120px;
+    }
+    .detail-value {
+      color: #212529;
+    }
+  </style>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
 
-     <!-- Header -->
-        <%- include('partials/header') %>
+  <!-- Header -->
+  <%- include('partials/header') %>
 
   <!-- Sidebar -->
   <%- include('partials/sidebar', { user: user }) %>
 
- <main class="main-content">
+  <main class="main-content">
     <div class="container-fluid pt-5 mt-3">
-      
-    <div class="row">
+      <div class="row">
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+          
+          <!-- Flash Messages Container -->
+    <%- include('partials/flash') %>
 
-      <!-- Main content -->
-      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
-        <!-- Flash messages -->
-        <% if (flash.error?.length) { %>
-          <p class="error"><%= flash.error[0] %></p>
-        <% } %>
-        <% if (flash.success?.length) { %>
-          <p class="success"><%= flash.success[0] %></p>
-        <% } %>
-
-        <h2 class="mb-4">Welcome, <%= member.first_name %> <%= member.sur_name %>!</h2>
-
-        <!-- Summary Cards -->
-        <div class="row g-3 mb-4">
-          <div class="col-12 col-sm-6 col-md-4">
-            <div class="card shadow-sm h-100">
-              <div class="card-body d-flex align-items-center gap-3">
-                <div class="card-icon bg-success">💰</div>
-                <div class="card-content">
-                  <h5 class="card-title">Lifetime Contribution</h5>
-                  <p class="card-text">TSh <%= memberTotal.toLocaleString() %></p>
+          <!-- Professional Welcome Header -->
+          <div class="welcome-header">
+            <div class="row align-items-center">
+              <div class="col-md-8">
+                <h4 class="fw-bold text-dark mb-1">Welcome, <%= member.first_name %> <%= member.sur_name %></h4>
+                <p class="text-muted mb-2">Family Fund Management System </p>
+                <div class="d-flex gap-2 align-items-center">
+                  <span class="profile-badge">
+                    <i class="fas fa-user-shield me-1"></i>
+                    <%= user.role.replace('_',' ') %>
+                  </span>
+                  <span class="text-muted">
+                    <i class="fas fa-calendar me-1"></i>
+                    <%= new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %>
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-4 text-end">
+                <div class="d-flex justify-content-end gap-2">
+                  <div class="text-center">
+                    <div class="fs-2 text-primary">
+                      <i class="fas fa-chart-line"></i>
+                    </div>
+                    <small class="text-muted">Dashboard</small>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="col-12 col-sm-6 col-md-4">
-            <div class="card shadow-sm h-100">
-              <div class="card-body d-flex align-items-center gap-3" style="border-left: 6px solid <%= userColor %>;">
-                <div class="card-icon" style="background:<%= userColor %>;">📊</div>
-                <div class="card-content">
-                  <h5 class="card-title">Your Share of All Contributions</h5>
-                  <p class="card-text"><%= percentage %>%</p>
-                  <small class="text-muted">Total all members: TSh <%= allTotal.toLocaleString() %></small>
+          <!-- Combined Quick Actions and Stats Row -->
+          <div class="row g-3 mb-4 combined-row">
+            <!-- My Contributions Card -->
+            <div class="col-12 col-md-6">
+              <div class="card shadow-sm h-100 quick-action-card">
+                <div class="card-body text-center">
+                  <div class="card-icon bg-primary text-white mx-auto mb-3">
+                    <i class="fas fa-chart-bar"></i>
+                  </div>
+                  <h5 class="card-title">My Contributions</h5>
+                  <p class="card-text text-muted">View detailed contribution history, analytics, and export reports</p>
+                  <a href="/my-contributions" class="btn btn-primary btn-sm">
+                    <i class="fas fa-external-link-alt me-1"></i>View Details
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Lifetime Contributions Stats -->
+            <div class="col-12 col-md-3">
+              <div class="card shadow-sm border-0 h-100 stat-card">
+                <div class="card-body text-center py-3">
+                  <div class="text-primary mb-2">
+                    <i class="fas fa-money-bill-wave fa-2x"></i>
+                  </div>
+                  <h4 class="text-primary fw-bold">TSh <%= memberTotal.toLocaleString() %></h4>
+                  <small class="text-muted">Lifetime Contributions</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Share of Total Stats -->
+            <div class="col-12 col-md-3">
+              <div class="card shadow-sm border-0 h-100 stat-card">
+                <div class="card-body text-center py-3">
+                  <div class="text-success mb-2">
+                    <i class="fas fa-chart-pie fa-2x"></i>
+                  </div>
+                  <h4 class="text-success fw-bold"><%= percentage %>%</h4>
+                  <small class="text-muted">Share of Total</small>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="col-12 col-sm-12 col-md-4">
-            <div class="card shadow-sm h-100">
-              <div class="card-body d-flex flex-column gap-2">
-                <h5 class="card-title">Update & Fund Requests</h5>
-                <p><%= updateRequestsCount %> 📋 request(s) <a href="/update-requests">View</a></p>
-                <p><%= fundRequestsCount %> 💰 request(s) <a href="/update-requests?tab=fund">Manage</a></p>
+          <!-- Profile Card with View Details Button -->
+          <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0 text-dark">
+                <i class="fas fa-user-circle me-2 text-primary"></i>Profile Information
+              </h5>
+              <button type="button" class="btn btn-info btn-sm" id="viewProfileDetailsBtn">
+                <i class="bi bi-eye me-1"></i>View Full Profile
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong><i class="fas fa-user me-2 text-primary"></i>Full Name:</strong> 
+                    <%= member.first_name %> <%= member.middle_name || '' %> <%= member.sur_name %>
+                  </p>
+                  <p><strong><i class="fas fa-venus-mars me-2 text-primary"></i>Gender:</strong> 
+                    <%= member.gender || 'Not specified' %>
+                  </p>
+                  <p><strong><i class="fas fa-birthday-cake me-2 text-primary"></i>Date of Birth:</strong> 
+                    <%= member.date_of_birth ? new Date(member.date_of_birth).toLocaleDateString() : 'Not provided' %>
+                  </p>
+                  <p><strong><i class="fas fa-map-marker-alt me-2 text-primary"></i>Address:</strong> 
+                    <%= member.address %>
+                  </p>
+                  <p><strong><i class="fas fa-envelope me-2 text-primary"></i>Email:</strong> 
+                    <%= member.email %>
+                  </p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong><i class="fas fa-phone me-2 text-primary"></i>Phone:</strong> 
+                    <%= member.phone %>
+                  </p>
+                  <p><strong><i class="fas fa-heart me-2 text-primary"></i>Marital Status:</strong> 
+                    <%= member.marital_status ? member.marital_status.charAt(0).toUpperCase() + member.marital_status.slice(1) : 'Not specified' %>
+                  </p>
+                  <p><strong><i class="fas fa-child me-2 text-primary"></i>Number of Children:</strong> 
+                    <%= member.number_of_children %>
+                  </p>
+                  <p><strong><i class="fas fa-user-tie me-2 text-primary"></i>Father Alive:</strong> 
+                    <%= member.father_alive ? 'Yes' : 'No' %>
+                  </p>
+                  <p><strong><i class="fas fa-user-female me-2 text-primary"></i>Mother Alive:</strong> 
+                    <%= member.mother_alive ? 'Yes' : 'No' %>
+                  </p>
+                </div>
+              </div>
+              <div class="text-center mt-3">
+                <a href="/update-profile" class="btn btn-outline-primary">
+                  <i class="fas fa-edit me-2"></i>Update Profile Information
+                </a>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Notification Card -->
-        <div class="card mb-4 shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title">Fund Requests</h5>
-            <% if (user.role === 'chairman') { %>
-              <p>Tracking only <strong>Expenses</strong> requests</p>
-            <% } else if (user.role === 'chief_signatory') { %>
-              <p>Tracking all requests <strong>except Expenses</strong></p>
-            <% } %>
-            <div class="row text-center mt-3">
-              <div class="col-6 col-md-6 p-2 bg-light rounded mx-1">
-                <h4 class="mb-0"><%= newCount %></h4>
-                <small>New</small>
-              </div>
-              <div class="col-6 col-md-6 p-2 bg-light rounded mx-1">
-                <h4 class="mb-0"><%= reviewedCount %></h4>
-                <small>Reviewed</small>
+          <!-- My Requests Detailed Card -->
+          <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-light">
+              <h5 class="card-title mb-0 text-dark">
+                <i class="fas fa-tasks me-2 text-info"></i>My Requests Overview
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <!-- Profile Requests Card -->
+                <div class="col-md-6 mb-3">
+                  <div class="card h-100 sub-card">
+                    <div class="card-header bg-transparent">
+                      <h6 class="card-title mb-0">
+                        <i class="fas fa-user-edit me-2 text-primary"></i>Profile Update Requests
+                      </h6>
+                    </div>
+                    <div class="card-body">
+                      <% if (memberProfileRequests && memberProfileRequests.length > 0) { %>
+                        <div class="mb-3">
+                          <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold">Status Summary:</span>
+                          </div>
+                          <div class="row text-center">
+                            <div class="col-4">
+                              <div class="border rounded p-2 bg-warning bg-opacity-10">
+                                <h6 class="mb-0 text-warning">
+                                  <%= memberProfileRequests.filter(req => req.status === 'Pending' || req.status === 'In Progress').length %>
+                                </h6>
+                                <small class="text-muted">Pending</small>
+                              </div>
+                            </div>
+                            <div class="col-4">
+                              <div class="border rounded p-2 bg-success bg-opacity-10">
+                                <h6 class="mb-0 text-success">
+                                  <%= memberProfileRequests.filter(req => req.status === 'Approved').length %>
+                                </h6>
+                                <small class="text-muted">Approved</small>
+                              </div>
+                            </div>
+                            <div class="col-4">
+                              <div class="border rounded p-2 bg-danger bg-opacity-10">
+                                <h6 class="mb-0 text-danger">
+                                  <%= memberProfileRequests.filter(req => req.status === 'Rejected').length %>
+                                </h6>
+                                <small class="text-muted">Rejected</small>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="request-list">
+                          <small class="text-muted d-block mb-2">Recent Requests:</small>
+                          <% memberProfileRequests.slice(0, 1).forEach(request => { %>
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                              <div>
+                                <small class="fw-bold">Request #<%= request.id %></small>
+                                <br>
+                                <small class="text-muted">
+                                  <%= new Date(request.created_at).toLocaleDateString() %>
+                                </small>
+                              </div>
+                              <span class="badge 
+                                <%= request.status === 'Pending' || request.status === 'In Progress' ? 'bg-warning' : 
+                                    request.status === 'Approved' ? 'bg-success' : 'bg-danger' %>
+                                request-status-badge">
+                                <%= request.status %>
+                              </span>
+                            </div>
+                          <% }) %>
+                        </div>
+                      <% } else { %>
+                        <div class="text-center py-3">
+                          <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                          <p class="text-muted mb-0">No profile update requests</p>
+                        </div>
+                      <% } %>
+                      <div class="text-center mt-3">
+                        <a href="/update-requests" class="btn btn-outline-primary btn-sm">
+                          <i class="fas fa-eye me-1"></i>View All Profile Requests
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Fund Requests Card -->
+                <div class="col-md-6 mb-3">
+                  <div class="card h-100 sub-card">
+                    <div class="card-header bg-transparent">
+                      <h6 class="card-title mb-0">
+                        <i class="fas fa-hand-holding-usd me-2 text-success"></i>My Fund Requests
+                      </h6>
+                    </div>
+                    <div class="card-body">
+                      <% if (memberFundRequests && memberFundRequests.length > 0) { %>
+                        <div class="mb-3">
+                          <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold">Status Summary:</span>
+                          </div>
+                          <div class="row text-center">
+                            <div class="col-4">
+                              <div class="border rounded p-2 bg-warning bg-opacity-10">
+                                <h6 class="mb-0 text-warning">
+                                  <%= memberFundRequests.filter(req => req.status === 'Pending' || req.status === 'Under Review').length %>
+                                </h6>
+                                <small class="text-muted">Pending</small>
+                              </div>
+                            </div>
+                            <div class="col-4">
+                              <div class="border rounded p-2 bg-success bg-opacity-10">
+                                <h6 class="mb-0 text-success">
+                                  <%= memberFundRequests.filter(req => req.status === 'Approved' || req.status === 'Completed').length %>
+                                </h6>
+                                <small class="text-muted">Approved</small>
+                              </div>
+                            </div>
+                            <div class="col-4">
+                              <div class="border rounded p-2 bg-danger bg-opacity-10">
+                                <h6 class="mb-0 text-danger">
+                                  <%= memberFundRequests.filter(req => req.status === 'Rejected' || req.status === 'Cancelled').length %>
+                                </h6>
+                                <small class="text-muted">Rejected</small>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="request-list">
+                          <small class="text-muted d-block mb-2">Recent Requests:</small>
+                          <% memberFundRequests.slice(0, 1).forEach(request => { %>
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                              <div>
+                                <small class="fw-bold">
+                                  <%= request.request_type %> - TSh <%= request.amount.toLocaleString() %>
+                                </small>
+                                <br>
+                                <small class="text-muted">
+                                  <%= new Date(request.created_at).toLocaleDateString() %>
+                                </small>
+                              </div>
+                              <span class="badge 
+                                <%= request.status === 'Pending' || request.status === 'Under Review' ? 'bg-warning' : 
+                                    request.status === 'Approved' || request.status === 'Completed' ? 'bg-success' : 'bg-danger' %>
+                                request-status-badge">
+                                <%= request.status %>
+                              </span>
+                            </div>
+                          <% }) %>
+                        </div>
+                      <% } else { %>
+                        <div class="text-center py-3">
+                          <i class="fas fa-hand-holding-usd fa-2x text-muted mb-2"></i>
+                          <p class="text-muted mb-0">No fund requests submitted</p>
+                        </div>
+                      <% } %>
+                      <div class="text-center mt-3">
+                        <a href="/update-requests?tab=fund" class="btn btn-outline-success btn-sm">
+                          <i class="fas fa-eye me-1"></i>View All Fund Requests
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Profile Card -->
-        <div class="card mb-4 shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title">Profile Details</h5>
-            <p><strong>Full Name:</strong> <%= member.first_name %> <%= member.middle_name %> <%= member.sur_name %></p>
-            <p><strong>Date of Birth:</strong> <%= member.date_of_birth ? new Date(member.date_of_birth).toDateString() : '' %></p>
-            <p><strong>Address:</strong> <%= member.address %></p>
-            <p><strong>Email:</strong> <%= member.email %></p>
-            <p><strong>Phone:</strong> <%= member.phone %></p>
-            <p><strong>Marital Status:</strong> <%= member.marital_status %></p>
-            <p><strong>Number of Children:</strong> <%= member.number_of_children %></p>
-            <p><strong>Father Alive:</strong> <%= member.father_alive ? 'Yes' : 'No' %></p>
-            <p><strong>Mother Alive:</strong> <%= member.mother_alive ? 'Yes' : 'No' %></p>
-            <p><strong>Role:</strong> <%= user.role.replace('_',' ') %></p>
-          </div>
-        </div>
+          <!-- Fund Requests Overview Card (For authorized roles only) -->
+          <% if (['chairman', 'chief_signatory', 'assistant_signatory'].includes(user.role)) { %>
+            <div class="card mb-4 shadow-sm">
+              <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                  <i class="fas fa-bell me-2"></i>Fund Requests Overview
+                </h5>
+              </div>
+              <div class="card-body">
+                <% if (user.role === 'chairman') { %>
+                  <p class="card-text mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Tracking only <strong>Expenses</strong> requests across all members
+                  </p>
+                <% } else if (user.role === 'chief_signatory') { %>
+                  <p class="card-text mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Tracking all requests <strong>except Expenses</strong> across all members
+                  </p>
+                <% } else if (user.role === 'assistant_signatory') { %>
+                  <p class="card-text mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Tracking all fund requests across all members
+                  </p>
+                <% } %>
+                
+                <div class="row text-center">
+                  <div class="col-6 col-md-3 p-3">
+                    <div class="border rounded p-2 bg-primary bg-opacity-10">
+                      <h4 class="mb-0 text-primary"><%= newCount %></h4>
+                      <small class="text-muted">New</small>
+                    </div>
+                  </div>
+                  <div class="col-6 col-md-3 p-3">
+                    <div class="border rounded p-2 bg-warning bg-opacity-10">
+                      <h4 class="mb-0 text-warning"><%= reviewedCount %></h4>
+                      <small class="text-muted">Pending</small>
+                    </div>
+                  </div>
+                  <div class="col-6 col-md-3 p-3">
+                    <div class="border rounded p-2 bg-success bg-opacity-10">
+                      <h4 class="mb-0 text-success"><%= approvedCount %></h4>
+                      <small class="text-muted">Approved</small>
+                    </div>
+                  </div>
+                  <div class="col-6 col-md-3 p-3">
+                    <div class="border rounded p-2 bg-danger bg-opacity-10">
+                      <h4 class="mb-0 text-danger"><%= rejectedCount %></h4>
+                      <small class="text-muted">Rejected</small>
+                    </div>
+                  </div>
+                </div>
+                <div class="text-center mt-3">
+                  <a href="/fund-requests" class="btn btn-outline-primary">
+                    <i class="fas fa-cog me-2"></i>Manage Fund Requests
+                  </a>
+                </div>
+              </div>
+            </div>
+          <% } %>
 
-        <!-- Contribution Filter & Table -->
-        <div class="card mb-4 shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title">Filter Contributions</h5>
-            <form class="row g-3 mb-3" id="contrib-filter-form" method="GET" action="/dashboard">
-              <div class="col-12 col-sm-6 col-md-3">
-                <label class="form-label">From</label>
-                <input type="month" class="form-control" name="from" value="<%= from %>">
-              </div>
-              <div class="col-12 col-sm-6 col-md-3">
-                <label class="form-label">To</label>
-                <input type="month" class="form-control" name="to" value="<%= to %>">
-              </div>
-              <div class="col-12 col-md-6 d-flex gap-2 align-items-end">
-                <button type="submit" class="btn btn-primary flex-fill">Filter</button>
-                <a href="/user/contributions/pdf?<%= from ? 'from=' + from : '' %>&<%= to ? 'to=' + to : '' %>" target="_blank" class="btn btn-secondary flex-fill">Download PDF</a>
-              </div>
-            </form>
+          <!-- Password Modal -->
+          <%- include('partials/change_password_modal') %>
 
-            <div class="table-responsive">
-              <table class="table table-striped table-hover align-middle">
-                <thead class="table-dark">
-                  <tr>
-                    <th>Year</th><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th>
-                    <th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th><th>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% contributions.forEach(c => { %>
-                    <tr>
-                      <td><%= c.year %></td>
-                      <td><%= c.jan %></td><td><%= c.feb %></td><td><%= c.mar %></td><td><%= c.apr %></td>
-                      <td><%= c.may %></td><td><%= c.jun %></td><td><%= c.jul %></td><td><%= c.aug %></td>
-                      <td><%= c.sep %></td><td><%= c.oct %></td><td><%= c.nov %></td><td><%= c.dec %></td>
-                      <td><strong><%= c.total_year %></strong></td>
-                    </tr>
-                  <% }) %>
-                </tbody>
-              </table>
+          <!-- Profile Details Modal -->
+          <div class="modal fade" id="profileDetailsModal" tabindex="-1" aria-labelledby="profileDetailsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content">
+                <div class="profile-header">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <h4 class="modal-title mb-1" id="profileDetailsModalLabel">
+                        <i class="fas fa-user-circle me-2"></i>Member Profile Details
+                      </h4>
+                      <p class="mb-0 opacity-75">Complete profile information</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                </div>
+                <div class="modal-body" id="profileDetailsContent">
+                  <!-- Content will be populated by JavaScript -->
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <a href="/update-profile" class="btn btn-primary">
+                    <i class="fas fa-edit me-1"></i>Update Profile
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Password Modal -->
-        <%- include('partials/change_password_modal') %>
-
-    </main>
+        </main>
+      </div>
     </div>
-  </div>
-</main>
+  </main>
 
   <!-- Footer -->
   <%- include('partials/footer') %>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/script/dashboard.js"></script>
-<script src="/script/sidebar.js"></script>
-<script src="/script/update_profie.js"></script>
+  <!-- JavaScript Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  
+  <!-- Custom Scripts -->
+    <script src="/js/flash.js"></script>
+  <script src="/script/dashboard.js"></script>
+  <script src="/script/sidebar.js"></script>
+  <script src="/script/update_profie.js"></script>
+
+  <script>
+    // Format date to long format for modal
+    function formatLongDate(dateString) {
+      if (!dateString) return 'N/A';
+      try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        return date.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+      } catch (e) {
+        return dateString;
+      }
+    }
+
+    // Load member profile details
+    function loadProfileDetails() {
+      // Show loading state
+      document.getElementById('profileDetailsContent').innerHTML = `
+        <div class="text-center py-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2 text-muted">Loading profile details...</p>
+        </div>
+      `;
+      
+      fetch(`/my-profile/details`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to fetch profile details');
+          }
+          return response.json();
+        })
+        .then(member => {
+          const content = document.getElementById('profileDetailsContent');
+          content.innerHTML = `
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card mb-3">
+                  <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-user me-2 text-primary"></i>Personal Information</h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="profile-detail-item d-flex">
+                      <span class="detail-label">Full Name:</span>
+                      <span class="detail-value">${member.first_name} ${member.middle_name || ''} ${member.sur_name}</span>
+                    </div>
+                    <div class="profile-detail-item d-flex">
+                      <span class="detail-label">Gender:</span>
+                      <span class="detail-value">${member.gender || 'N/A'}</span>
+                    </div>
+                    <div class="profile-detail-item d-flex">
+                      <span class="detail-label">Date of Birth:</span>
+                      <span class="detail-value">${formatLongDate(member.date_of_birth)}</span>
+                    </div>
+                    <div class="profile-detail-item d-flex">
+                      <span class="detail-label">Marital Status:</span>
+                      <span class="detail-value">${member.marital_status ? member.marital_status.charAt(0).toUpperCase() + member.marital_status.slice(1) : 'N/A'}</span>
+                    </div>
+                    <div class="profile-detail-item d-flex">
+                      <span class="detail-label">Children:</span>
+                      <span class="detail-value">${member.number_of_children}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card mb-3">
+                  <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-address-card me-2 text-primary"></i>Contact Information</h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="profile-detail-item d-flex">
+                      <span class="detail-label">Email:</span>
+                      <span class="detail-value">${member.email}</span>
+                    </div>
+                    <div class="profile-detail-item d-flex">
+                      <span class="detail-label">Phone:</span>
+                      <span class="detail-value">${member.phone}</span>
+                    </div>
+                    <div class="profile-detail-item d-flex">
+                      <span class="detail-label">Address:</span>
+                      <span class="detail-value">${member.address}</span>
+                    </div>
+                    <div class="profile-detail-item d-flex">
+                      <span class="detail-label">Father Alive:</span>
+                      <span class="detail-value">${member.father_alive ? 'Yes' : 'No'}</span>
+                    </div>
+                    <div class="profile-detail-item d-flex">
+                      <span class="detail-label">Mother Alive:</span>
+                      <span class="detail-value">${member.mother_alive ? 'Yes' : 'No'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-users me-2 text-primary"></i>Next of Kin Information</h6>
+                  </div>
+                  <div class="card-body">
+                    ${member.next_of_kins && member.next_of_kins.length > 0 ? 
+                      member.next_of_kins.map(kin => `
+                        <div class="kin-card">
+                          <div class="row">
+                            <div class="col-md-6">
+                              <div class="profile-detail-item">
+                                <strong>Name:</strong> ${kin.first_name} ${kin.middle_name || ''} ${kin.sur_name}
+                              </div>
+                              <div class="profile-detail-item">
+                                <strong>Relationship:</strong> ${kin.relationship}
+                              </div>
+                              <div class="profile-detail-item">
+                                <strong>Gender:</strong> ${kin.gender}
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="profile-detail-item">
+                                <strong>Phone:</strong> ${kin.phone}
+                              </div>
+                              <div class="profile-detail-item">
+                                <strong>Email:</strong> ${kin.email || 'N/A'}
+                              </div>
+                              <div class="profile-detail-item">
+                                <strong>Address:</strong> ${kin.address}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      `).join('') 
+                      : '<div class="text-center py-3"><i class="fas fa-users fa-2x text-muted mb-2"></i><p class="text-muted mb-0">No next of kin information available</p></div>'
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        })
+        .catch(error => {
+          console.error('Error loading profile details:', error);
+          document.getElementById('profileDetailsContent').innerHTML = 
+            '<div class="alert alert-danger text-center">Failed to load profile details. Please try again.</div>';
+        });
+    }
+
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add event listener to view profile details button
+      const viewProfileBtn = document.getElementById('viewProfileDetailsBtn');
+      if (viewProfileBtn) {
+        viewProfileBtn.addEventListener('click', function() {
+          loadProfileDetails();
+          const modal = new bootstrap.Modal(document.getElementById('profileDetailsModal'));
+          modal.show();
+        });
+      }
+    });
+  </script>
 
 </body>
 </html>
+
+

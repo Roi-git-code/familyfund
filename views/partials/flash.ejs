@@ -1,0 +1,98 @@
+
+
+<!-- views/partials/flash.ejs -->
+<div id="flash-container" class="flash-container" aria-live="polite">
+  <% if (flash) { %>
+    <% if (flash.success && flash.success.length) { %>
+      <div class="flash-message flash-success" data-type="success" data-duration="5000">
+        <div class="flash-icon">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="flash-content">
+          <div class="flash-title">Success</div>
+          <div class="flash-text"><%= flash.success[0] %></div>
+        </div>
+        <div class="flash-progress">
+          <div class="flash-progress-bar"></div>
+        </div>
+        <button class="flash-close" aria-label="Close message">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    <% } %>
+
+    <% if (flash.error && flash.error.length) { %>
+      <div class="flash-message flash-error" data-type="error" data-duration="7000">
+        <div class="flash-icon">
+          <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <div class="flash-content">
+          <div class="flash-title">Error</div>
+          <div class="flash-text"><%= flash.error[0] %></div>
+        </div>
+        <div class="flash-progress">
+          <div class="flash-progress-bar"></div>
+        </div>
+        <button class="flash-close" aria-label="Close message">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    <% } %>
+
+    <% if (flash.warning && flash.warning.length) { %>
+      <div class="flash-message flash-warning" data-type="warning" data-duration="6000">
+        <div class="flash-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="flash-content">
+          <div class="flash-title">Warning</div>
+          <div class="flash-text"><%= flash.warning[0] %></div>
+        </div>
+        <div class="flash-progress">
+          <div class="flash-progress-bar"></div>
+        </div>
+        <button class="flash-close" aria-label="Close message">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    <% } %>
+
+    <% if (flash.info && flash.info.length) { %>
+      <div class="flash-message flash-info" data-type="info" data-duration="5000">
+        <div class="flash-icon">
+          <i class="fas fa-info-circle"></i>
+        </div>
+        <div class="flash-content">
+          <div class="flash-title">Information</div>
+          <div class="flash-text"><%= flash.info[0] %></div>
+        </div>
+        <div class="flash-progress">
+          <div class="flash-progress-bar"></div>
+        </div>
+        <button class="flash-close" aria-label="Close message">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    <% } %>
+
+    <% if (flash.alert && flash.alert.length) { %>
+      <div class="flash-message flash-alert" data-type="alert" data-duration="8000">
+        <div class="flash-icon">
+          <i class="fas fa-bell"></i>
+        </div>
+        <div class="flash-content">
+          <div class="flash-title">Alert</div>
+          <div class="flash-text"><%= flash.alert[0] %></div>
+        </div>
+        <div class="flash-progress">
+          <div class="flash-progress-bar"></div>
+        </div>
+        <button class="flash-close" aria-label="Close message">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    <% } %>
+  <% } %>
+</div>
+
+

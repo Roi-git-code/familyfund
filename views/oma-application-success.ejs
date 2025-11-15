@@ -1,141 +1,453 @@
+
+
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Application Submitted - OMA</title>
+  <title><%= app ? `Application ${app.id}` : 'Application' %> - OMA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/flash.css">
+
+  <style>
+    :root {
+      --primary-purple: #8B5FBF;
+      --light-purple: #9D7FCC;
+      --gradient-purple: linear-gradient(135deg, #8B5FBF 0%, #6A4C93 100%);
+      --light-gradient: linear-gradient(135deg, #f8f4ff 0%, #e8e2ff 100%);
+    }
+    
+    .bg-purple-gradient {
+      background: var(--gradient-purple);
+    }
+    
+    .bg-light-purple {
+      background: var(--light-gradient);
+    }
+    
+    .application-card {
+      border-left: 4px solid var(--primary-purple);
+    }
+    
+    .status-badge {
+      font-size: 0.9rem;
+      padding: 0.5rem 1rem;
+    }
+    
+    .application-table tr:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .action-buttons .btn {
+      margin: 0 2px;
+    }
+    
+    .kin-card {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 0.375rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .profile-detail-item {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .profile-detail-item:last-child {
+      border-bottom: none;
+    }
+    
+    .detail-label {
+      font-weight: 600;
+      color: #495057;
+      min-width: 120px;
+    }
+    
+    .detail-value {
+      color: #212529;
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 768px) {
+      .card-body {
+        padding: 1rem;
+      }
+      
+      .btn-group .btn {
+        margin-bottom: 0.25rem;
+      }
+      
+      .table-responsive {
+        font-size: 0.875rem;
+      }
+      
+      .profile-detail-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .detail-label {
+        min-width: auto;
+        margin-bottom: 0.25rem;
+      }
+    }
+    
+    @media (max-width: 576px) {
+      .p-4 {
+        padding: 1rem !important;
+      }
+      
+      .card-header h2 {
+        font-size: 1.25rem;
+      }
+      
+      .action-buttons .btn {
+        display: block;
+        width: 100%;
+        margin: 0.25rem 0;
+      }
+    }
+  </style>
 </head>
-<body class="d-flex flex-column min-vh-100 bg-light">
+<body class="d-flex flex-column min-vh-100 bg-light-purple">
 
   <%- include('partials/oma-header', { omaUser: omaUser }) %>
 
-  <div class="d-flex flex-grow-1">
-    <%- include('partials/oma-sidebar', { active: 'success', omaUser: omaUser, user: user }) %>
+  <div class="d-flex flex-column flex-md-row flex-grow-1">
+    <%- include('partials/oma-sidebar', { active: 'applications', omaUser: omaUser, user: user }) %>
 
-    <div class="flex-grow-1 p-4">
-      <div class="card shadow-lg border-success rounded-3">
-        <div class="card-header bg-success text-white text-center">
-          <h2>Application Submitted</h2>
+    <div class="flex-grow-1 p-3 p-md-4">
+  <%- include('partials/flash') %>
+
+      <!-- Application Details Card -->
+      <% if (app) { %>
+      <div class="card shadow-lg border-0 rounded-3 mb-4 application-card">
+        <div class="card-header bg-purple-gradient text-white d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+          <h2 class="mb-2 mb-md-0">Application #<%= app.id %></h2>
+          <span class="status-badge badge 
+            <%= app.status === 'Approved' ? 'bg-light text-dark' : 
+                app.status === 'Rejected' ? 'bg-danger' : 
+                app.status === 'Registered' ? 'bg-primary' : 
+                'bg-warning text-dark' %>">
+            <%= app.status || 'Pending Review' %>
+          </span>
         </div>
-        <div class="card-body text-center">
-          <% if (flash.success && flash.success.length) { %>
-            <div class="alert alert-success"><%= flash.success[0] %></div>
-          <% } %>
-
-          <p class="lead">Your application ID: <strong><%= app.id %></strong></p>
-          <p>Status: 
-            <span class="badge 
-              <%= app.status === 'Approved' ? 'bg-success' : 
-                  app.status === 'Rejected' ? 'bg-danger' : 
-                  'bg-warning text-dark' %>">
-              <%= app.status || 'Pending Review' %>
-            </span>
-          </p>
-          
-          <div class="mt-4">
-            <a href="/oma/application/<%= app.id %>/pdf" class="btn btn-outline-secondary px-4">Download PDF</a>
+        
+        <div class="card-body bg-white">
+          <!-- Action Buttons -->
+          <div class="d-flex flex-column flex-sm-row gap-2 mb-4">
+            <a href="/oma/application/<%= app.id %>/pdf" class="btn btn-outline-purple">
+              <i class="fas fa-download me-1"></i>Download PDF
+            </a>
+            <a href="/oma/applications" class="btn btn-outline-secondary">
+              <i class="fas fa-list me-1"></i>Back to List
+            </a>
+            <% if (app.status === 'Rejected' || app.status === 'Pending') { %>
+              <a href="/oma/apply" class="btn btn-success">
+                <i class="fas fa-plus me-1"></i>New Application
+              </a>
+            <% } %>
           </div>
 
-          <!-- Accordion for reviewing submitted details -->
-          <div class="accordion mt-4" id="reviewAccordion">
-            <div class="accordion-item">
-              <h2 class="accordion-header" id="headingOne">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseReview" aria-expanded="false" aria-controls="collapseReview">
-                  Review Submitted Application
-                </button>
-              </h2>
-              <div id="collapseReview" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#reviewAccordion">
-                <div class="accordion-body text-start">
-                  <dl class="row">
-                    <dt class="col-sm-3">First Name</dt>
-                    <dd class="col-sm-9"><%= app.first_name %></dd>
+          <!-- Application Details -->
+          <div class="row">
+            <div class="col-12 col-md-6 mb-3">
+              <div class="card h-100">
+                <div class="card-header bg-light-purple">
+                  <h6 class="mb-0"><i class="fas fa-user me-2 text-purple"></i>Personal Information</h6>
+                </div>
+                <div class="card-body">
+                  <div class="profile-detail-item d-flex flex-column flex-sm-row">
+                    <span class="detail-label">First Name:</span>
+                    <span class="detail-value"><%= app.first_name %></span>
+                  </div>
+                  <div class="profile-detail-item d-flex flex-column flex-sm-row">
+                    <span class="detail-label">Middle Name:</span>
+                    <span class="detail-value"><%= app.middle_name || '-' %></span>
+                  </div>
+                  <div class="profile-detail-item d-flex flex-column flex-sm-row">
+                    <span class="detail-label">Surname:</span>
+                    <span class="detail-value"><%= app.sur_name %></span>
+                  </div>
+                  <div class="profile-detail-item d-flex flex-column flex-sm-row">
+                    <span class="detail-label">Date of Birth:</span>
+                    <span class="detail-value"><%= new Date(app.date_of_birth).toLocaleDateString() %></span>
+                  </div>
+                  <div class="profile-detail-item d-flex flex-column flex-sm-row">
+                    <span class="detail-label">Gender:</span>
+                    <span class="detail-value"><%= app.gender || 'Not specified' %></span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                    <dt class="col-sm-3">Middle Name</dt>
-                    <dd class="col-sm-9"><%= app.middle_name || '-' %></dd>
-
-                    <dt class="col-sm-3">Surname</dt>
-                    <dd class="col-sm-9"><%= app.sur_name %></dd>
-
-                    <dt class="col-sm-3">Date of Birth</dt>
-                    <dd class="col-sm-9"><%= app.date_of_birth %></dd>
-
-                    <dt class="col-sm-3">Phone</dt>
-                    <dd class="col-sm-9"><%= app.phone %></dd>
-
-                    <dt class="col-sm-3">Email</dt>
-                    <dd class="col-sm-9"><%= app.email %></dd>
-
-                    <dt class="col-sm-3">Address</dt>
-                    <dd class="col-sm-9"><%= app.address %></dd>
-
-                    <dt class="col-sm-3">Marital Status</dt>
-                    <dd class="col-sm-9"><%= app.marital_status || '-' %></dd>
-
-                    <dt class="col-sm-3">Children</dt>
-                    <dd class="col-sm-9"><%= app.number_of_children || 0 %></dd>
-
-                    <dt class="col-sm-3">Father Alive</dt>
-                    <dd class="col-sm-9"><%= app.father_alive ? 'Yes' : 'No' %></dd>
-
-                    <dt class="col-sm-3">Mother Alive</dt>
-                    <dd class="col-sm-9"><%= app.mother_alive ? 'Yes' : 'No' %></dd>
-                  </dl>
+            <div class="col-12 col-md-6 mb-3">
+              <div class="card h-100">
+                <div class="card-header bg-light-purple">
+                  <h6 class="mb-0"><i class="fas fa-address-card me-2 text-purple"></i>Contact Information</h6>
+                </div>
+                <div class="card-body">
+                  <div class="profile-detail-item d-flex flex-column flex-sm-row">
+                    <span class="detail-label">Phone:</span>
+                    <span class="detail-value"><%= app.phone %></span>
+                  </div>
+                  <div class="profile-detail-item d-flex flex-column flex-sm-row">
+                    <span class="detail-label">Email:</span>
+                    <span class="detail-value"><%= app.email || '-' %></span>
+                  </div>
+                  <div class="profile-detail-item d-flex flex-column flex-sm-row">
+                    <span class="detail-label">Address:</span>
+                    <span class="detail-value"><%= app.address %></span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <!-- End accordion -->
 
+          <div class="row">
+            <div class="col-12 col-md-6 mb-3">
+              <div class="card h-100">
+                <div class="card-header bg-light-purple">
+                  <h6 class="mb-0"><i class="fas fa-users me-2 text-purple"></i>Family Information</h6>
+                </div>
+                <div class="card-body">
+                  <div class="profile-detail-item d-flex flex-column flex-sm-row">
+                    <span class="detail-label">Marital Status:</span>
+                    <span class="detail-value"><%= app.marital_status ? app.marital_status.charAt(0).toUpperCase() + app.marital_status.slice(1) : '-' %></span>
+                  </div>
+                  <div class="profile-detail-item d-flex flex-column flex-sm-row">
+                    <span class="detail-label">Children:</span>
+                    <span class="detail-value"><%= app.number_of_children || 0 %></span>
+                  </div>
+                  <div class="profile-detail-item d-flex flex-column flex-sm-row">
+                    <span class="detail-label">Father Alive:</span>
+                    <span class="detail-value"><%= app.father_alive ? 'Yes' : 'No' %></span>
+                  </div>
+                  <div class="profile-detail-item d-flex flex-column flex-sm-row">
+                    <span class="detail-label">Mother Alive:</span>
+                    <span class="detail-value"><%= app.mother_alive ? 'Yes' : 'No' %></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6 mb-3">
+              <div class="card h-100">
+                <div class="card-header bg-light-purple">
+                  <h6 class="mb-0"><i class="fas fa-info-circle me-2 text-purple"></i>Application Details</h6>
+                </div>
+                <div class="card-body">
+                  <div class="profile-detail-item d-flex flex-column flex-sm-row">
+                    <span class="detail-label">Submitted:</span>
+                    <span class="detail-value"><%= new Date(app.created_at).toLocaleString() %></span>
+                  </div>
+                  <div class="profile-detail-item d-flex flex-column flex-sm-row">
+                    <span class="detail-label">Last Updated:</span>
+                    <span class="detail-value"><%= new Date(app.updated_at).toLocaleString() %></span>
+                  </div>
+                  <% if (app.reviewer_note) { %>
+                  <div class="profile-detail-item d-flex flex-column flex-sm-row">
+                    <span class="detail-label">Reviewer Note:</span>
+                    <span class="detail-value"><%= app.reviewer_note %></span>
+                  </div>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Next of Kin Information -->
+          <div class="row mt-3">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-header bg-light-purple">
+                  <h6 class="mb-0"><i class="fas fa-users me-2 text-purple"></i>Next of Kin Information</h6>
+                </div>
+                <div class="card-body">
+                  <% if (app.next_of_kins && app.next_of_kins.length > 0) { %>
+                    <% app.next_of_kins.forEach(kin => { %>
+                      <div class="kin-card">
+                        <div class="row">
+                          <div class="col-12 col-md-6">
+                            <div class="profile-detail-item">
+                              <strong>Name:</strong> <%= kin.first_name %> <%= kin.middle_name || '' %> <%= kin.sur_name %>
+                            </div>
+                            <div class="profile-detail-item">
+                              <strong>Relationship:</strong> <%= kin.relationship %>
+                            </div>
+                            <div class="profile-detail-item">
+                              <strong>Gender:</strong> <%= kin.gender %>
+                            </div>
+                          </div>
+                          <div class="col-12 col-md-6">
+                            <div class="profile-detail-item">
+                              <strong>Phone:</strong> <%= kin.phone %>
+                            </div>
+                            <div class="profile-detail-item">
+                              <strong>Email:</strong> <%= kin.email || 'N/A' %>
+                            </div>
+                            <div class="profile-detail-item">
+                              <strong>Address:</strong> <%= kin.address %>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    <% }) %>
+                  <% } else { %>
+                    <div class="text-center py-3">
+                      <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                      <p class="text-muted mb-0">No next of kin information provided</p>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="card-footer text-center text-muted">
-          Thank you for applying to join the Family Fund. You’ll be notified once the chairman reviews your application.
+
+        <div class="card-footer text-center text-muted bg-light">
+          <% if (app.status === 'Pending') { %>
+            Your application is under review. You'll be notified once the chairman reviews it.
+          <% } else if (app.status === 'Approved') { %>
+            Congratulations! Your application has been approved.
+          <% } else if (app.status === 'Rejected') { %>
+            Your application was not approved. You may submit a new application.
+          <% } else if (app.status === 'Registered') { %>
+            Your application has been registered as a member. Welcome to the Family Fund!
+          <% } %>
         </div>
+      </div>
+      <% } %>
 
-
-  <div class="content">
-    <h2>📂 My Applications</h2>
-
-    <% if (typeof apps !== 'undefined' && apps.length > 0) { %>
-        <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Full Name</th>
-            <th>Date of Birth</th>
-            <th>Status</th>
-            <th>Submitted At</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% apps.forEach(ap => { %>
-            <tr>
-              <td><%= ap.id %></td>
-              <td><%= ap.first_name %> <%= ap.middle_name || '' %> <%= ap.sur_name %></td>
-              <td><%= ap.date_of_birth.toISOString().slice(0,10) %></td>
-              <td><%= ap.status %></td>
-              <td><%= ap.created_at.toISOString().slice(0,19).replace('T',' ') %></td>
-              <td>
-                <a href="/oma/application/<%= ap.id %>/success" class="btn btn-sm btn-primary">
-                  Review
-                </a>
-              </td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
-    <% } else { %>
-      <p>You have not submitted any applications yet.</p>
-      <a href="/oma/apply" class="btn btn-success">Apply Now</a>
-    <% } %>
-  </div>
-
+      <!-- Applications List -->
+      <div class="card shadow rounded-3 border-0">
+        <div class="card-header bg-purple-gradient text-white">
+          <h3 class="mb-0"><i class="fas fa-folder me-2"></i>My Applications</h3>
+        </div>
+        <div class="card-body bg-white">
+          <% if (typeof apps !== 'undefined' && apps.length > 0) { %>
+            <div class="table-responsive">
+              <table class="table table-hover application-table">
+                <thead class="table-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Full Name</th>
+                    <th class="d-none d-md-table-cell">Date of Birth</th>
+                    <th>Status</th>
+                    <th class="d-none d-sm-table-cell">Submitted</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% apps.forEach(ap => { %>
+                    <tr class="<%= app && ap.id === app.id ? 'table-active' : '' %>">
+                      <td><strong>#<%= ap.id %></strong></td>
+                      <td>
+                        <div class="d-flex flex-column">
+                          <span class="fw-bold"><%= ap.first_name %> <%= ap.sur_name %></span>
+                          <% if (ap.middle_name) { %>
+                            <small class="text-muted"><%= ap.middle_name %></small>
+                          <% } %>
+                        </div>
+                      </td>
+                      <td class="d-none d-md-table-cell"><%= new Date(ap.date_of_birth).toLocaleDateString() %></td>
+                      <td>
+                        <span class="badge 
+                          <%= ap.status === 'Approved' ? 'bg-success' : 
+                              ap.status === 'Rejected' ? 'bg-danger' : 
+                              ap.status === 'Registered' ? 'bg-primary' : 
+                              'bg-warning text-dark' %>">
+                          <%= ap.status || 'Pending' %>
+                        </span>
+                      </td>
+                      <td class="d-none d-sm-table-cell"><%= new Date(ap.created_at).toLocaleDateString() %></td>
+                      <td>
+                        <div class="btn-group btn-group-sm">
+                          <a href="/oma/application/<%= ap.id %>/view" 
+                             class="btn btn-outline-purple <%= app && ap.id === app.id ? 'active' : '' %>"
+                             title="View Application">
+                            <i class="fas fa-eye"></i>
+                            <span class="d-none d-sm-inline"> View</span>
+                          </a>
+                          <a href="/oma/application/<%= ap.id %>/pdf" 
+                             class="btn btn-outline-success"
+                             title="Download PDF">
+                            <i class="fas fa-download"></i>
+                            <span class="d-none d-sm-inline"> PDF</span>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="text-center py-4">
+              <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+              <p class="lead text-muted">You haven't submitted any applications yet.</p>
+              <a href="/oma/apply" class="btn btn-success btn-lg">
+                <i class="fas fa-plus me-2"></i>Submit Your First Application
+              </a>
+            </div>
+          <% } %>
+        </div>
       </div>
     </div>
   </div>
 
   <%- include('partials/oma-footer') %>
 
+  <!-- Font Awesome for icons -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/flash.js"></script>
+
+  
+  <script>
+    // Add purple button styling
+    document.addEventListener('DOMContentLoaded', function() {
+      const style = document.createElement('style');
+      style.textContent = `
+        .btn-outline-purple {
+          color: var(--primary-purple);
+          border-color: var(--primary-purple);
+        }
+        .btn-outline-purple:hover {
+          background: var(--gradient-purple);
+          border-color: var(--primary-purple);
+          color: white;
+        }
+        .btn-outline-purple.active {
+          background: var(--gradient-purple);
+          border-color: var(--primary-purple);
+          color: white;
+        }
+        .text-purple {
+          color: var(--primary-purple) !important;
+        }
+      `;
+      document.head.appendChild(style);
+    });
+
+    // Auto-dismiss alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(alert => {
+        setTimeout(() => {
+          const bsAlert = new bootstrap.Alert(alert);
+          bsAlert.close();
+        }, 5000);
+      });
+    });
+  </script>
 </body>
 </html>
+
+

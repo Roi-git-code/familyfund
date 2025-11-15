@@ -1,0 +1,466 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Privacy Policy - FamilyFund</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link href="/css/app.css" rel="stylesheet">
+    
+    <style>
+        .privacy-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .section-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .section-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .section-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .policy-nav {
+            position: sticky;
+            top: 100px;
+        }
+        
+        .nav-link {
+            color: #6c757d;
+            border-left: 3px solid transparent;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0.25rem;
+            border-radius: 0 8px 8px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: #667eea;
+            background-color: #f8f9ff;
+            border-left-color: #667eea;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+            border-left: 4px solid #667eea;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+        
+        .last-updated {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            border-left: 4px solid #28a745;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+  <!-- Header -->
+  <%- include('partials/header') %>
+
+  <!-- Sidebar -->
+  <%- include('partials/sidebar', { user: user, activePage: 'privacy-policy' }) %>
+
+  <main class="main-content">
+    <div class="container-fluid pt-5 mt-3">
+      <div class="row">
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+          
+          <!-- Header Section -->
+          <div class="privacy-header text-center">
+            <div class="row align-items-center">
+              <div class="col-md-2 text-center">
+                <i class="fas fa-shield-alt fa-4x mb-3 opacity-90"></i>
+              </div>
+              <div class="col-md-10">
+                <h1 class="display-5 fw-bold mb-3">Privacy Policy</h1>
+                <p class="lead mb-4 opacity-90">Protecting your financial data and personal information is our highest priority</p>
+                <div class="last-updated d-inline-block bg-white bg-opacity-20 p-3 rounded">
+                  <i class="fas fa-clock me-2"></i>
+                  <strong>Last Updated:</strong> <%= new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Navigation Sidebar -->
+            <div class="col-lg-3 d-none d-lg-block">
+              <div class="policy-nav">
+                <div class="card section-card">
+                  <div class="card-header bg-transparent border-bottom-0">
+                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>Policy Sections</h6>
+                  </div>
+                  <div class="card-body p-0">
+                    <nav class="nav flex-column">
+                      <a class="nav-link active" href="#introduction">Introduction</a>
+                      <a class="nav-link" href="#data-collection">Data We Collect</a>
+                      <a class="nav-link" href="#data-usage">How We Use Data</a>
+                      <a class="nav-link" href="#data-protection">Data Protection</a>
+                      <a class="nav-link" href="#data-sharing">Data Sharing</a>
+                      <a class="nav-link" href="#your-rights">Your Rights</a>
+                      <a class="nav-link" href="#cookies">Cookies</a>
+                      <a class="nav-link" href="#changes">Policy Changes</a>
+                      <a class="nav-link" href="#contact">Contact Us</a>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9">
+              <!-- Introduction -->
+              <div class="card section-card" id="introduction">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-primary text-white">
+                      <i class="fas fa-info-circle"></i>
+                    </div>
+                    <h3 class="card-title mb-0">Introduction & Commitment</h3>
+                  </div>
+                  <p class="card-text">
+                    At <strong>FamilyFund Management System</strong>, we are committed to protecting your privacy and ensuring the security of your personal and financial information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our family fund management platform.
+                  </p>
+                  <div class="highlight-box">
+                    <h6><i class="fas fa-lightbulb text-warning me-2"></i>Our Commitment</h6>
+                    <p class="mb-0">We treat your family's financial data with the same level of care and security as we would our own. Your trust is the foundation of our service.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Data Collection -->
+              <div class="card section-card" id="data-collection">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-info text-white">
+                      <i class="fas fa-database"></i>
+                    </div>
+                    <h3 class="card-title mb-0">Information We Collect</h3>
+                  </div>
+                  
+                  <h6 class="text-primary mb-3"><i class="fas fa-user me-2"></i>Personal Information</h6>
+                  <ul class="list-group list-group-flush mb-4">
+                    <li class="list-group-item px-0">
+                      <i class="fas fa-check text-success me-2"></i>
+                      <strong>Basic Profile:</strong> Name, email address, phone number
+                    </li>
+                    <li class="list-group-item px-0">
+                      <i class="fas fa-check text-success me-2"></i>
+                      <strong>Family Information:</strong> Family member details and relationships
+                    </li>
+                    <li class="list-group-item px-0">
+                      <i class="fas fa-check text-success me-2"></i>
+                      <strong>Contact Information:</strong> Address and communication preferences
+                    </li>
+                  </ul>
+
+                  <h6 class="text-primary mb-3"><i class="fas fa-chart-line me-2"></i>Financial Information</h6>
+                  <ul class="list-group list-group-flush mb-4">
+                    <li class="list-group-item px-0">
+                      <i class="fas fa-check text-success me-2"></i>
+                      <strong>Contribution Records:</strong> Individual contribution amounts and dates
+                    </li>
+                    <li class="list-group-item px-0">
+                      <i class="fas fa-check text-success me-2"></i>
+                      <strong>Fund Requests:</strong> Request details, amounts, and purposes
+                    </li>
+                    <li class="list-group-item px-0">
+                      <i class="fas fa-check text-success me-2"></i>
+                      <strong>Transaction History:</strong> Complete audit trail of all financial activities
+                    </li>
+                  </ul>
+
+                  <h6 class="text-primary mb-3"><i class="fas fa-laptop me-2"></i>Technical Information</h6>
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item px-0">
+                      <i class="fas fa-check text-success me-2"></i>
+                      <strong>Usage Data:</strong> Login times, feature usage, and preferences
+                    </li>
+                    <li class="list-group-item px-0">
+                      <i class="fas fa-check text-success me-2"></i>
+                      <strong>Device Information:</strong> Browser type, IP address, and operating system
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Data Usage -->
+              <div class="card section-card" id="data-usage">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-success text-white">
+                      <i class="fas fa-cogs"></i>
+                    </div>
+                    <h3 class="card-title mb-0">How We Use Your Information</h3>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <div class="d-flex">
+                        <i class="fas fa-rocket text-primary me-3 mt-1"></i>
+                        <div>
+                          <h6>Service Operation</h6>
+                          <p class="small text-muted mb-0">Manage contributions, process fund requests, and maintain financial records</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <div class="d-flex">
+                        <i class="fas fa-chart-pie text-info me-3 mt-1"></i>
+                        <div>
+                          <h6>Financial Reporting</h6>
+                          <p class="small text-muted mb-0">Generate statements, summaries, and financial insights</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <div class="d-flex">
+                        <i class="fas fa-bell text-warning me-3 mt-1"></i>
+                        <div>
+                          <h6>Communication</h6>
+                          <p class="small text-muted mb-0">Send notifications, updates, and important alerts</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <div class="d-flex">
+                        <i class="fas fa-shield-alt text-success me-3 mt-1"></i>
+                        <div>
+                          <h6>Security & Compliance</h6>
+                          <p class="small text-muted mb-0">Protect against fraud and ensure regulatory compliance</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Data Protection -->
+              <div class="card section-card" id="data-protection">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-warning text-white">
+                      <i class="fas fa-lock"></i>
+                    </div>
+                    <h3 class="card-title mb-0">Data Protection & Security</h3>
+                  </div>
+                  
+                  <div class="alert alert-success">
+                    <h6><i class="fas fa-shield-check me-2"></i>Multi-Layer Security Approach</h6>
+                    <p class="mb-0">We employ industry-standard security measures to protect your data</p>
+                  </div>
+
+                  <div class="row text-center">
+                    <div class="col-md-4 mb-3">
+                      <div class="border rounded p-3 h-100">
+                        <i class="fas fa-key fa-2x text-primary mb-2"></i>
+                        <h6>Encryption</h6>
+                        <p class="small text-muted mb-0">All data encrypted in transit and at rest using AES-256</p>
+                      </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <div class="border rounded p-3 h-100">
+                        <i class="fas fa-user-shield fa-2x text-info mb-2"></i>
+                        <h6>Access Control</h6>
+                        <p class="small text-muted mb-0">Role-based permissions and authentication</p>
+                      </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <div class="border rounded p-3 h-100">
+                        <i class="fas fa-history fa-2x text-success mb-2"></i>
+                        <h6>Regular Audits</h6>
+                        <p class="small text-muted mb-0">Continuous monitoring and security assessments</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Data Sharing -->
+              <div class="card section-card" id="data-sharing">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-danger text-white">
+                      <i class="fas fa-share-alt"></i>
+                    </div>
+                    <h3 class="card-title mb-0">Data Sharing & Disclosure</h3>
+                  </div>
+                  
+                  <div class="alert alert-info">
+                    <h6><i class="fas fa-exclamation-circle me-2"></i>We Do Not Sell Your Data</h6>
+                    <p class="mb-0">We never sell, trade, or rent your personal information to third parties</p>
+                  </div>
+
+                  <h6>Limited Sharing Circumstances:</h6>
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item px-0">
+                      <i class="fas fa-users text-primary me-2"></i>
+                      <strong>Within Your Family Group:</strong> Financial information shared only with authorized family members
+                    </li>
+                    <li class="list-group-item px-0">
+                      <i class="fas fa-gavel text-warning me-2"></i>
+                      <strong>Legal Requirements:</strong> When required by law or legal process
+                    </li>
+                    <li class="list-group-item px-0">
+                      <i class="fas fa-heart text-danger me-2"></i>
+                      <strong>Protection of Rights:</strong> To protect our rights, privacy, safety, or property
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Your Rights -->
+              <div class="card section-card" id="your-rights">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-secondary text-white">
+                      <i class="fas fa-user-check"></i>
+                    </div>
+                    <h3 class="card-title mb-0">Your Rights & Choices</h3>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <div class="d-flex align-items-start">
+                        <i class="fas fa-eye text-primary me-3 mt-1"></i>
+                        <div>
+                          <h6>Access & Review</h6>
+                          <p class="small text-muted mb-0">View and download your personal and financial data</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <div class="d-flex align-items-start">
+                        <i class="fas fa-edit text-info me-3 mt-1"></i>
+                        <div>
+                          <h6>Correction</h6>
+                          <p class="small text-muted mb-0">Update or correct inaccurate information</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <div class="d-flex align-items-start">
+                        <i class="fas fa-trash-alt text-warning me-3 mt-1"></i>
+                        <div>
+                          <h6>Deletion</h6>
+                          <p class="small text-muted mb-0">Request deletion of your personal data</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <div class="d-flex align-items-start">
+                        <i class="fas fa-ban text-danger me-3 mt-1"></i>
+                        <div>
+                          <h6>Opt-Out</h6>
+                          <p class="small text-muted mb-0">Control communication preferences</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Contact -->
+              <div class="card section-card" id="contact">
+                <div class="card-body text-center">
+                  <h4 class="card-title mb-3">Questions About Our Privacy Policy?</h4>
+                  <p class="card-text mb-4">We're here to help you understand how we protect and manage your data.</p>
+                  <a href="/contact" class="btn btn-primary btn-lg">
+                    <i class="fas fa-headset me-2"></i>Contact Support Team
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <%- include('partials/footer') %>
+
+  <!-- JavaScript Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+  <script>
+    // Smooth scrolling for navigation
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+          
+          // Update active nav link
+          document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+          });
+          this.classList.add('active');
+        }
+      });
+    });
+
+    // Update active nav link on scroll
+    window.addEventListener('scroll', () => {
+      const sections = document.querySelectorAll('.card[id]');
+      const navLinks = document.querySelectorAll('.nav-link');
+      
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop - 100;
+        if (scrollY >= sectionTop) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+
+

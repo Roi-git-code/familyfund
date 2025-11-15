@@ -1,3 +1,5 @@
+
+
 const express = require('express');
 const router = express.Router();
 const app = express();
@@ -14,6 +16,7 @@ const fundRequestModel = require('../models/fundRequestModel');
 const notificationModel = require('../models/notificationModel');
 const userRequestModel = require('../models/userRequestModel');
 const sendNotification = require('../utils/notification'); // helper to notify users (email or UI)
+
 // Dashboard
 router.get('/dashboard', requireAuth, async (req, res) => {
   try {
@@ -36,7 +39,7 @@ router.get('/dashboard', requireAuth, async (req, res) => {
     let contributions = await userLandingModel.getMemberContributions(member.id);
     if (from || to) {
       contributions = contributions.filter(c => {
-        const yearMonth = c.year + '-' + (c.month || '01'); // default month 01 if none
+        const yearMonth = c.year + '-' + (c.month || '01');
         let afterFrom = true, beforeTo = true;
         if (from) afterFrom = yearMonth >= from;
         if (to) beforeTo = yearMonth <= to;
@@ -44,12 +47,9 @@ router.get('/dashboard', requireAuth, async (req, res) => {
       });
     }
 
-    // Fund requests and update requests
-    const fundRequests = await fundRequestModel.getFundRequestsByRole(role); // role-filtered
-    const fundRequestsCount = fundRequests.length;
-
-    const updateRequests = await userLandingModel.getMemberUpdateRequests(member.id);
-    const updateRequestsCount = updateRequests.length;
+    // Get member-specific requests
+    const memberProfileRequests = await userLandingModel.getMemberUpdateRequests(member.id);
+    const memberFundRequests = await fundRequestModel.getFundRequestsByMember(member.id);
 
     // Lifetime totals
     const { memberTotal, allTotal, percentage } = await userLandingModel.getLifetimeTotals(member.id);
@@ -61,10 +61,35 @@ router.get('/dashboard', requireAuth, async (req, res) => {
       return memberData ? memberData.color : 'red';
     })();
 
-// Dashboard fund request counts
-const { new_count, reviewed_count } = await fundRequestModel.getDashboardCountsByRole(req.session.user.role);
+    // Get system-wide fund request counts for authorized roles
+    let newCount = 0;
+    let reviewedCount = 0;
+    let approvedCount = 0;
+    let rejectedCount = 0;
 
-    // Render dashboard
+    if (['chairman', 'chief_signatory', 'assistant_signatory'].includes(role)) {
+      // Use the improved method to get comprehensive counts
+      const counts = await fundRequestModel.getDashboardCountsByRole(role);
+      
+      // Map the counts to our expected variables
+      newCount = counts.new_count; // Pending requests
+      reviewedCount = counts.under_review_count; // Under Review requests
+      approvedCount = counts.approved_count + counts.completed_count; // Approved + Completed
+      rejectedCount = counts.rejected_count + counts.cancelled_count; // Rejected + Cancelled
+    }
+
+    // Calculate member-specific request counts for the stats cards
+    const memberPendingProfileRequests = memberProfileRequests.filter(req => 
+      req.status === 'Pending' || req.status === 'In Progress'
+    ).length;
+
+    const memberPendingFundRequests = memberFundRequests.filter(req => 
+      req.status === 'Pending' || req.status === 'Under Review'
+    ).length;
+
+    const totalPendingRequests = memberPendingProfileRequests + memberPendingFundRequests;
+
+    // Render dashboard with all data
     res.render('userLanding', {
       user: req.session.user,
       member,
@@ -73,20 +98,43 @@ const { new_count, reviewed_count } = await fundRequestModel.getDashboardCountsB
       allTotal,
       percentage,
       userColor: relativeToMax,
-      updateRequestsCount,
-      fundRequestsCount,
+      updateRequestsCount: memberProfileRequests.length,
+      fundRequestsCount: memberFundRequests.length,
       notifications,
       from,
       to,
-      // Fund summary counts
-   newCount: new_count,
-  reviewedCount: reviewed_count
-      });
+      newCount,
+      reviewedCount,
+      approvedCount,
+      rejectedCount,
+      memberProfileRequests,
+      memberFundRequests,
+      totalPendingRequests
+    });
 
   } catch (err) {
     console.error('Landing page error:', err);
     req.flash('error', 'Unable to load your dashboard.');
     res.redirect('/');
+  }
+});
+
+// GET Member Details for Modal (User's own profile - Secure)
+router.get('/my-profile/details', requireAuth, async (req, res) => {
+  try {
+    const memberId = req.session.user.member_Id;
+
+    // Use the memberModel to get full profile with next of kin
+    const member = await memberModel.getMemberWithKins(memberId);
+    
+    if (!member) {
+      return res.status(404).json({ error: 'Member profile not found' });
+    }
+
+    res.json(member);
+  } catch (err) {
+    console.error('Get member details error:', err);
+    res.status(500).json({ error: 'Failed to get profile details' });
   }
 });
 
@@ -249,8 +297,7 @@ router.get('/user-requests', requireAuth, allowRoles('chairman', 'chief_signator
     res.render('user_requests', {
       user: req.session.user,
       requests,
-      pendingRequestsCount,
-      flash: req.flash()
+      pendingRequestsCount
     });
   } catch (err) {
     console.error('Error loading user requests:', err);
@@ -305,8 +352,7 @@ router.get('/update-requests', requireAuth, async (req, res) => {
     res.render('user_update_requests', {
       user: req.session.user,
       updateRequests,
-     fundRequests,    
-     flash: req.flash()
+     fundRequests
     });
   } catch (err) {
     console.error('Error loading update requests:', err);
@@ -755,8 +801,175 @@ function addFooter(doc, username) {
   }
 }
 
-module.exports = router;
 
+// My Contributions page
+router.get('/my-contributions', requireAuth, async (req, res) => {
+  try {
+    const { username } = req.session.user;
+
+    // Get member profile
+    const member = await userLandingModel.getMemberProfileByEmail(username);
+    if (!member) {
+      req.flash('error', 'No profile found for your account.');
+      return res.redirect('/dashboard');
+    }
+
+    // Optional date range filter for contributions
+    const from = req.query.from || '';
+    const to = req.query.to || '';
+
+    let contributions = await userLandingModel.getMemberContributions(member.id);
+    
+    // Apply date filtering if provided
+    if (from || to) {
+      contributions = contributions.filter(c => {
+        const yearMonth = c.year + '-01'; // Use January as default month for yearly filtering
+        let afterFrom = true, beforeTo = true;
+        if (from) afterFrom = yearMonth >= from + '-01';
+        if (to) beforeTo = yearMonth <= to + '-01';
+        return afterFrom && beforeTo;
+      });
+    }
+
+    // Lifetime totals for summary cards
+    const { memberTotal, allTotal, percentage } = await userLandingModel.getLifetimeTotals(member.id);
+
+    // Contribution relative color
+    const relativeToMax = await (async () => {
+      const summary = await require('../models/contributionModel').getContributionSummary();
+      const memberData = summary.members.find(m => m.member_id === member.id);
+      return memberData ? memberData.color : 'red';
+    })();
+
+    // Render dedicated contributions page
+    res.render('myContributions', {
+      user: req.session.user,
+      member,
+      contributions,
+      memberTotal,
+      allTotal,
+      percentage,
+      userColor: relativeToMax,
+      from,
+      to
+    });
+
+  } catch (err) {
+    console.error('My Contributions page error:', err);
+    req.flash('error', 'Unable to load your contributions.');
+    res.redirect('/dashboard');
+  }
+});
+
+// Download PDF for My Contributions page
+router.get('/my-contributions/pdf', requireAuth, async (req, res) => {
+  try {
+    const memberId = req.session.user.member_Id;
+    const from = req.query.from;
+    const to = req.query.to;
+
+    // Fetch all contributions
+    let contributions = await userLandingModel.getMemberContributions(memberId);
+
+    // Filter by from/to if provided
+    if (from || to) {
+      const fromDate = from ? new Date(from + '-01') : null;
+      const toDate = to ? new Date(to + '-01') : null;
+
+      contributions = contributions.filter(c => {
+        const yearMonth = new Date(`${c.year}-01`);
+        if (fromDate && yearMonth < fromDate) return false;
+        if (toDate && yearMonth > toDate) return false;
+        return true;
+      });
+    }
+
+    // Prepare rows
+    const rows = contributions.map(c => [
+      c.year,
+      Number(c.jan) || 0,
+      Number(c.feb) || 0,
+      Number(c.mar) || 0,
+      Number(c.apr) || 0,
+      Number(c.may) || 0,
+      Number(c.jun) || 0,
+      Number(c.jul) || 0,
+      Number(c.aug) || 0,
+      Number(c.sep) || 0,
+      Number(c.oct) || 0,
+      Number(c.nov) || 0,
+      Number(c.dec) || 0,
+      (Number(c.total_year) || 0).toFixed(2),
+    ]);
+
+    // PDF generation (reuse existing PDF function)
+    const doc = new PDFDocument({
+      size: 'A4',
+      layout: 'landscape',
+      bufferPages: true,
+      margins: { top: 50, bottom: 50, left: 50, right: 50 },
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="MyContributions.pdf"');
+
+    doc.pipe(res);
+
+    // Header Section
+    const logoPath = path.join(__dirname, '../public/images/logo.png');
+    const systemName = "Family Fund Management System";
+    const pageWidth = doc.page.width;
+
+    let headerY = 30;
+
+    try {
+      const logoWidth = 60;
+      const logoX = (pageWidth - logoWidth) / 2;
+      doc.image(logoPath, logoX, headerY, { width: logoWidth });
+      headerY += 65;
+    } catch (err) {
+      console.warn("Logo not found, skipping logo render.");
+    }
+
+    doc.font('Helvetica-Bold')
+       .fontSize(18)
+       .fillColor('#000000')
+       .text(systemName, 0, headerY, { align: 'center' });
+
+    headerY += 25;
+
+    // Report Title
+    let reportTitle = "My Contributions";
+    if (from && to) {
+      reportTitle += ` From ${from.replace("-", "/")} To ${to.replace("-", "/")}`;
+    } else if (from) {
+      reportTitle += ` From ${from.replace("-", "/")}`;
+    } else if (to) {
+      reportTitle += ` Up To ${to.replace("-", "/")}`;
+    } else {
+      reportTitle += " (All Time)";
+    }
+
+    doc.font('Helvetica-Bold')
+       .fontSize(16)
+       .text(reportTitle, 0, headerY, { align: 'center', underline: true });
+
+    doc.moveDown(2);
+
+    // Table
+    const headers = ['Year', 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Total'];
+    addContributionTable(doc, headers, rows);
+    addFooter(doc, req.session.user.username);
+    doc.end();
+
+  } catch (err) {
+    console.error('Error generating My Contributions PDF:', err);
+    req.flash('error', 'Failed to generate PDF.');
+    res.redirect('/my-contributions');
+  }
+});
+
+module.exports = router;
 
 
 

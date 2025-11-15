@@ -1,0 +1,428 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Payment Status - FamilyFund</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="/css/app.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/flash.css">
+
+  <style>
+    .countdown {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #0d6efd;
+    }
+    .modal-xl {
+      max-width: 700px;
+    }
+    /* Custom styling for the button group */
+    .btn-group-custom {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    @media (max-width: 576px) {
+      .btn-group-custom {
+        flex-direction: column;
+        align-items: center;
+      }
+      .btn-group-custom .btn {
+        width: 100%;
+        max-width: 250px;
+      }
+    }
+    /* Admin view styling */
+    .admin-view-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+  <%- include('../partials/header') %>
+
+  <div class="container mt-4">
+  <%- include('../partials/sidebar') %>
+
+    <div class="row justify-content-center">
+         <%- include('../partials/flash') %>
+
+      <div class="col-lg-8">
+        <div class="card shadow position-relative">
+          <!-- Admin View Badge -->
+          <% if (isAdminView && !isPaymentOwner) { %>
+            <span class="admin-view-badge badge bg-warning text-dark">
+              <i class="fas fa-eye me-1"></i>Admin View
+            </span>
+          <% } %>
+          
+          <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+              <i class="fas fa-receipt me-2"></i>Payment Status
+              <% if (isAdminView && !isPaymentOwner) { %>
+                <small class="fs-6">(Viewing <%= paymentMemberName %>'s Payment)</small>
+              <% } %>
+            </h4>
+          </div>
+          <div class="card-body">
+            <!-- Status Info -->
+            <div class="text-center mb-4">
+              <% if (payment.status === 'Paid') { %>
+                <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                <h3 class="text-success">Payment Completed!</h3>
+              <% } else if (payment.status === 'Failed') { %>
+                <i class="fas fa-times-circle fa-4x text-danger mb-3"></i>
+                <h3 class="text-danger">Payment Failed</h3>
+              <% } else { %>
+                <i class="fas fa-clock fa-4x text-warning mb-3"></i>
+                <h3 class="text-warning">Payment Pending</h3>
+              <% } %>
+            </div>
+
+            <!-- Payment Details -->
+            <div class="row mb-4">
+              <div class="col-md-8 mx-auto">
+                <div class="list-group">
+                  <div class="list-group-item">
+                    <strong>Amount:</strong> TSh <%= Number(payment.amount).toLocaleString() %>
+                  </div>
+                  <div class="list-group-item">
+                    <strong>Phone Number:</strong> <%= payment.phone_number %>
+                  </div>
+                  <div class="list-group-item">
+                    <strong>Transaction ID:</strong> <%= payment.transaction_id %>
+                  </div>
+                  <div class="list-group-item">
+                    <strong>Status:</strong> 
+                    <span class="badge 
+                      <%= payment.status === 'Paid' ? 'bg-success' :
+                          payment.status === 'Pending' ? 'bg-warning' :
+                          'bg-danger' %>">
+                      <%= payment.status %>
+                    </span>
+                  </div>
+                  <div class="list-group-item">
+                    <strong>Date:</strong> <%= new Date(payment.created_at).toLocaleString() %>
+                  </div>
+                  <!-- Show member name if admin is viewing someone else's payment -->
+                  <% if (isAdminView && !isPaymentOwner && paymentMemberName) { %>
+                    <div class="list-group-item">
+                      <strong>Member:</strong> <%= paymentMemberName %>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+
+            <!-- Lipia Link Instructions - ONLY SHOW TO PAYMENT OWNER -->
+            <% if (payment.status === 'Pending' && isPaymentOwner) { %>
+              <div class="alert alert-info text-center">
+                <h5><i class="fas fa-link me-2"></i>Complete Your Payment</h5>
+                <p class="mb-3">Click the button below to proceed with Azam Lipia payment:</p>
+                
+                <button type="button" 
+                        class="btn btn-primary btn-lg" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#lipiaCheckoutModal">
+                  <i class="fas fa-credit-card me-2"></i>
+                  Proceed to Azam Lipia Payment
+                </button>
+                
+                <p class="text-muted mt-2 small">
+                  <i class="fas fa-info-circle me-1"></i>
+                  Secure payment processed by Azam Lipia
+                </p>
+              </div>
+
+              <!-- Auto-refresh for pending payments - ONLY FOR PAYMENT OWNER -->
+              <div class="alert alert-warning text-center">
+                <i class="fas fa-sync-alt me-2"></i>
+                <span id="refreshText">Page will auto-refresh to check status...</span>
+                <div class="spinner-border spinner-border-sm ms-2" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            <% } %>
+
+            <!-- Action Buttons - CONDITIONAL BASED ON OWNERSHIP -->
+            <div class="text-center mt-4">
+              <!-- Check Status Button - ONLY FOR PAYMENT OWNER -->
+              <% if (payment.status === 'Pending' && isPaymentOwner) { %>
+                <button class="btn btn-warning me-2" onclick="checkStatus()">
+                  <i class="fas fa-sync-alt me-1"></i>Check Status Now
+                </button>
+              <% } %>
+              
+              <!-- Button Group - DIFFERENT SETS BASED ON USER TYPE -->
+              <div class="btn-group-custom mt-3">
+                <% if (isPaymentOwner) { %>
+                  <!-- Payment Owner's Buttons -->
+                  <a href="/payments" class="btn btn-primary">
+                    <i class="fas fa-credit-card me-1"></i>Make New Payment
+                  </a>
+                  
+                  <!-- PDF Download Button - AVAILABLE TO ALL FOR COMPLETED PAYMENTS -->
+                  
+                    <a href="/payments/status/<%= payment.transaction_id %>/pdf" class="btn btn-danger">
+                      <i class="fas fa-file-pdf me-1"></i>Download Receipt PDF
+                    </a>
+                  
+                  
+                  <a href="/payments/history" class="btn btn-outline-secondary">
+                    <i class="fas fa-history me-1"></i>View Payment History
+                  </a>
+                  
+                <% } else if (isAdminView) { %>
+                  <!-- Admin/Official's Buttons (Viewing someone else's payment) -->
+                  <a href="/payments/history?view=all" class="btn btn-outline-primary">
+                 <i class="fas fa-list me-1"></i>All Payments
+                 </a>
+                  
+                  <!-- PDF Download Button - AVAILABLE TO ADMINS FOR COMPLETED PAYMENTS -->
+                 
+                    <a href="/payments/status/<%= payment.transaction_id %>/pdf" class="btn btn-danger">
+                      <i class="fas fa-file-pdf me-1"></i>Download Receipt
+                    </a>
+                 
+                  
+                  <a href="/dashboard" class="btn btn-outline-secondary">
+                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                  </a>
+                  
+                <% } else { %>
+                  <!-- Fallback for non-owners who aren't admins (shouldn't happen) -->
+                  <a href="/payments/history" class="btn btn-outline-primary">
+                    <i class="fas fa-history me-1"></i>My Payment History
+                  </a>
+                  <a href="/dashboard" class="btn btn-outline-secondary">
+                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                  </a>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+              
+<%- include('../partials/change_password_modal') %>
+
+  <%- include('../partials/footer') %>
+
+  <!-- Lipia Checkout Modal - ONLY FOR PAYMENT OWNER -->
+  <% if (isPaymentOwner) { %>
+    <div class="modal fade" id="lipiaCheckoutModal" tabindex="-1" aria-labelledby="lipiaCheckoutModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="lipiaCheckoutModalLabel">
+              <i class="fas fa-credit-card me-2"></i>Redirecting to Azam Lipia
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center">
+            
+            <!-- Loading Animation -->
+            <div class="mb-4">
+              <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+
+            <!-- Countdown Timer -->
+            <div class="countdown mb-3" id="countdown">5</div>
+            <p class="text-muted mb-4">Redirecting to Azam Lipia payment gateway in <span id="countdownText">5 seconds</span></p>
+
+            <!-- Payment Summary -->
+            <div class="card bg-light mb-4">
+              <div class="card-body">
+                <h6 class="card-title">Payment Details</h6>
+                <div class="row text-start">
+                  <div class="col-6">
+                    <strong>Amount:</strong><br>
+                    <span class="text-primary">TSh <%= Number(payment.amount).toLocaleString() %></span>
+                  </div>
+                  <div class="col-6">
+                    <strong>Phone:</strong><br>
+                    <span><%= payment.phone_number %></span>
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <strong>Transaction ID:</strong><br>
+                  <code class="small"><%= payment.transaction_id %></code>
+                </div>
+              </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="alert alert-info">
+              <h6><i class="fas fa-info-circle me-2"></i>Important Instructions</h6>
+              <ul class="small text-start mb-0">
+                <li>You will be redirected to the official Azam Lipia payment page</li>
+                <li>Complete your payment on the Azam Lipia website</li>
+                <li>After payment, return to this website to check your payment status</li>
+                <li>Keep this transaction ID for reference: <strong><%= payment.transaction_id %></strong></li>
+              </ul>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-grid gap-2">
+              <button id="redirectNow" class="btn btn-primary btn-lg">
+                <i class="fas fa-external-link-alt me-2"></i>
+                Redirect Now
+              </button>
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                <i class="fas fa-arrow-left me-2"></i>
+                Cancel
+              </button>
+            </div>
+
+            <!-- Manual Link (as backup) -->
+            <div class="mt-4 pt-3 border-top">
+              <p class="small text-muted mb-2">If you are not redirected automatically:</p>
+              <a href="<%= lipiaLink %>" target="_blank" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-external-link-alt me-1"></i>
+                Click here to open Azam Lipia manually
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <script>
+    // Payment status checking function - ONLY FOR PAYMENT OWNER
+    <% if (isPaymentOwner) { %>
+      function checkStatus() {
+        const refreshText = document.getElementById('refreshText');
+        if (refreshText) {
+          refreshText.innerHTML = 'Checking payment status...';
+        }
+        
+        fetch(`/payments/check-status/<%= payment.transaction_id %>`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              if (data.payment.status !== 'Pending') {
+                window.location.reload();
+              } else {
+                if (refreshText) {
+                  refreshText.innerHTML = 'Still pending... Next auto-refresh in 30 seconds';
+                }
+              }
+            }
+          })
+          .catch(error => {
+            console.error('Error checking status:', error);
+            if (refreshText) {
+              refreshText.innerHTML = 'Error checking status';
+            }
+          });
+      }
+
+      // Auto-refresh for pending payments every 30 seconds - ONLY FOR PAYMENT OWNER
+      <% if (payment.status === 'Pending') { %>
+        setInterval(checkStatus, 30000);
+      <% } %>
+    <% } %>
+
+    // Lipia Checkout Modal Scripts - ONLY FOR PAYMENT OWNER
+    <% if (isPaymentOwner) { %>
+      document.addEventListener('DOMContentLoaded', function() {
+        const lipiaModal = document.getElementById('lipiaCheckoutModal');
+        
+        if (lipiaModal) {
+          lipiaModal.addEventListener('show.bs.modal', function() {
+            // Reset countdown when modal opens
+            resetCountdown();
+          });
+
+          lipiaModal.addEventListener('shown.bs.modal', function() {
+            // Start countdown when modal is fully shown
+            startCountdown();
+          });
+
+          lipiaModal.addEventListener('hidden.bs.modal', function() {
+            // Stop countdown when modal is closed
+            stopCountdown();
+          });
+        }
+
+        let countdown = 5;
+        let countdownInterval;
+        const countdownElement = document.getElementById('countdown');
+        const countdownTextElement = document.getElementById('countdownText');
+        const redirectNowButton = document.getElementById('redirectNow');
+
+        function resetCountdown() {
+          countdown = 5;
+          if (countdownElement) countdownElement.textContent = countdown;
+          if (countdownTextElement) countdownTextElement.textContent = `${countdown} seconds`;
+          stopCountdown();
+        }
+
+        function startCountdown() {
+          if (!countdownElement || !countdownTextElement) return;
+          
+          countdownInterval = setInterval(() => {
+            countdown--;
+            countdownElement.textContent = countdown;
+            countdownTextElement.textContent = `${countdown} second${countdown !== 1 ? 's' : ''}`;
+            
+            if (countdown <= 0) {
+              clearInterval(countdownInterval);
+              redirectToLipia();
+            }
+          }, 1000);
+        }
+
+        function stopCountdown() {
+          if (countdownInterval) {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+          }
+        }
+
+        // Redirect function
+        function redirectToLipia() {
+          window.location.href = "<%= lipiaLink %>";
+        }
+
+        // Manual redirect button
+        if (redirectNowButton) {
+          redirectNowButton.addEventListener('click', function() {
+            stopCountdown();
+            redirectToLipia();
+          });
+        }
+
+        // Auto-start countdown after modal is shown (backup)
+        setTimeout(() => {
+          const modal = bootstrap.Modal.getInstance(lipiaModal);
+          if (modal && modal._isShown) {
+            startCountdown();
+          }
+        }, 100);
+      });
+    <% } %>
+  </script>
+
+      <script src="/script/dashboard.js"></script>
+      <script src="/script/sidebar.js"></script>
+      <script src="/js/flash.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+

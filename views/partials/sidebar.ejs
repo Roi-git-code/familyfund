@@ -1,3 +1,6 @@
+
+
+ <% if (user) { %>
 <!-- Sidebar Toggle Button (visible only on small screens) -->
 <button id="sidebarToggle" class="sidebar-toggle d-md-none">
   ☰
@@ -7,62 +10,160 @@
 <nav id="sidebar" class="sidebar">
   <h3>Menu</h3>
 
+  <!-- Admin Role - No Access to Content -->
   <% if (user.role === 'admin') { %>
-    <a href="/admin">Dashboard</a>
-    <a href="/member/form">Register Member</a>
-    <a href="/member">Manage Members</a>
+    <div class="sidebar-group">
+      <div class="sidebar-group-header">
+        <span class="icon">⚙️</span>
+        <span class="title">System Administration</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="sidebar-group-content">
+        <a href="/admin">Dashboard</a>
+        <a href="/member/form">Register Member</a>
+        <a href="/member">Manage Members</a>
+      </div>
+    </div>
   <% } %>
 
+  <!-- Non-Admin Users -->
   <% if (user.role !== 'admin') { %>
-    <a href="/dashboard">Dashboard</a>
+    <!-- Dashboard -->
+    <div class="sidebar-group">
+      <div class="sidebar-group-header">
+        <span class="icon">📊</span>
+        <span class="title">Dashboard</span>
+      </div>
+      <div class="sidebar-group-content">
+        <a href="/dashboard">Main Dashboard</a>
+      </div>
+    </div>
+
+    <!-- Requests Section -->
+    <div class="sidebar-group">
+      <div class="sidebar-group-header">
+        <span class="icon">📝</span>
+        <span class="title">Requests</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="sidebar-group-content">
+        <a href="/update-requests">
+          <span class="icon">📋</span>
+          <span class="title">My Requests</span>
+        </a>
+        <a href="/update-profile">Requesting System</a>
+        
+        <!-- Member Requests (Chairman, Chief Signatory, Signatory) -->
+        <% if (['chairman', 'chief_signatory', 'assistant_signatory'].includes(user.role)) { %>
+          <a href="/user-requests">
+            <span class="icon">👥</span>
+            <span class="title">Member Requests</span>
+          </a>
+          <a href="/fund-requests">
+            <span class="icon">💰</span>
+            <span class="title">Fund Requests</span>
+          </a>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Contributions Section -->
+    <div class="sidebar-group">
+      <div class="sidebar-group-header">
+        <span class="icon">💵</span>
+        <span class="title">Contributions</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="sidebar-group-content">
+        <a href="/my-contributions">
+          <span class="icon">📊</span>
+          <span class="title">My Contributions</span>
+        </a>
+        
+        <!-- Chief Signatory - Add Contributions -->
+        <% if (user.role === 'chief_signatory') { %>
+          <a href="/contributions/form">Add Contribution</a>
+          <a href="/contributions">Manage Contributions</a>
+        <% } %>
+        
+        <!-- Chairman & Assistant Signatory - View Contributions -->
+        <% if (['chairman', 'assistant_signatory'].includes(user.role)) { %>
+          <a href="/contributions">View Contributions</a>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Financial Section -->
+    <div class="sidebar-group">
+      <div class="sidebar-group-header">
+        <span class="icon">🏦</span>
+        <span class="title">Financial</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="sidebar-group-content">
+        <a href="/financial-statement">
+          <span class="icon">📈</span>
+          <span class="title">Financial Statement</span>
+        </a>
+        
+        <!-- Fund Management (Chairman, Chief Signatory, Assistant Signatory) -->
+        <% if (['chairman', 'chief_signatory', 'assistant_signatory'].includes(user.role)) { %>
+          <a href="/fund-management">
+            <span class="icon">💰</span>
+            <span class="title">Fund Management</span>
+          </a>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Payments Section -->
+    <div class="sidebar-group">
+      <div class="sidebar-group-header">
+        <span class="icon">💳</span>
+        <span class="title">Payments</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="sidebar-group-content">
+        <a href="/payments">
+          <span class="icon">💳</span>
+          <span class="title">Make Payment</span>
+        </a>
+        <a href="/payments/history">
+          <span class="icon">📋</span>
+          <span class="title">Payment History</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Member Management (Chairman only) -->
+    <% if (user.role === 'chairman') { %>
+      <div class="sidebar-group">
+        <div class="sidebar-group-header">
+          <span class="icon">👥</span>
+          <span class="title">Member Management</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="sidebar-group-content">
+          <a href="/oma/admin/list">OMAS</a>   
+          <a href="/member/form">Register Member</a>
+          <a href="/member">Manage Members</a>
+        </div>
+      </div>
+    <% } %>
   <% } %>
 
-  <a href="/update-profile">Requsting system</a>
-
-  <% if (user.role === 'chairman') { %>
-    <a href="/oma/admin/list">OMAS</a>   
-    <a href="/member/form">Register Member</a>
-    <a href="/member">Manage Members</a>
-    <a href="/contributions">View Contributions</a>
-    <a href="/user-requests">Manage User Requests</a>
-  <% } %>
-
-  <% if (user.role === 'chief_signatory') { %>
-    <a href="/contributions/form">Add Contribution</a>
-    <a href="/contributions">Manage Contributions</a>
-  <% } %>
-
-  <% if (user.role === 'assistant_signatory') { %>
-    <a href="/contributions">View Contributions</a>
-  <% } %>
-
-  <li>
-    <a href="/update-requests">
-      <span class="icon">📝</span>
-      <span class="title">My Requests</span>
-    </a>
-  </li>
-
-  <% if (['chairman', 'chief_signatory', 'signatory'].includes(user.role)) { %>
-    <li>
-      <a href="/user-requests">
-        <span class="icon">👥</span>
-        <span class="title">Member Requests</span>
-      </a>
-    </li>
-    <li>
-      <a href="/fund-requests">
-        <span class="icon">💰</span>
-        <span class="title">Fund Requests</span>
-      </a>
-    </li>
-    <li>
-      <a href="/fund-management">
-        <span class="icon">💰</span>
-        <span class="title">Fund Management</span>
-      </a>
-    </li>
-  <% } %> 
-
-  <a href="#" id="changePasswordBtn">Manage Password</a>
+  <!-- Password Management (All Users) -->
+  <div class="sidebar-group">
+    <div class="sidebar-group-header">
+      <span class="icon">🔒</span>
+      <span class="title">Security</span>
+    </div>
+    <div class="sidebar-group-content">
+      <a href="#" id="changePasswordBtn">Manage Password</a>
+    </div>
+  </div>
 </nav>
+
+
+<% } %>
+

@@ -1,0 +1,714 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Terms of Service - FamilyFund</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link href="/css/app.css" rel="stylesheet">
+    
+    <style>
+        .terms-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .section-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .section-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .section-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .terms-nav {
+            position: sticky;
+            top: 100px;
+        }
+        
+        .nav-link {
+            color: #6c757d;
+            border-left: 3px solid transparent;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0.25rem;
+            border-radius: 0 8px 8px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: #3498db;
+            background-color: #f8f9ff;
+            border-left-color: #3498db;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-left: 4px solid #ffc107;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+            border-left: 4px solid #17a2b8;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+        
+        .agreement-section {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .clause-item {
+            border-left: 3px solid #3498db;
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .contact-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+        }
+        
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, #3498db, #2c3e50);
+            z-index: 1000;
+            transition: width 0.3s ease;
+        }
+        
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #3498db;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            transition: all 0.3s ease;
+            z-index: 99;
+        }
+        
+        .back-to-top:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            color: white;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+  <!-- Scroll Progress Bar -->
+  <div class="scroll-progress" id="scrollProgress"></div>
+
+  <!-- Back to Top Button -->
+  <a href="#" class="back-to-top" id="backToTop">
+    <i class="fas fa-chevron-up"></i>
+  </a>
+
+  <!-- Header -->
+  <%- include('partials/header') %>
+
+  <!-- Sidebar -->
+  <%- include('partials/sidebar', { user: user, activePage: 'terms-of-service' }) %>
+
+  <main class="main-content">
+    <div class="container-fluid pt-5 mt-3">
+      <div class="row">
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+          
+          <!-- Header Section -->
+          <div class="terms-header text-center">
+            <div class="row align-items-center">
+              <div class="col-md-2 text-center">
+                <i class="fas fa-balance-scale fa-4x mb-3 opacity-90"></i>
+              </div>
+              <div class="col-md-10">
+                <h1 class="display-5 fw-bold mb-3">Terms of Service</h1>
+                <p class="lead mb-4 opacity-90">Understanding your rights and responsibilities when being a member of and using FamilyFund</p>
+                <div class="last-updated d-inline-block bg-white bg-opacity-20 p-3 rounded">
+                  <i class="fas fa-clock me-2"></i>
+                  <strong>Effective Date:</strong> <%= new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="agreement-section">
+            <div class="text-center mb-4">
+              <h3 class="text-primary"><i class="fas fa-handshake me-2"></i>Agreement Overview</h3>
+              <p class="lead">By accessing and using FamilyFund Management System, you agree to be bound by these Terms of Service and our Privacy Policy.</p>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Navigation Sidebar -->
+            <div class="col-lg-3 d-none d-lg-block">
+              <div class="terms-nav">
+                <div class="card section-card">
+                  <div class="card-header bg-transparent border-bottom-0">
+                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>Terms Sections</h6>
+                  </div>
+                  <div class="card-body p-0">
+                    <nav class="nav flex-column">
+                      <a class="nav-link active" href="#acceptance">Acceptance of Terms</a>
+                      <a class="nav-link" href="#eligibility">Eligibility</a>
+                      <a class="nav-link" href="#account-responsibilities">Account Responsibilities</a>
+                      <a class="nav-link" href="#financial-responsibilities">Financial Responsibilities</a>
+                      <a class="nav-link" href="#acceptable-use">Acceptable Use</a>
+                      <a class="nav-link" href="#intellectual-property">Intellectual Property</a>
+                      <a class="nav-link" href="#termination">Termination</a>
+                      <a class="nav-link" href="#disclaimer">Disclaimer</a>
+                      <a class="nav-link" href="#limitation-liability">Limitation of Liability</a>
+                      <a class="nav-link" href="#governing-law">Governing Law</a>
+                      <a class="nav-link" href="#changes">Changes to Terms</a>
+                      <a class="nav-link" href="#contact">Contact Information</a>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9">
+              <!-- Acceptance of Terms -->
+              <div class="card section-card" id="acceptance">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-primary text-white">
+                      <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3 class="card-title mb-0">1. Acceptance of Terms</h3>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>1.1 Agreement to Terms</h6>
+                    <p class="mb-2">By being member and accessing or using the FamilyFund Management System, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>1.2 Modifications</h6>
+                    <p class="mb-2">We reserve the right to modify these terms with or without notifying a user at any time. Continued use of the service after changes constitutes acceptance of the modified terms.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>1.3 Supplemental Terms</h6>
+                    <p class="mb-0">Certain features may be subject to additional guidelines, terms, or rules, which will be posted in connection with such features.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Eligibility -->
+              <div class="card section-card" id="eligibility">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-success text-white">
+                      <i class="fas fa-user-check"></i>
+                    </div>
+                    <h3 class="card-title mb-0">2. Eligibility & Registration</h3>
+                  </div>
+                  
+                  <div class="warning-box">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Important Eligibility Requirements</h6>
+                    <p class="mb-0">You must meet the following criteria to become and use FamilyFund Management System</p>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="clause-item">
+                        <h6>2.1 Age Requirement</h6>
+                        <p>You must be at least 18 years old to create an account and use our services.</p>
+                      </div>
+                      
+                      <div class="clause-item">
+                        <h6>2.2 Family Membership</h6>
+                        <p>Access is limited to verified family members by approved family fund apication.</p>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="clause-item">
+                        <h6>2.3 Accurate Information</h6>
+                        <p>You must provide accurate, current, and complete information during registration.</p>
+                      </div>
+                      
+                      <div class="clause-item">
+                        <h6>2.4 Account Security</h6>
+                        <p>You are responsible for maintaining the confidentiality of your login credentials.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Account Responsibilities -->
+              <div class="card section-card" id="account-responsibilities">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-info text-white">
+                      <i class="fas fa-user-cog"></i>
+                    </div>
+                    <h3 class="card-title mb-0">3. Account Responsibilities</h3>
+                  </div>
+                  
+                  <div class="info-box">
+                    <h6><i class="fas fa-shield-alt me-2"></i>Security First Approach</h6>
+                    <p class="mb-0">Your account security is a shared responsibility between you and FamilyFund</p>
+                  </div>
+
+                  <div class="clause-item">
+                    <h6>3.1 Password Security</h6>
+                    <p>You are responsible for maintaining strong password security and not sharing your credentials with unauthorized individuals.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>3.2 Unauthorized Access</h6>
+                    <p>You must immediately notify us of any unauthorized use of your account or any other security breaches.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>3.3 Account Activity</h6>
+                    <p>You are responsible for all activities that occur under your account, whether authorized by you or not.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Financial Responsibilities -->
+              <div class="card section-card" id="financial-responsibilities">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-warning text-white">
+                      <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <h3 class="card-title mb-0">4. Financial Responsibilities</h3>
+                  </div>
+                  
+                  <div class="warning-box">
+                    <h6><i class="fas fa-exclamation-circle me-2"></i>Important Financial Disclaimer</h6>
+                    <p class="mb-0">FamilyFund is a management tool, and a pattial not full financial institution</p>
+                  </div>
+
+                  <div class="clause-item">
+                    <h6>4.1 Contribution Accuracy</h6>
+                    <p>You are solely responsible for the accuracy of contribution amounts and dates entered into the system.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>4.2 Fund Request Validation</h6>
+                    <p>All fund requests must represent legitimate family needs and comply with your family's internal guidelines.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>4.3 Transaction Verification</h6>
+                    <p>You should verify all financial transactions and report any discrepancies within 30 days.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>4.4 Tax Responsibilities</h6>
+                    <p>You are responsible for understanding and complying with any tax obligations related to family fund activities.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Acceptable Use -->
+              <div class="card section-card" id="acceptable-use">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-danger text-white">
+                      <i class="fas fa-ban"></i>
+                    </div>
+                    <h3 class="card-title mb-0">5. Acceptable Use Policy</h3>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>5.1 Prohibited Activities</h6>
+                    <p>You agree not to engage in any of the following prohibited activities:</p>
+                    <ul>
+                      <li>Fraudulent financial reporting or misrepresentation</li>
+                      <li>Unauthorized access to other family members' accounts</li>
+                      <li>Manipulation of financial records or transaction history</li>
+                      <li>Use of the service for illegal purposes or fraudulent activities</li>
+                      <li>Distribution of malware or harmful code</li>
+                    </ul>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>5.2 Compliance with Laws</h6>
+                    <p>You must comply with all applicable local, state, national, and international laws and regulations.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>5.3 Family Cooperation</h6>
+                    <p>You agree to cooperate with family members and system administrators in maintaining accurate financial records.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Intellectual Property -->
+              <div class="card section-card" id="intellectual-property">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-secondary text-white">
+                      <i class="fas fa-copyright"></i>
+                    </div>
+                    <h3 class="card-title mb-0">6. Intellectual Property Rights</h3>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>6.1 Our Intellectual Property</h6>
+                    <p>The FamilyFund Management System, including its features, design, and content, is protected by copyright, trademark, and other laws.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>6.2 Your Content</h6>
+                    <p>You retain ownership of any financial data and personal information you provide to the service.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>6.3 License Grant</h6>
+                    <p>By being a member and using our service, you grant us a license to use your data solely for the purpose of providing and improving our services.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Termination -->
+              <div class="card section-card" id="termination">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-dark text-white">
+                      <i class="fas fa-power-off"></i>
+                    </div>
+                    <h3 class="card-title mb-0">7. Termination</h3>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>7.1 Termination by You</h6>
+                    <p>You may stop your Family Fund membership and using our services at any time. Account deletion requests should be submitted through the system.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>7.2 Termination by Us</h6>
+                    <p>We may suspend or terminate your membership and/or access to the service if you violate these Terms of Service and/or Family Fund constitution and/or bylaw.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>7.3 Effect of Termination</h6>
+                    <p>Upon termination, your right to use the service will immediately cease. Historical data may be retained for legal and compliance purposes.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Disclaimer -->
+              <div class="card section-card" id="disclaimer">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-primary text-white">
+                      <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3 class="card-title mb-0">8. Disclaimer of Warranties</h3>
+                  </div>
+                  
+                  <div class="warning-box">
+                    <h6><i class="fas fa-info-circle me-2"></i>Important Disclaimer</h6>
+                    <p class="mb-0">The service is provided "as is" without warranties of any kind</p>
+                  </div>
+
+                  <div class="clause-item">
+                    <h6>8.1 No Financial Advice</h6>
+                    <p>FamilyFund does not provide financial advice. All financial decisions are your responsibility.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>8.2 Service Availability</h6>
+                    <p>We do not guarantee uninterrupted or error-free service. Maintenance and downtime may occur.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>8.3 Data Accuracy</h6>
+                    <p>While we strive for accuracy, we cannot guarantee that all financial data will be error-free.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Limitation of Liability -->
+              <div class="card section-card" id="limitation-liability">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-danger text-white">
+                      <i class="fas fa-gavel"></i>
+                    </div>
+                    <h3 class="card-title mb-0">9. Limitation of Liability</h3>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>9.1 Indirect Damages</h6>
+                    <p>To the maximum extent permitted by law, FamilyFund shall not be liable for any indirect, incidental, or consequential damages.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>9.2 Total Liability</h6>
+                    <p>Our total liability for any claims under these terms shall not exceed the amount you conteibuted and/or paid to become the member and/or use the service, if any.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>9.3 Basis of the Bargain</h6>
+                    <p>The limitations of liability in this section are fundamental elements of the basis of the agreement between you and FamilyFund.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Governing Law -->
+              <div class="card section-card" id="governing-law">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-info text-white">
+                      <i class="fas fa-balance-scale-left"></i>
+                    </div>
+                    <h3 class="card-title mb-0">10. Governing Law & Dispute Resolution</h3>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>10.1 Governing Law</h6>
+                    <p>These Terms shall be governed by the laws of Tanzania, without regard to its conflict of law provisions.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>10.2 Dispute Resolution</h6>
+                    <p>Any disputes shall first be attempted to be resolved through good faith negotiations between the members, leaders and third parties.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>10.3 Arbitration</h6>
+                    <p>If negotiation fails, disputes shall be resolved through binding arbitration in Tanzania.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Changes to Terms -->
+              <div class="card section-card" id="changes">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon bg-warning text-white">
+                      <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <h3 class="card-title mb-0">11. Changes to Terms</h3>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>11.1 Modification Rights</h6>
+                    <p>We reserve the right to modify these terms at our discretion. We will provide notice of material changes.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>11.2 Continued Membership and Use</h6>
+                    <p>Your continued membership and use of the service after changes become effective constitutes acceptance of the modified terms.</p>
+                  </div>
+                  
+                  <div class="clause-item">
+                    <h6>11.3 Review Responsibility</h6>
+                    <p>You are responsible for regularly reviewing these Terms of Service for any changes.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Contact Information -->
+              <div class="card section-card" id="contact">
+                <div class="card-body text-center">
+                  <h4 class="card-title mb-3">Questions About Our Terms?</h4>
+                  <p class="lead mb-4">We're here to help you understand our Terms of Service</p>
+                  
+                  <div class="row justify-content-center">
+                    <div class="col-md-8">
+                      <div class="contact-card p-4 mb-4">
+                        <h5><i class="fas fa-headset me-2"></i>Contact Our Support Team</h5>
+                        <p class="mb-3">Get clarification on any aspect of our terms</p>
+                        <div class="row">
+                          <div class="col-md-6">
+                            <p><i class="fas fa-envelope me-2"></i>itzfamilyfund@gmail.com</p>
+                          </div>
+                          <div class="col-md-6">
+                            <p><i class="fas fa-phone me-2"></i>Service Enquiry +255 698 778 560 / +255 747 306 515</p>
+                          </div>
+                         <div class="col-md-6">
+                            <p><i class="fas fa-phone me-2"></i> General Management +255 748 033 536</p>
+                          </div>
+                         <div class="col-md-6">
+                         <p><i class="fas fa-phone me-2"></i> Technical suport +255 763 724 710</p>
+                        </div>
+
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-4 mb-3">
+                      <div class="card h-100">
+                        <div class="card-body">
+                          <i class="fas fa-file-contract fa-2x text-primary mb-3"></i>
+                          <h6>Privacy Policy</h6>
+                          <p class="small">Learn how we protect your data and privacy</p>
+                          <a href="/privacy" class="btn btn-outline-primary btn-sm">View Policy</a>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <div class="card h-100">
+                        <div class="card-body">
+                          <i class="fas fa-cookie fa-2x text-warning mb-3"></i>
+                          <h6>Cookie Policy</h6>
+                          <p class="small">Not yet implemented</p>
+                          <a href="/cookies" class="btn btn-outline-warning btn-sm">View Policy</a>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <div class="card h-100">
+                        <div class="card-body">
+                          <i class="fas fa-question-circle fa-2x text-info mb-3"></i>
+                          <h6>Support Center</h6>
+                          <p class="small">Get help with using FamilyFund</p>
+                          <a href="/contact" class="btn btn-outline-info btn-sm">Get Help</a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mt-4 p-3 bg-light rounded">
+                    <p class="mb-2"><strong>Last Updated:</strong> <%= new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
+                    <p class="small text-muted mb-0">By using FamilyFund, you acknowledge that you have read and agree to these Terms of Service.</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Scroll progress indicator
+    window.addEventListener('scroll', function() {
+      const winHeight = window.innerHeight;
+      const docHeight = document.documentElement.scrollHeight;
+      const scrollTop = window.pageYOffset;
+      const trackLength = docHeight - winHeight;
+      const progress = Math.floor((scrollTop / trackLength) * 100);
+      document.getElementById('scrollProgress').style.width = progress + '%';
+    });
+
+    // Back to top button
+    const backToTop = document.getElementById('backToTop');
+    window.addEventListener('scroll', function() {
+      if (window.pageYOffset > 300) {
+        backToTop.style.display = 'flex';
+      } else {
+        backToTop.style.display = 'none';
+      }
+    });
+
+    backToTop.addEventListener('click', function(e) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Update active nav link on scroll
+    const sections = document.querySelectorAll('.section-card');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    window.addEventListener('scroll', function() {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop - 100;
+        const sectionHeight = section.clientHeight;
+        if (pageYOffset >= sectionTop && pageYOffset < sectionTop + sectionHeight) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+          link.classList.add('active');
+        }
+      });
+    });
+
+    // Mobile navigation handler
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileNavToggle = document.querySelector('.navbar-toggler');
+      if (mobileNavToggle) {
+        mobileNavToggle.addEventListener('click', function() {
+          document.body.classList.toggle('mobile-nav-open');
+        });
+      }
+    });
+  </script>
+</body>
+</html>
+
+

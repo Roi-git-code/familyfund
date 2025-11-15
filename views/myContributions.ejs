@@ -1,0 +1,742 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Contributions - FamilyFund</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- DataTables -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Unified custom CSS -->
+  <link href="/css/app.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/flash.css">
+
+
+  <style>
+    .summary-card {
+      transition: transform 0.2s ease-in-out;
+      border: none;
+      border-radius: 12px;
+    }
+    .summary-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    .card-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+    }
+    .table-actions {
+      white-space: nowrap;
+    }
+    .page-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .empty-state {
+      padding: 3rem 1rem;
+      text-align: center;
+      color: #6c757d;
+    }
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+    .stat-highlight {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+    .stat-subtitle {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    .month-cell {
+      min-width: 70px;
+      text-align: center;
+      font-weight: 500;
+    }
+    .filter-section {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      display: none; /* Hidden by default */
+      transition: all 0.3s ease-in-out;
+    }
+    .filter-section.show {
+      display: block;
+      animation: slideDown 0.3s ease-out;
+    }
+    
+    /* Toggle button styles */
+    .filter-toggle-btn {
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      margin-bottom: 1rem;
+    }
+    
+    .filter-toggle-btn .fa-chevron-down {
+      transition: transform 0.3s ease;
+    }
+    
+    .filter-toggle-btn.collapsed .fa-chevron-down {
+      transform: rotate(-90deg);
+    }
+    
+    /* Professional Button Styles */
+    .filter-btn-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .filter-btn {
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .action-btn-group {
+      display: flex;
+      gap: 0.25rem;
+    }
+    
+    .action-btn {
+      border-radius: 6px;
+      padding: 0.375rem 0.75rem;
+      transition: all 0.3s ease;
+    }
+    
+    /* Animation for filter section */
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Mobile Optimizations */
+    @media (max-width: 768px) {
+      .filter-btn-group {
+        flex-direction: column;
+      }
+      
+      .filter-btn {
+        width: 100%;
+        text-align: center;
+      }
+      
+      .page-header {
+        padding: 1.5rem 1rem;
+      }
+      
+      .page-header h2 {
+        font-size: 1.5rem;
+      }
+      
+      .stat-highlight {
+        font-size: 1.8rem;
+      }
+    }
+    
+    @media (max-width: 576px) {
+      .card-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+      }
+    }
+
+    /* DataTable button styling */
+    .dt-buttons .btn {
+      border-radius: 6px;
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+
+  <!-- Header -->
+  <%- include('partials/header') %>
+
+  <!-- Sidebar -->
+  <%- include('partials/sidebar', { user: user, activePage: 'my-contributions' }) %>
+
+  <main class="main-content">
+    <div class="container-fluid pt-5 mt-3">
+      <div class="row">
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+          
+          <!-- Flash messages -->
+  <%- include('partials/flash') %>
+    
+          <!-- Page Header -->
+          <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h2 class="fw-bold mb-2">My Contributions</h2>
+                <p class="mb-0 opacity-90">Track and analyze your complete contribution history with detailed insights</p>
+              </div>
+              <div>
+                <a href="/dashboard" class="btn btn-light btn-sm">
+                  <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Summary Cards -->
+          <div class="row g-4 mb-4">
+            <!-- Lifetime Contribution -->
+            <div class="col-12 col-sm-6 col-md-4">
+              <div class="card shadow-sm h-100 summary-card border-start border-4 border-success">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-3">
+                    <div class="card-icon bg-success text-white me-3">
+                      <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div>
+                      <h5 class="card-title mb-1">Lifetime Contribution</h5>
+                      <p class="stat-highlight text-success">
+                        <% if (memberTotal > 0) { %>
+                          TSh <%= memberTotal.toLocaleString() %>
+                        <% } else { %>
+                          <span class="text-muted">No Contributions</span>
+                        <% } %>
+                      </p>
+                    </div>
+                  </div>
+                  <p class="stat-subtitle text-muted mb-0">
+                    <% if (memberTotal > 0) { %>
+                      Your total contributions across all years
+                    <% } else { %>
+                      Start making your first contribution
+                    <% } %>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Share of Contributions -->
+            <div class="col-12 col-sm-6 col-md-4">
+              <div class="card shadow-sm h-100 summary-card border-start border-4 border-primary">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-3">
+                    <div class="card-icon bg-primary text-white me-3">
+                      <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div>
+                      <h5 class="card-title mb-1">Share of Total</h5>
+                      <p class="stat-highlight text-primary">
+                        <% if (percentage > 0) { %>
+                          <%= percentage %>%
+                        <% } else { %>
+                          <span class="text-muted">0%</span>
+                        <% } %>
+                      </p>
+                    </div>
+                  </div>
+                  <p class="stat-subtitle text-muted mb-0">
+                    <% if (allTotal > 0) { %>
+                      Total pool: TSh <%= allTotal.toLocaleString() %>
+                    <% } else { %>
+                      No contributions in the system yet
+                    <% } %>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contribution Years -->
+            <div class="col-12 col-sm-12 col-md-4">
+              <div class="card shadow-sm h-100 summary-card border-start border-4 border-info">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-3">
+                    <div class="card-icon bg-info text-white me-3">
+                      <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div>
+                      <h5 class="card-title mb-1">Active Years</h5>
+                      <p class="stat-highlight text-info">
+                        <%= contributions.length || 0 %>
+                      </p>
+                    </div>
+                  </div>
+                  <p class="stat-subtitle text-muted mb-0">
+                    <% if (contributions.length > 0) { %>
+                      Years with contribution records
+                    <% } else { %>
+                      No contribution history available
+                    <% } %>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filter Toggle Button -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">
+              <i class="fas fa-table me-2 text-primary"></i>Contribution Details
+              <% if (contributions.length > 0) { %>
+                <span class="badge bg-primary ms-2"><%= contributions.length %> years</span>
+              <% } %>
+            </h5>
+            <button type="button" class="btn btn-outline-primary filter-toggle-btn" id="filterToggleBtn">
+              <i class="fas fa-filter me-2"></i>
+              <span id="filterToggleText">Show Filters</span>
+              <i class="fas fa-chevron-down ms-2"></i>
+            </button>
+          </div>
+
+          <!-- Filter Section (Hidden by Default) -->
+          <div class="filter-section" id="filterSection">
+            <div class="row align-items-center">
+              <div class="col-12">
+                <h5 class="card-title mb-3">
+                  <i class="fas fa-filter text-primary me-2"></i>Filter Contributions
+                </h5>
+                <form class="row g-2" id="contrib-filter-form" method="GET" action="/my-contributions">
+                  <div class="col-12 col-sm-6 col-md-4">
+                    <label class="form-label fw-semibold">From Date</label>
+                    <input type="month" class="form-control" name="from" value="<%= from || '' %>" 
+                           placeholder="Select start date">
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-4">
+                    <label class="form-label fw-semibold">To Date</label>
+                    <input type="month" class="form-control" name="to" value="<%= to || '' %>"
+                           placeholder="Select end date">
+                  </div>
+                  <div class="col-12 col-md-4 mt-md-4">
+                    <div class="filter-btn-group">
+                      <button type="submit" class="btn btn-primary filter-btn">
+                        <i class="fas fa-search me-1"></i> Apply Filters
+                      </button>
+                      <a href="/my-contributions" class="btn btn-outline-secondary filter-btn">
+                        <i class="fas fa-refresh me-1"></i> Clear All
+                      </a>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contributions Table -->
+          <div class="card shadow-sm border-0">
+            <div class="card-body">
+              <% if (contributions.length === 0) { %>
+                <div class="empty-state">
+                  <i class="fas fa-chart-bar"></i>
+                  <h4 class="mb-3">
+                    <% if (from || to) { %>
+                      No Contributions Found
+                    <% } else { %>
+                      No Contribution History
+                    <% } %>
+                  </h4>
+                  <p class="text-muted mb-4">
+                    <% if (from || to) { %>
+                      No contribution records match your selected filter criteria. Try adjusting your date range.
+                    <% } else { %>
+                      You haven't made any contributions yet. Contributions will appear here once they are recorded.
+                    <% } %>
+                  </p>
+                  <% if (from || to) { %>
+                    <a href="/my-contributions" class="btn btn-primary">
+                      <i class="fas fa-eye me-1"></i> View All Contributions
+                    </a>
+                  <% } else { %>
+                    <div class="d-flex gap-2 justify-content-center">
+                      <a href="/dashboard" class="btn btn-outline-primary">
+                        <i class="fas fa-home me-1"></i> Back to Dashboard
+                      </a>
+                      <button class="btn btn-primary" onclick="alert('Contact administrator to make your first contribution')">
+                        <i class="fas fa-info-circle me-1"></i> Get Started
+                      </button>
+                    </div>
+                  <% } %>
+                </div>
+              <% } else { %>
+                <div class="table-responsive">
+                  <table id="contributions-table" class="table table-hover align-middle">
+                    <thead class="table-dark">
+                      <tr>
+                        <th class="bg-primary">Year</th>
+                        <th class="text-center">Jan(Tsh)</th>
+                        <th class="text-center">Feb(Tsh)</th>
+                        <th class="text-center">Mar(Tsh)</th>
+                        <th class="text-center">Apr(Tsh)</th>
+                        <th class="text-center">May(Tsh)</th>
+                        <th class="text-center">Jun<(Tsh)/th>
+                        <th class="text-center">Jul(Tsh)</th>
+                        <th class="text-center">Aug(Tsh)</th>
+                        <th class="text-center">Sep(Tsh)</th>
+                        <th class="text-center">Oct(Tsh)</th>
+                        <th class="text-center">Nov(Tsh)</th>
+                        <th class="text-center">Dec(Tsh)</th>
+                        <th class="text-center bg-success">Year Total(Tsh)</th>
+                        <th class="text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% contributions.forEach(c => { %>
+                        <tr class="contribution-row">
+                          <td class="fw-bold text-dark">
+                            <i class="fas fa-calendar text-primary me-2"></i><%= c.year %>
+                          </td>
+                          <td class="month-cell <%= c.jan > 0 ? 'table-success' : 'table-light' %>">
+                            <%= c.jan > 0 ?  Number(c.jan).toLocaleString() : '-' %>
+                          </td>
+                          <td class="month-cell <%= c.feb > 0 ? 'table-success' : 'table-light' %>">
+                            <%= c.feb > 0 ?  Number(c.feb).toLocaleString() : '-' %>
+                          </td>
+                          <td class="month-cell <%= c.mar > 0 ? 'table-success' : 'table-light' %>">
+                            <%= c.mar > 0 ?  Number(c.mar).toLocaleString() : '-' %>
+                          </td>
+                          <td class="month-cell <%= c.apr > 0 ? 'table-success' : 'table-light' %>">
+                            <%= c.apr > 0 ?  Number(c.apr).toLocaleString() : '-' %>
+                          </td>
+                          <td class="month-cell <%= c.may > 0 ? 'table-success' : 'table-light' %>">
+                            <%= c.may > 0 ?  Number(c.may).toLocaleString() : '-' %>
+                          </td>
+                          <td class="month-cell <%= c.jun > 0 ? 'table-success' : 'table-light' %>">
+                            <%= c.jun > 0 ?  Number(c.jun).toLocaleString() : '-' %>
+                          </td>
+                          <td class="month-cell <%= c.jul > 0 ? 'table-success' : 'table-light' %>">
+                            <%= c.jul > 0 ?  Number(c.jul).toLocaleString() : '-' %>
+                          </td>
+                          <td class="month-cell <%= c.aug > 0 ? 'table-success' : 'table-light' %>">
+                            <%= c.aug > 0 ?  Number(c.aug).toLocaleString() : '-' %>
+                          </td>
+                          <td class="month-cell <%= c.sep > 0 ? 'table-success' : 'table-light' %>">
+                            <%= c.sep > 0 ?  Number(c.sep).toLocaleString() : '-' %>
+                          </td>
+                          <td class="month-cell <%= c.oct > 0 ? 'table-success' : 'table-light' %>">
+                            <%= c.oct > 0 ?  Number(c.oct).toLocaleString() : '-' %>
+                          </td>
+                          <td class="month-cell <%= c.nov > 0 ? 'table-success' : 'table-light' %>">
+                            <%= c.nov > 0 ?  Number(c.nov).toLocaleString() : '-' %>
+                          </td>
+                          <td class="month-cell <%= c.dec > 0 ? 'table-success' : 'table-light' %>">
+                            <%= c.dec > 0 ?  Number(c.dec).toLocaleString() : '-' %>
+                          </td>
+                          <td class="text-center fw-bold text-success">
+                           <%= Number(c.total_year).toLocaleString() %>
+                          </td>
+                          <td class="table-actions">
+                            <div class="action-btn-group">
+                              <button class="btn btn-outline-primary action-btn view-year" data-year="<%= c.year %>" 
+                                      title="View Year Details">
+                                <i class="fas fa-chart-bar"></i>
+                              </button>
+                              <a href="/my-contributions/pdf?from=<%= c.year %>-01&to=<%= c.year %>-12" 
+                                 class="btn btn-outline-danger action-btn" target="_blank" title="Download PDF Report">
+                                <i class="fas fa-file-pdf"></i>
+                              </a>
+                            </div>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                    <tfoot class="table-group-divider">
+                      <tr class="table-active fw-bold">
+                        <td>All Years Total(Tsh)</td>
+                        <td class="text-center"> <%= contributions.reduce((sum, c) => sum + (Number(c.jan) || 0), 0).toLocaleString() %></td>
+                        <td class="text-center"> <%= contributions.reduce((sum, c) => sum + (Number(c.feb) || 0), 0).toLocaleString() %></td>
+                        <td class="text-center"> <%= contributions.reduce((sum, c) => sum + (Number(c.mar) || 0), 0).toLocaleString() %></td>
+                        <td class="text-center"> <%= contributions.reduce((sum, c) => sum + (Number(c.apr) || 0), 0).toLocaleString() %></td>
+                        <td class="text-center"> <%= contributions.reduce((sum, c) => sum + (Number(c.may) || 0), 0).toLocaleString() %></td>
+                        <td class="text-center"> <%= contributions.reduce((sum, c) => sum + (Number(c.jun) || 0), 0).toLocaleString() %></td>
+                        <td class="text-center"> <%= contributions.reduce((sum, c) => sum + (Number(c.jul) || 0), 0).toLocaleString() %></td>
+                        <td class="text-center"> <%= contributions.reduce((sum, c) => sum + (Number(c.aug) || 0), 0).toLocaleString() %></td>
+                        <td class="text-center"> <%= contributions.reduce((sum, c) => sum + (Number(c.sep) || 0), 0).toLocaleString() %></td>
+                        <td class="text-center"> <%= contributions.reduce((sum, c) => sum + (Number(c.oct) || 0), 0).toLocaleString() %></td>
+                        <td class="text-center"> <%= contributions.reduce((sum, c) => sum + (Number(c.nov) || 0), 0).toLocaleString() %></td>
+                        <td class="text-center"> <%= contributions.reduce((sum, c) => sum + (Number(c.dec) || 0), 0).toLocaleString() %></td>
+                        <td class="text-center text-success"> <%= contributions.reduce((sum, c) => sum + (Number(c.total_year) || 0), 0).toLocaleString() %></td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Quick Stats -->
+          <% if (contributions.length > 0) { %>
+            <div class="row mt-4">
+              <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body text-center py-4">
+                    <i class="fas fa-calculator fa-2x text-primary mb-3"></i>
+                    <h6 class="card-title text-muted">Average Monthly</h6>
+                    <h4 class="text-primary fw-bold">
+                      TSh <%= ((contributions.reduce((sum, c) => sum + (Number(c.total_year) || 0), 0) / Math.max(contributions.length * 12, 1)) || 0).toFixed(2).toLocaleString() %>
+                    </h4>
+                    <small class="text-muted">Per month across all years</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body text-center py-4">
+                    <i class="fas fa-trophy fa-2x text-warning mb-3"></i>
+                    <h6 class="card-title text-muted">Best Year</h6>
+                    <h4 class="text-warning fw-bold">
+                      <% 
+                        const maxYear = contributions.reduce((max, c) => 
+                          (Number(c.total_year) || 0) > (Number(max.total_year) || 0) ? c : max, 
+                        contributions[0]);
+                      %>
+                      TSh <%= maxYear ? Number(maxYear.total_year).toLocaleString() : '0' %>
+                    </h4>
+                    <small class="text-muted"><%= maxYear ? maxYear.year : 'N/A' %></small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body text-center py-4">
+                    <i class="fas fa-star fa-2x text-info mb-3"></i>
+                    <h6 class="card-title text-muted">Top Month</h6>
+                    <h4 class="text-info fw-bold">
+                      <% 
+                        const monthlySums = {};
+                        const monthNames = {
+                          jan: 'Jan', feb: 'Feb', mar: 'Mar', apr: 'Apr', may: 'May', jun: 'Jun',
+                          jul: 'Jul', aug: 'Aug', sep: 'Sep', oct: 'Oct', nov: 'Nov', dec: 'Dec'
+                        };
+                        for (let month of ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']) {
+                          monthlySums[month] = contributions.reduce((sum, c) => sum + (Number(c[month]) || 0), 0);
+                        }
+                        const maxMonth = Object.keys(monthlySums).reduce((a, b) => monthlySums[a] > monthlySums[b] ? a : b);
+                      %>
+                      <%= monthNames[maxMonth] %>
+                    </h4>
+                    <small class="text-muted">TSh <%= (monthlySums[maxMonth] || 0).toLocaleString() %></small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% } %>
+
+        </main>
+      </div>
+    </div>
+            
+   <%- include('partials/change_password_modal') %>
+
+  </main>
+
+  <!-- Footer -->
+  <%- include('partials/footer') %>
+
+  <!-- JavaScript Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+  
+  <!-- Custom Scripts -->
+    <script src="/js/flash.js"></script>
+  <script src="/script/dashboard.js"></script>
+  <script src="/script/sidebar.js"></script>
+  <script src="/script/update_profie.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      // Filter toggle functionality
+      $('#filterToggleBtn').on('click', function() {
+        const filterSection = $('#filterSection');
+        const toggleText = $('#filterToggleText');
+        const isVisible = filterSection.hasClass('show');
+        
+        if (isVisible) {
+          filterSection.removeClass('show');
+          toggleText.text('Show Filters');
+          $(this).addClass('collapsed');
+        } else {
+          filterSection.addClass('show');
+          toggleText.text('Hide Filters');
+          $(this).removeClass('collapsed');
+        }
+      });
+
+      // Show filter section if filters are already applied
+      <% if (from || to) { %>
+        $('#filterSection').addClass('show');
+        $('#filterToggleText').text('Hide Filters');
+        $('#filterToggleBtn').removeClass('collapsed');
+      <% } %>
+
+      // Only initialize DataTable if there are contributions
+      <% if (contributions.length > 0) { %>
+        const table = $('#contributions-table').DataTable({
+          dom: '<"row"<"col-md-6"B><"col-md-6"f>>rt<"row"<"col-md-6"l><"col-md-6"p>>',
+          buttons: [
+            {
+              extend: 'excel',
+              text: '<i class="fas fa-file-excel me-2"></i>Excel',
+              className: 'btn btn-success btn-sm',
+              title: 'My Contributions - FamilyFund'
+            },
+            {
+              extend: 'csv',
+              text: '<i class="fas fa-file-csv me-2"></i>CSV',
+              className: 'btn btn-info btn-sm',
+              title: 'My Contributions - FamilyFund'
+            },
+            {
+              extend: 'print',
+              text: '<i class="fas fa-print me-2"></i>Print',
+              className: 'btn btn-secondary btn-sm',
+              title: 'My Contributions - FamilyFund',
+              customize: function (win) {
+                $(win.document.body).find('table').addClass('display').css('font-size', '10px');
+                $(win.document.body).find('h1').css('text-align','center').css('font-size', '18px');
+              }
+            },
+            {
+              text: '<i class="fas fa-file-pdf me-2"></i>PDF',
+              className: 'btn btn-danger btn-sm',
+              action: function (e, dt, node, config) {
+                // Get current filter parameters
+                const from = '<%= from || "" %>';
+                const to = '<%= to || "" %>';
+                
+                // Construct PDF URL with current filters
+                let pdfUrl = '/my-contributions/pdf?';
+                if (from) pdfUrl += 'from=' + from + '&';
+                if (to) pdfUrl += 'to=' + to;
+                
+                // Open PDF in new tab
+                window.open(pdfUrl, '_blank');
+              }
+            }
+          ],
+          pageLength: 10,
+          lengthMenu: [5, 10, 25, 50],
+          order: [[0, 'desc']],
+          responsive: true,
+          language: {
+            search: "Search years or amounts:",
+            lengthMenu: "Show _MENU_ years",
+            info: "Showing _START_ to _END_ of _TOTAL_ years",
+            paginate: {
+              previous: "‹",
+              next: "›"
+            }
+          }
+        });
+
+      <% } %>
+
+      // View year details with enhanced modal
+      $('.view-year').on('click', function() {
+        const year = $(this).data('year');
+        
+        // Create a simple modal for year details (can be enhanced with charts later)
+        const modalHtml = `
+          <div class="modal fade" id="yearModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                  <h5 class="modal-title">
+                    <i class="fas fa-chart-bar me-2"></i>Contribution Analysis - ${year}
+                  </h5>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                  <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                  <h4>Detailed Analysis for ${year}</h4>
+                  <p class="text-muted">Advanced analytics and visualization features coming soon!</p>
+                  <p class="text-muted">This will include monthly trends, comparison charts, and detailed breakdowns.</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <a href="/my-contributions/pdf?from=${year}-01&to=${year}-12" 
+                     class="btn btn-primary" target="_blank">
+                    <i class="fas fa-download me-1"></i>Download Report
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Remove existing modal if any
+        $('#yearModal').remove();
+        $('body').append(modalHtml);
+        
+        // Show the modal
+        const yearModal = new bootstrap.Modal(document.getElementById('yearModal'));
+        yearModal.show();
+      });
+
+      // Enhanced filter auto-submit with debouncing
+      let filterTimeout;
+      $('input[type="month"]').on('change', function() {
+        clearTimeout(filterTimeout);
+        filterTimeout = setTimeout(() => {
+          if ($(this).val()) {
+            $('#contrib-filter-form').submit();
+          }
+        }, 800);
+      });
+
+      // Add row hover effects
+      $('.contribution-row').hover(
+        function() {
+          $(this).addClass('table-active');
+          $(this).css('transform', 'scale(1.01)');
+        },
+        function() {
+          $(this).removeClass('table-active');
+          $(this).css('transform', 'scale(1)');
+        }
+      );
+    });
+  </script>
+
+</body>
+</html>
+
+

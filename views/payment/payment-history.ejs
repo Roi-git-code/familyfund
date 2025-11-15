@@ -1,0 +1,1132 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= pageTitle %> - FamilyFund</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="/css/app.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/flash.css">
+
+  <style>
+    .stats-card {
+      border-radius: 10px;
+      border: none;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+    }
+    .stats-icon {
+      font-size: 2rem;
+      opacity: 0.8;
+    }
+    .view-toggle {
+      border-radius: 25px;
+    }
+    .table-hover tbody tr:hover {
+      background-color: rgba(0, 123, 255, 0.05);
+    }
+    .status-badge {
+      font-size: 0.75rem;
+      padding: 0.35em 0.65em;
+    }
+    .action-dropdown .btn-group {
+      display: flex;
+    }
+    .table-actions {
+      white-space: nowrap;
+      width: 100px;
+    }
+    .compact-badge {
+      font-size: 0.7rem;
+      padding: 0.25em 0.5em;
+    }
+    .transaction-id {
+      max-width: 150px;
+      word-break: break-all;
+    }
+    .dropdown-menu {
+      min-width: 200px;
+    }
+    .payment-details-summary {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    .payment-details-summary .detail-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .payment-details-summary .detail-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+    /* New styles for filtering and table */
+    .filter-section {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .table-container {
+      max-height: 600px;
+      overflow-y: auto;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+    }
+    .table-responsive {
+      margin-bottom: 0;
+    }
+    .pagination-container {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-top: 1px solid #dee2e6;
+      border-radius: 0 0 8px 8px;
+    }
+    .filter-badge {
+      font-size: 0.75rem;
+      margin-left: 5px;
+    }
+    .filter-group {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+      margin-bottom: 15px;
+    }
+    .filter-toggle {
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 8px;
+      padding: 12px 15px;
+      border: 1px solid #dee2e6;
+    }
+    .filter-toggle:hover {
+      background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    }
+    .filter-advanced {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .filter-advanced.show {
+      max-height: 500px;
+    }
+    .filter-main {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .filter-main.show {
+      max-height: 500px;
+    }
+    .sticky-top {
+      position: sticky;
+      top: 0;
+      background: white;
+      z-index: 10;
+    }
+    .toggle-icon {
+      transition: transform 0.3s ease;
+    }
+    .toggle-icon.rotated {
+      transform: rotate(180deg);
+    }
+    .stats-section {
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    .stats-section.collapsed {
+      max-height: 0;
+      opacity: 0;
+      margin-bottom: 0;
+    }
+    .section-toggle {
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-radius: 8px;
+      padding: 10px 15px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .section-toggle:hover {
+      background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    }
+    .section-toggle.secondary {
+      background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    }
+    .section-toggle.secondary:hover {
+      background: linear-gradient(135deg, #5a6268 0%, #3d4348 100%);
+    }
+  </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+  <%- include('../partials/header') %>
+
+  <div class="container-fluid">
+    <div class="row">
+      <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+        <%- include('../partials/sidebar') %>
+      </nav>
+
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+        <%- include('../partials/flash') %>
+        
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h2><i class="fas fa-history me-2"></i><%= pageTitle %></h2>
+            <p class="text-muted mb-0">Track and manage payment records</p>
+          </div>
+          <div class="btn-group">
+            <a href="/payments" class="btn btn-outline-primary btn-sm">
+              <i class="fas fa-credit-card me-1"></i>Make Payment
+            </a>
+            <a href="/dashboard" class="btn btn-outline-secondary btn-sm">
+              <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+          </div>
+        </div>
+
+        <!-- Statistics Cards Section with Toggle -->
+        <div class="mb-4">
+          <div class="section-toggle d-flex justify-content-between align-items-center mb-3" onclick="toggleStatsSection()">
+            <div>
+              <i class="fas fa-chart-bar me-2"></i>
+              <span class="fw-bold">Payment Statistics</span>
+            </div>
+            <i class="fas fa-chevron-down toggle-icon" id="statsToggleIcon"></i>
+          </div>
+          
+          <div class="stats-section show" id="statsSection">
+            <div class="row">
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card stats-card border-left-primary">
+                  <div class="card-body">
+                    <div class="row align-items-center">
+                      <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Paid</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">TSh <%= Number(statistics.totalPaid).toLocaleString() %></div>
+                      </div>
+                      <div class="col-auto">
+                        <i class="fas fa-check-circle stats-icon text-primary"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card stats-card border-left-warning">
+                  <div class="card-body">
+                    <div class="row align-items-center">
+                      <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Payments</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">TSh <%= Number(statistics.totalPending).toLocaleString() %></div>
+                      </div>
+                      <div class="col-auto">
+                        <i class="fas fa-clock stats-icon text-warning"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card stats-card border-left-success">
+                  <div class="card-body">
+                    <div class="row align-items-center">
+                      <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Completed Payments</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><%= statistics.paidCount %></div>
+                      </div>
+                      <div class="col-auto">
+                        <i class="fas fa-receipt stats-icon text-success"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card stats-card border-left-info">
+                  <div class="card-body">
+                    <div class="row align-items-center">
+                      <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Records</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><%= statistics.totalPayments %></div>
+                      </div>
+                      <div class="col-auto">
+                        <i class="fas fa-database stats-icon text-info"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enhanced Filter Section with Toggle -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+              <i class="fas fa-filter me-2"></i>Filter Payments
+            </h5>
+            <div class="d-flex align-items-center">
+              <span class="badge bg-primary me-2" id="activeFiltersCount">0 active filters</span>
+              <i class="fas fa-chevron-down toggle-icon" id="mainFilterToggleIcon"></i>
+            </div>
+          </div>
+          
+          <!-- Main Filter Content (initially hidden) -->
+          <div class="filter-main" id="mainFilterContent">
+            <div class="card-body">
+              <form id="filterForm" method="get" action="/payments/history">
+                <input type="hidden" name="view" value="<%= viewType %>">
+                
+                <div class="row g-3">
+                  <!-- Basic Filters -->
+                  <div class="col-md-6">
+                    <label class="form-label fw-bold">Date Range</label>
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <input type="date" name="from" class="form-control form-control-sm" value="<%= typeof from !== 'undefined' ? from : '' %>" placeholder="From Date">
+                      </div>
+                      <div class="col-6">
+                        <input type="date" name="to" class="form-control form-control-sm" value="<%= typeof to !== 'undefined' ? to : '' %>" placeholder="To Date">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-3">
+                    <label class="form-label fw-bold">Status</label>
+                    <select name="status" class="form-select form-select-sm">
+                      <option value="">All Status</option>
+                      <option value="Paid" <%= (typeof status !== 'undefined' && status === 'Paid') ? 'selected' : '' %>>Paid</option>
+                      <option value="Pending" <%= (typeof status !== 'undefined' && status === 'Pending') ? 'selected' : '' %>>Pending</option>
+                      <option value="Failed" <%= (typeof status !== 'undefined' && status === 'Failed') ? 'selected' : '' %>>Failed</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-3">
+                    <label class="form-label fw-bold">Amount Range</label>
+                    <select name="amount_range" class="form-select form-select-sm">
+                      <option value="">Any Amount</option>
+                      <option value="0-10000" <%= (typeof amount_range !== 'undefined' && amount_range === '0-10000') ? 'selected' : '' %>>Under 10,000</option>
+                      <option value="10000-50000" <%= (typeof amount_range !== 'undefined' && amount_range === '10000-50000') ? 'selected' : '' %>>10,000 - 50,000</option>
+                      <option value="50000-100000" <%= (typeof amount_range !== 'undefined' && amount_range === '50000-100000') ? 'selected' : '' %>>50,000 - 100,000</option>
+                      <option value="100000-500000" <%= (typeof amount_range !== 'undefined' && amount_range === '100000-500000') ? 'selected' : '' %>>100,000 - 500,000</option>
+                      <option value="500000+" <%= (typeof amount_range !== 'undefined' && amount_range === '500000+') ? 'selected' : '' %>>500,000+</option>
+                    </select>
+                  </div>
+
+                  <!-- Advanced Filters Toggle -->
+                  <div class="col-12">
+                    <div class="filter-toggle p-2 rounded" onclick="toggleAdvancedFilters()">
+                      <i class="fas fa-sliders-h me-2"></i>
+                      <span class="fw-bold">Advanced Filters</span>
+                      <i class="fas fa-chevron-down ms-2 toggle-icon" id="advancedFiltersIcon"></i>
+                    </div>
+                  </div>
+
+                  <!-- Advanced Filters -->
+                  <div class="col-12 filter-advanced" id="advancedFilters">
+                    <div class="row g-3">
+                      <% if (viewType === 'all') { %>
+                      <div class="col-md-6">
+                        <label class="form-label fw-bold">Member Search</label>
+                        <input type="text" name="member_search" class="form-control form-control-sm" value="<%= typeof member_search !== 'undefined' ? member_search : '' %>" placeholder="Search by member name...">
+                      </div>
+                      <% } %>
+                      
+                      <div class="col-md-6">
+                        <label class="form-label fw-bold">Transaction ID</label>
+                        <input type="text" name="transaction_id" class="form-control form-control-sm" value="<%= typeof transaction_id !== 'undefined' ? transaction_id : '' %>" placeholder="Search by transaction ID...">
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label fw-bold">Phone Number</label>
+                        <input type="text" name="phone_number" class="form-control form-control-sm" value="<%= typeof phone_number !== 'undefined' ? phone_number : '' %>" placeholder="Search by phone number...">
+                      </div>
+
+                      <div class="col-md-3">
+                        <label class="form-label fw-bold">Sort By</label>
+                        <select name="sort_by" class="form-select form-select-sm">
+                          <option value="created_at_desc" <%= (typeof sort_by !== 'undefined' && sort_by === 'created_at_desc') ? 'selected' : 'selected' %>>Newest First</option>
+                          <option value="created_at_asc" <%= (typeof sort_by !== 'undefined' && sort_by === 'created_at_asc') ? 'selected' : '' %>>Oldest First</option>
+                          <option value="amount_desc" <%= (typeof sort_by !== 'undefined' && sort_by === 'amount_desc') ? 'selected' : '' %>>Highest Amount</option>
+                          <option value="amount_asc" <%= (typeof sort_by !== 'undefined' && sort_by === 'amount_asc') ? 'selected' : '' %>>Lowest Amount</option>
+                        </select>
+                      </div>
+
+                      <div class="col-md-3">
+                        <label class="form-label fw-bold">Results Per Page</label>
+                        <select name="per_page" class="form-select form-select-sm">
+                          <option value="10" <%= (typeof per_page !== 'undefined' && per_page == 10) ? 'selected' : '' %>>10</option>
+                          <option value="25" <%= (typeof per_page !== 'undefined' && per_page == 25) ? 'selected' : 'selected' %>>25</option>
+                          <option value="50" <%= (typeof per_page !== 'undefined' && per_page == 50) ? 'selected' : '' %>>50</option>
+                          <option value="100" <%= (typeof per_page !== 'undefined' && per_page == 100) ? 'selected' : '' %>>100</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div class="col-12">
+                    <div class="d-flex gap-2 flex-wrap">
+                      <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-search me-1"></i>Apply Filters
+                      </button>
+                      <a href="/payments/history?view=<%= viewType %>" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-times me-1"></i>Clear All
+                      </a>
+                      <button type="button" class="btn btn-outline-info btn-sm" onclick="saveFilterPreset()">
+                        <i class="fas fa-save me-1"></i>Save Preset
+                      </button>
+                      <div class="btn-group">
+                        <button type="button" class="btn btn-outline-success btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                          <i class="fas fa-download me-1"></i>Export
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li><a class="dropdown-item" href="#" onclick="exportToCSV()"><i class="fas fa-file-csv me-2"></i>Export CSV</a></li>
+                          <li><a class="dropdown-item" href="/payments/history/pdf?view=<%= viewType %><%= typeof buildExportQueryString === 'function' ? buildExportQueryString() : '' %>"><i class="fas fa-file-pdf me-2"></i>Export PDF</a></li>
+                        </ul>
+                      </div>
+                      
+                      <!-- View Toggle for authorized roles -->
+                      <% if (user.role === 'chief_signatory' || user.role === 'assistant_signatory' || user.role === 'chairman') { %>
+                      <div class="btn-group view-toggle ms-2">
+                        <a href="/payments/history?view=individual<%= typeof buildQueryString === 'function' ? buildQueryString({view: 'individual'}) : '' %>" 
+                           class="btn <%= viewType === 'individual' ? 'btn-primary' : 'btn-outline-primary' %> btn-sm">
+                          <i class="fas fa-user me-1"></i>My Payments
+                        </a>
+                        <a href="/payments/history?view=all<%= typeof buildQueryString === 'function' ? buildQueryString({view: 'all'}) : '' %>" 
+                           class="btn <%= viewType === 'all' ? 'btn-primary' : 'btn-outline-primary' %> btn-sm">
+                          <i class="fas fa-users me-1"></i>All Members
+                        </a>
+                      </div>
+                      <% } %>
+                    </div>
+                  </div>
+
+                  <!-- Active Filters Display -->
+                  <% if (hasActiveFilters) { %>
+                  <div class="col-12">
+                    <div class="alert alert-info py-2">
+                      <small class="fw-bold">Active Filters:</small>
+                      <% if (from) { %>
+                        <span class="badge bg-primary filter-badge">From: <%= from %></span>
+                      <% } %>
+                      <% if (to) { %>
+                        <span class="badge bg-primary filter-badge">To: <%= to %></span>
+                      <% } %>
+                      <% if (status) { %>
+                        <span class="badge bg-success filter-badge">Status: <%= status %></span>
+                      <% } %>
+                      <% if (amount_range) { %>
+                        <span class="badge bg-warning filter-badge">Amount: <%= amount_range %></span>
+                      <% } %>
+                      <% if (member_search) { %>
+                        <span class="badge bg-info filter-badge">Member: <%= member_search %></span>
+                      <% } %>
+                      <% if (transaction_id) { %>
+                        <span class="badge bg-secondary filter-badge">Transaction: <%= transaction_id %></span>
+                      <% } %>
+                      <% if (phone_number) { %>
+                        <span class="badge bg-dark filter-badge">Phone: <%= phone_number %></span>
+                      <% } %>
+                      <a href="/payments/history?view=<%= viewType %>" class="text-danger ms-2">
+                        <i class="fas fa-times"></i>
+                      </a>
+                    </div>
+                  </div>
+                  <% } %>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payments Table with Vertical Overflow and Pagination -->
+        <% if (payments && payments.length > 0) { %>
+          <div class="card shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+              <h6 class="card-title mb-0">
+                <i class="fas fa-list me-2"></i>Payment Records
+                <span class="badge bg-primary ms-2"><%= payments.length %> records</span>
+              </h6>
+              <div class="text-muted small">
+                Showing <%= ((currentPage - 1) * per_page) + 1 %>-<%= Math.min(currentPage * per_page, statistics.totalPayments) %> 
+                of <%= statistics.totalPayments %> total payments
+              </div>
+            </div>
+            
+            <!-- Table Container with Vertical Scroll -->
+            <div class="table-container">
+              <div class="table-responsive">
+                <table class="table table-hover table-sm mb-0" id="paymentsTable">
+                  <thead class="table-light sticky-top">
+                    <tr>
+                      <% if (viewType === 'all') { %>
+                        <th>Member Name</th>
+                        <th>Contact</th>
+                      <% } %>
+                      <th>Date & Time</th>
+                      <th>Amount (Tsh)</th>
+                      <th>Phone</th>
+                      <th>Transaction ID</th>
+                      <th>Payment Method</th>
+                      <th>Status</th>
+                      <th class="table-actions">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% payments.forEach(payment => { %>
+                      <tr>
+                        <% if (viewType === 'all') { %>
+                          <td>
+                            <div class="fw-bold">
+                              <%= payment.first_name %> <%= payment.sur_name %>
+                            </div>
+                            <small class="text-muted"><%= payment.member_email %></small>
+                          </td>
+                          <td>
+                            <small><%= payment.member_phone %></small>
+                          </td>
+                        <% } %>
+                        <td>
+                          <div class="fw-bold">
+                            <%= new Date(payment.created_at).toLocaleDateString() %>
+                          </div>
+                          <small class="text-muted">
+                            <%= new Date(payment.created_at).toLocaleTimeString() %>
+                          </small>
+                        </td>
+                        <td class="fw-bold text-primary">
+                           <%= Number(payment.amount).toLocaleString() %>
+                        </td>
+                        <td>
+                          <code class="small"><%= payment.phone_number %></code>
+                        </td>
+                        <td class="transaction-id">
+                          <code class="small"><%= payment.transaction_id %></code>
+                        </td>
+                        <td>
+                          <span class="badge bg-light text-dark compact-badge">
+                            <i class="fas fa-link me-1"></i>Azam Lipia
+                          </span>
+                        </td>
+                        <td>
+                          <span class="badge status-badge 
+                            <%= payment.status === 'Paid' ? 'bg-success' :
+                                payment.status === 'Pending' ? 'bg-warning' :
+                                'bg-danger' %>">
+                            <i class="fas 
+                              <%= payment.status === 'Paid' ? 'fa-check' :
+                                  payment.status === 'Pending' ? 'fa-clock' :
+                                  'fa-times' %> me-1">
+                            </i>
+                            <%= payment.status %>
+                          </span>
+                        </td>
+                        <td class="table-actions">
+                          <div class="dropdown">
+                            <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                              <i class="fas fa-cog"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                              <li>
+                                <a class="dropdown-item" href="/payments/status/<%= payment.transaction_id %>">
+                                  <i class="fas fa-eye me-2"></i>View Details
+                                </a>
+                              </li>
+                              <li>
+                                <a class="dropdown-item" href="/payments/status/<%= payment.transaction_id %>/pdf">
+                                  <i class="fas fa-file-pdf me-2"></i>Download Receipt
+                                </a>
+                              </li>
+                              <% if ((user.role === 'chief_signatory' || user.role === 'assistant_signatory' || user.role === 'chairman') && payment.status === 'Pending') { %>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                  <a class="dropdown-item text-success mark-as-paid-btn" href="#" 
+                                     data-transaction-id="<%= payment.transaction_id %>"
+                                     data-member-id="<%= payment.member_id %>"
+                                     data-amount="<%= payment.amount %>"
+                                     data-payment-date="<%= new Date(payment.created_at).toISOString() %>"
+                                     data-member-name="<%= payment.first_name %> <%= payment.sur_name %>">
+                                    <i class="fas fa-check me-2"></i>Mark as Paid
+                                  </a>
+                                </li>
+                                <li>
+                                  <a class="dropdown-item text-danger" href="#" onclick="updateStatus('<%= payment.transaction_id %>', 'Failed')">
+                                    <i class="fas fa-times me-2"></i>Mark as Failed
+                                  </a>
+                                </li>
+                              <% } %>
+                            </ul>
+                          </div>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Pagination -->
+            <% if (totalPages > 1) { %>
+            <div class="pagination-container">
+              <nav aria-label="Payment records pagination">
+                <ul class="pagination pagination-sm justify-content-center mb-0">
+                  <!-- First Page -->
+                  <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                    <a class="page-link" href="<%= typeof buildPaginationLink === 'function' ? buildPaginationLink(1) : '#' %>" aria-label="First">
+                      <i class="fas fa-angle-double-left"></i>
+                    </a>
+                  </li>
+                  
+                  <!-- Previous Page -->
+                  <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                    <a class="page-link" href="<%= typeof buildPaginationLink === 'function' ? buildPaginationLink(currentPage - 1) : '#' %>" aria-label="Previous">
+                      <i class="fas fa-angle-left"></i>
+                    </a>
+                  </li>
+
+                  <!-- Page Numbers -->
+                  <% 
+                    let startPage = Math.max(1, currentPage - 2);
+                    let endPage = Math.min(totalPages, currentPage + 2);
+                    
+                    // Adjust if we're near the start
+                    if (currentPage <= 3) {
+                      endPage = Math.min(5, totalPages);
+                    }
+                    
+                    // Adjust if we're near the end
+                    if (currentPage >= totalPages - 2) {
+                      startPage = Math.max(1, totalPages - 4);
+                    }
+                  %>
+                  
+                  <% for(let i = startPage; i <= endPage; i++) { %>
+                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                      <a class="page-link" href="<%= typeof buildPaginationLink === 'function' ? buildPaginationLink(i) : '#' %>"><%= i %></a>
+                    </li>
+                  <% } %>
+
+                  <!-- Next Page -->
+                  <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                    <a class="page-link" href="<%= typeof buildPaginationLink === 'function' ? buildPaginationLink(currentPage + 1) : '#' %>" aria-label="Next">
+                      <i class="fas fa-angle-right"></i>
+                    </a>
+                  </li>
+
+                  <!-- Last Page -->
+                  <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                    <a class="page-link" href="<%= typeof buildPaginationLink === 'function' ? buildPaginationLink(totalPages) : '#' %>" aria-label="Last">
+                      <i class="fas fa-angle-double-right"></i>
+                    </a>
+                  </li>
+                </ul>
+                
+                <!-- Page Info -->
+                <div class="text-center mt-2">
+                  <small class="text-muted">
+                    Page <%= currentPage %> of <%= totalPages %> 
+                    | Showing <%= ((currentPage - 1) * per_page) + 1 %>-<%= Math.min(currentPage * per_page, statistics.totalPayments) %> 
+                    of <%= statistics.totalPayments %> records
+                  </small>
+                </div>
+              </nav>
+            </div>
+            <% } %>
+          </div>
+        <% } else { %>
+          <div class="text-center py-5">
+            <i class="fas fa-receipt fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">No Payment Records Found</h4>
+            <p class="text-muted">
+              <% if (hasActiveFilters) { %>
+                No payments match your current filters. Try adjusting your search criteria.
+              <% } else if (viewType === 'all') { %>
+                No payments have been made by any members yet.
+              <% } else { %>
+                You haven't made any payments yet.
+              <% } %>
+            </p>
+            <% if (hasActiveFilters) { %>
+              <a href="/payments/history?view=<%= viewType %>" class="btn btn-outline-primary">
+                <i class="fas fa-times me-1"></i>Clear Filters
+              </a>
+            <% } %>
+            <a href="/payments" class="btn btn-primary">
+              <i class="fas fa-credit-card me-1"></i>
+              Make Your First Payment
+            </a>
+          </div>
+        <% } %>
+
+      </main>
+    </div>
+  </div>
+<%- include('../partials/change_password_modal') %>
+
+  <%- include('../partials/footer') %>
+
+  <!-- Mark as Paid Confirmation Modal -->
+  <div class="modal fade" id="markAsPaidModal" tabindex="-1" aria-labelledby="markAsPaidModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="markAsPaidModalLabel">
+            <i class="fas fa-check-circle me-2"></i>Confirm Payment Approval
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Please review the payment details below. Upon confirmation, the system will automatically add this contribution to the member's record.
+          </div>
+          
+          <div class="payment-details-summary">
+            <h6 class="mb-3">Payment Details:</h6>
+            <div class="detail-item">
+              <span class="fw-bold">Member:</span>
+              <span id="modal-member-name">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="fw-bold">Member ID:</span>
+              <span id="modal-member-id">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="fw-bold">Amount:</span>
+              <span id="modal-amount" class="text-success fw-bold">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="fw-bold">Payment Date:</span>
+              <span id="modal-payment-date">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="fw-bold">Transaction ID:</span>
+              <span id="modal-transaction-id" class="text-muted">-</span>
+            </div>
+          </div>
+
+          <div class="contribution-form-section mt-4">
+            <h6 class="mb-3">Contribution Details:</h6>
+            <form id="contributionForm" method="POST" action="/contributions/add">
+              <!-- Hidden fields for required data -->
+              <input type="hidden" name="member_id" id="contribution-member-id">
+              <input type="hidden" name="amount" id="contribution-amount">
+              <input type="hidden" name="transaction_date" id="contribution-transaction-date" value="<%= new Date().toISOString().split('T')[0] %>">
+              
+              <!-- Keep the visible fields for user reference (readonly) -->
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Member ID</label>
+                  <input type="text" id="contribution-member-id-display" class="form-control" readonly disabled>
+                  <div class="form-text text-muted">
+                    <i class="fas fa-lock me-1"></i>Member ID is auto-filled from payment
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="contribution-year" class="form-label">Year</label>
+                  <select name="year" id="contribution-year" class="form-select" required>
+                    <% const currentYear = new Date().getFullYear(); %>
+                    <% for(let y = currentYear; y >= currentYear - 5; y--) { %>
+                      <option value="<%= y %>" <%= y === currentYear ? 'selected' : '' %>><%= y %></option>
+                    <% } %>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="contribution-month" class="form-label">Month</label>
+                  <select name="month" id="contribution-month" class="form-select" required>
+                    <% 
+                      const months = [
+                        {value: 'jan', name: 'January'}, {value: 'feb', name: 'February'}, 
+                        {value: 'mar', name: 'March'}, {value: 'apr', name: 'April'}, 
+                        {value: 'may', name: 'May'}, {value: 'jun', name: 'June'}, 
+                        {value: 'jul', name: 'July'}, {value: 'aug', name: 'August'}, 
+                        {value: 'sep', name: 'September'}, {value: 'oct', name: 'October'}, 
+                        {value: 'nov', name: 'November'}, {value: 'dec', name: 'December'}
+                      ];
+                      const currentMonth = new Date().getMonth(); // 0-11
+                    %>
+                    <% months.forEach((month, index) => { %>
+                      <option value="<%= month.value %>" <%= index === currentMonth ? 'selected' : '' %>>
+                        <%= month.name %>
+                      </option>
+                    <% }) %>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Amount (Tsh)</label>
+                  <input type="text" id="contribution-amount-display" class="form-control" readonly disabled>
+                  <div class="form-text text-muted">
+                    <i class="fas fa-lock me-1"></i>Amount is auto-filled from payment
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success" id="confirmMarkAsPaid">
+            <i class="fas fa-check me-1"></i>Confirm & Add Contribution
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+   <script src="/js/flash.js"></script>
+<script src="/script/dashboard.js"></script>
+<script src="/script/sidebar.js"></script>
+
+
+  <script>
+    // Current payment data for modal
+    let currentPaymentData = null;
+
+    // Toggle statistics section
+    function toggleStatsSection() {
+      const statsSection = document.getElementById('statsSection');
+      const statsIcon = document.getElementById('statsToggleIcon');
+      
+      if (statsSection && statsIcon) {
+        statsSection.classList.toggle('show');
+        statsSection.classList.toggle('collapsed');
+        statsIcon.classList.toggle('rotated');
+        
+        // Save state to localStorage
+        const isCollapsed = statsSection.classList.contains('collapsed');
+        localStorage.setItem('statsSectionCollapsed', isCollapsed);
+      }
+    }
+
+    // Toggle main filter section
+    function toggleMainFilters() {
+      const mainFilterContent = document.getElementById('mainFilterContent');
+      const mainFilterIcon = document.getElementById('mainFilterToggleIcon');
+      
+      if (mainFilterContent && mainFilterIcon) {
+        mainFilterContent.classList.toggle('show');
+        mainFilterIcon.classList.toggle('rotated');
+        
+        // Save state to localStorage
+        const isCollapsed = !mainFilterContent.classList.contains('show');
+        localStorage.setItem('mainFilterCollapsed', isCollapsed);
+      }
+    }
+
+    // Toggle advanced filters
+    function toggleAdvancedFilters() {
+      const advancedFilters = document.getElementById('advancedFilters');
+      const advancedIcon = document.getElementById('advancedFiltersIcon');
+      
+      if (advancedFilters && advancedIcon) {
+        advancedFilters.classList.toggle('show');
+        advancedIcon.classList.toggle('rotated');
+        
+        // Save state to localStorage
+        const isCollapsed = !advancedFilters.classList.contains('show');
+        localStorage.setItem('advancedFilterCollapsed', isCollapsed);
+      }
+    }
+
+    // Update active filters count
+    function updateActiveFiltersCount() {
+      const form = document.getElementById('filterForm');
+      if (!form) return;
+      
+      const formData = new FormData(form);
+      let activeCount = 0;
+      
+      for (let [key, value] of formData.entries()) {
+        if (value && key !== 'view' && key !== 'per_page' && key !== 'sort_by') {
+          activeCount++;
+        }
+      }
+      
+      const countElement = document.getElementById('activeFiltersCount');
+      if (countElement) {
+        countElement.textContent = activeCount + ' active filters';
+      }
+    }
+
+    // Save filter preset (localStorage)
+    function saveFilterPreset() {
+      const form = document.getElementById('filterForm');
+      if (!form) return;
+      
+      const formData = new FormData(form);
+      const filters = {};
+      
+      for (let [key, value] of formData.entries()) {
+        if (value) {
+          filters[key] = value;
+        }
+      }
+      
+      const presetName = prompt('Enter a name for this filter preset:');
+      if (presetName) {
+        const presets = JSON.parse(localStorage.getItem('paymentFilterPresets') || '{}');
+        presets[presetName] = filters;
+        localStorage.setItem('paymentFilterPresets', JSON.stringify(presets));
+        alert('Filter preset saved successfully!');
+      }
+    }
+
+    // Update payment status (for admin roles)
+    function updateStatus(transactionId, status) {
+      if (!confirm(`Are you sure you want to mark this payment as ${status}?`)) {
+        return;
+      }
+
+      fetch(`/payments/update-status/${transactionId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: status,
+          notes: 'Updated via payment history'
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
+        } else {
+          alert('Error: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to update payment status');
+      });
+    }
+
+    // Mark as Paid with contribution integration
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add event listeners to all "Mark as Paid" buttons
+      document.querySelectorAll('.mark-as-paid-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          currentPaymentData = {
+            transactionId: this.getAttribute('data-transaction-id'),
+            memberId: this.getAttribute('data-member-id'),
+            amount: this.getAttribute('data-amount'),
+            paymentDate: this.getAttribute('data-payment-date'),
+            memberName: this.getAttribute('data-member-name')
+          };
+
+          // Populate modal with payment data
+          document.getElementById('modal-member-name').textContent = currentPaymentData.memberName;
+          document.getElementById('modal-member-id').textContent = currentPaymentData.memberId;
+          document.getElementById('modal-amount').textContent = 'TSh ' + Number(currentPaymentData.amount).toLocaleString();
+          document.getElementById('modal-transaction-id').textContent = currentPaymentData.transactionId;
+
+          const paymentDate = new Date(currentPaymentData.paymentDate);
+          document.getElementById('modal-payment-date').textContent = paymentDate.toLocaleDateString() + ' ' + paymentDate.toLocaleTimeString();
+
+          // Populate contribution form (using hidden fields for submission)
+          document.getElementById('contribution-member-id').value = currentPaymentData.memberId;
+          document.getElementById('contribution-amount').value = currentPaymentData.amount;
+
+          // Set display fields (readonly)
+          document.getElementById('contribution-member-id-display').value = currentPaymentData.memberId;
+          document.getElementById('contribution-amount-display').value = 'TSh ' + Number(currentPaymentData.amount).toLocaleString();
+
+          // Set year and month based on payment date
+          const paymentYear = paymentDate.getFullYear();
+          const paymentMonth = paymentDate.getMonth(); // 0-11
+
+          document.getElementById('contribution-year').value = paymentYear;
+          document.getElementById('contribution-month').selectedIndex = paymentMonth;
+
+          // Show modal
+          const modal = new bootstrap.Modal(document.getElementById('markAsPaidModal'));
+          modal.show();
+        });
+      });
+
+      // Confirm mark as paid and add contribution
+      document.getElementById('confirmMarkAsPaid').addEventListener('click', function() {
+        if (!currentPaymentData) return;
+
+        const contributionForm = document.getElementById('contributionForm');
+        const formData = new FormData(contributionForm);
+
+        // First, update payment status to Paid
+        fetch(`/payments/update-status/${currentPaymentData.transactionId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            status: 'Paid',
+            notes: 'Approved and contribution added via payment history'
+          })
+        })
+        .then(response => response.json())
+        .then(paymentResult => {
+          if (paymentResult.success) {
+            // Then, add the contribution using the transaction endpoint
+            return fetch('/contributions/add-transaction', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: new URLSearchParams({
+                member_id: currentPaymentData.memberId,
+                amount: currentPaymentData.amount,
+                transaction_date: new Date().toISOString().split('T')[0]
+              })
+            })
+            .then(response => {
+              if (response.redirected) {
+                // Contribution was added successfully, reload the page
+                window.location.href = response.url;
+              } else {
+                return response.text().then(html => {
+                  // Check if there's an error in the response
+                  const parser = new DOMParser();
+                  const doc = parser.parseFromString(html, 'text/html');
+                  const errorFlash = doc.querySelector('.alert-danger');
+                  
+                  if (errorFlash) {
+                    throw new Error(errorFlash.textContent.trim());
+                  } else {
+                    // Success, reload to show updated status
+                    location.reload();
+                  }
+                });
+              }
+            });
+          } else {
+            throw new Error(paymentResult.message || 'Failed to update payment status');
+          }
+        })
+        .then(() => {
+          // Close modal
+          const modal = bootstrap.Modal.getInstance(document.getElementById('markAsPaidModal'));
+          modal.hide();
+          
+          // Show success message
+          alert('Payment marked as paid and contribution added successfully!');
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error: ' + error.message);
+        });
+      });
+
+      // Initialize filter count
+      updateActiveFiltersCount();
+
+      // Add change listeners to filter form
+      const filterForm = document.getElementById('filterForm');
+      if (filterForm) {
+        filterForm.addEventListener('change', updateActiveFiltersCount);
+        filterForm.addEventListener('input', updateActiveFiltersCount);
+      }
+
+      // Add click listener to main filter header
+      const mainFilterHeader = document.querySelector('.card-header.bg-light');
+      if (mainFilterHeader) {
+        mainFilterHeader.addEventListener('click', toggleMainFilters);
+      }
+
+      // Load saved toggle states from localStorage
+      const statsCollapsed = localStorage.getItem('statsSectionCollapsed') === 'true';
+      const mainFilterCollapsed = localStorage.getItem('mainFilterCollapsed') === 'true';
+      const advancedFilterCollapsed = localStorage.getItem('advancedFilterCollapsed') === 'true';
+
+      // Apply saved states
+      if (statsCollapsed) {
+        toggleStatsSection(); // Collapse stats
+      }
+      
+      if (!mainFilterCollapsed) {
+        toggleMainFilters(); // Show main filters if not collapsed
+      }
+      
+      if (!advancedFilterCollapsed) {
+        toggleAdvancedFilters(); // Show advanced filters if not collapsed
+      }
+    });
+
+    // Export to CSV functionality
+    function exportToCSV() {
+      const table = document.getElementById('paymentsTable');
+      if (!table) return;
+      
+      let csv = [];
+      const rows = table.querySelectorAll('tr');
+      
+      for (let i = 0; i < rows.length; i++) {
+        let row = [], cols = rows[i].querySelectorAll('td, th');
+        
+        for (let j = 0; j < cols.length; j++) {
+          // Remove icons and HTML from cell content
+          let text = cols[j].innerText.replace(/,/g, '');
+          row.push(text);
+        }
+        
+        csv.push(row.join(','));
+      }
+
+      // Download CSV file
+      const csvContent = "data:text/csv;charset=utf-8," + csv.join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "payment_history_<%= new Date().toISOString().split('T')[0] %>.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Auto-refresh for pending payments (every 2 minutes)
+    <% if (payments && payments.some(p => p.status === 'Pending')) { %>
+      setTimeout(() => {
+        window.location.reload();
+      }, 120000); // 2 minutes
+    <% } %>
+
+    // Initialize dropdowns and tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize all dropdowns
+      var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+      var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+        return new bootstrap.Dropdown(dropdownToggleEl)
+      });
+
+      // Initialize tooltips
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+      });
+    });
+  </script>
+</body>
+</html>
+
+

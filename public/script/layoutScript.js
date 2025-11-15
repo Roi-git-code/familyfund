@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Amount validation
     const amt = parseInt(amount.value);
-    if (!amt || amt < 10000 || amt > 100000) {
+    if (!amt || amt < 1000 || amt > 1000000) {
       amountError.style.display = 'block';
       valid = false;
     } else {

@@ -1,8 +1,10 @@
+
+
 const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const multer = require('multer');
-const { parse } = require('csv-parse');              // ✅ correct import style
+const { parse } = require('csv-parse');
 const contributionModel = require('../models/contributionModel');
 const { requireRole } = require('../middleware/authMiddleware');
 const upload = multer({ dest: 'uploads/' });
@@ -15,9 +17,13 @@ const path = require('path');
 const MONTHS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
 
 function monthNumToYYYYMM(year, monthNum) {
-  // monthNum: 1-12
   const mm = String(monthNum).padStart(2, '0');
-  return `${year}/${mm}`;
+  return `${year}-${mm}`;
+}
+
+function monthNameToNumber(monthName) {
+  const index = MONTHS.indexOf(monthName.toLowerCase());
+  return index >= 0 ? index + 1 : 1;
 }
 
 // Make a nice subtitle for PDFs based on filters
@@ -35,9 +41,7 @@ function buildReportSubtitle({ membersById, selectedMember, selectedYear, from, 
 
   // Time scope
   if (from && to) {
-    const [fy, fm] = from.split('-').map(Number);
-    const [ty, tm] = to.split('-').map(Number);
-    parts.push(`From ${monthNumToYYYYMM(fy, fm)} To ${monthNumToYYYYMM(ty, tm)}`);
+    parts.push(`From ${from} To ${to}`);
   } else if (selectedYear) {
     parts.push(`Year: ${selectedYear}`);
   } else {
@@ -47,163 +51,150 @@ function buildReportSubtitle({ membersById, selectedMember, selectedYear, from, 
   return parts.join(' — ');
 }
 
-// Flatten all contributions to month-level entries
-function toMonthEntries(allContributions) {
-  const out = [];
-  for (const row of allContributions) {
-    MONTHS.forEach((m, idx) => {
-      out.push({
-        member_id: row.member_id,
-        first_name: row.first_name,
-        middle_name: row.middle_name,
-        sur_name: row.sur_name,
-        year: row.year,
-        month: m,
-        monthNum: idx + 1,
-        amount: Number(row[m] || 0),
-      });
-    });
-  }
-  return out;
-}
-
-// Apply filters (member, year, from-to) to month entries
-function filterMonthEntries(entries, { selectedMember, selectedYear, from, to }) {
-  let data = entries;
-
-  if (selectedMember) {
-    const id = parseInt(selectedMember);
-    data = data.filter(e => e.member_id === id);
-  }
-
-  if (selectedYear) {
-    const y = parseInt(selectedYear);
-    data = data.filter(e => e.year === y);
-  }
-
-  if (from && to) {
-    const [fy, fm] = from.split('-').map(Number);
-    const [ty, tm] = to.split('-').map(Number);
-    data = data.filter(e =>
-      (e.year > fy || (e.year === fy && e.monthNum >= fm)) &&
-      (e.year < ty || (e.year === ty && e.monthNum <= tm))
-    );
-  }
-
-  return data;
-}
-
-// Group filtered months back to rows (member-year)
-function groupToRows(filteredMonths) {
-  const grouped = {};
-  for (const e of filteredMonths) {
-    const key = `${e.member_id}-${e.year}`;
-    if (!grouped[key]) {
-      grouped[key] = {
-        member_id: e.member_id,
-        first_name: e.first_name,
-        middle_name: e.middle_name,
-        sur_name: e.sur_name,
-        year: e.year,
+// Convert transactions to monthly entries for backward compatibility
+function transactionsToMonthlyEntries(transactions) {
+  const monthlyData = {};
+  
+  transactions.forEach(transaction => {
+    const key = `${transaction.member_id}-${transaction.year}`;
+    if (!monthlyData[key]) {
+      monthlyData[key] = {
+        member_id: transaction.member_id,
+        first_name: transaction.first_name,
+        middle_name: transaction.middle_name,
+        sur_name: transaction.sur_name,
+        year: transaction.year,
         jan: 0, feb: 0, mar: 0, apr: 0, may: 0, jun: 0,
         jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0,
         total_year: 0
       };
     }
-    grouped[key][e.month] += e.amount;
-    grouped[key].total_year += e.amount;
-  }
-
-  const rows = Object.values(grouped).sort((a, b) => {
-    if (a.member_id === b.member_id) return a.year - b.year;
-    return a.member_id - b.member_id;
+    
+    // Add amount to the appropriate month
+    if (transaction.month && MONTHS.includes(transaction.month)) {
+      monthlyData[key][transaction.month] += parseFloat(transaction.amount);
+      monthlyData[key].total_year += parseFloat(transaction.amount);
+    }
   });
-
-  return rows;
+  
+  return Object.values(monthlyData);
 }
 
+// Filter transactions based on query parameters
+function filterTransactions(transactions, { selectedMember, selectedYear, from, to }) {
+  let filtered = transactions;
 
+  if (selectedMember) {
+    const memberId = parseInt(selectedMember);
+    filtered = filtered.filter(t => t.member_id === memberId);
+  }
+
+  if (selectedYear) {
+    const year = parseInt(selectedYear);
+    filtered = filtered.filter(t => t.year === year);
+  }
+
+  if (from) {
+    filtered = filtered.filter(t => t.transaction_date >= from);
+  }
+
+  if (to) {
+    filtered = filtered.filter(t => t.transaction_date <= to);
+  }
+
+  return filtered;
+}
+
+// Build summary (per member totals + percentages) from transactions
+function buildSummaryFromTransactions(transactions) {
+  const perMember = new Map();
+  let allTotal = 0;
+
+  // Calculate totals per member
+  transactions.forEach(transaction => {
+    const current = perMember.get(transaction.member_id) || 0;
+    const amount = parseFloat(transaction.amount);
+    perMember.set(transaction.member_id, current + amount);
+    allTotal += amount;
+  });
+
+  // Get unique members with their details
+  const memberMap = new Map();
+  transactions.forEach(transaction => {
+    if (!memberMap.has(transaction.member_id)) {
+      memberMap.set(transaction.member_id, {
+        member_id: transaction.member_id,
+        full_name: `${transaction.first_name} ${transaction.middle_name || ''} ${transaction.sur_name}`.replace(/\s+/g,' ').trim()
+      });
+    }
+  });
+
+  const members = Array.from(memberMap.values()).map(member => {
+    const total = Number(perMember.get(member.member_id) || 0);
+    const maxContribution = Math.max(...Array.from(perMember.values()));
+    const color = colorForContribution(total, maxContribution);
+
+    return {
+      ...member,
+      total_contribution: total,
+      percentageOfAll: allTotal ? Number(((total / allTotal) * 100).toFixed(2)) : 0,
+      color
+    };
+  }).sort((a, b) => b.total_contribution - a.total_contribution);
+
+  return { members, totalAll: allTotal };
+}
+
+// Build monthly total summary from transactions
+function buildMonthlySummaryFromTransactions(transactions) {
+  const monthlySummary = {};
+  MONTHS.forEach(m => monthlySummary[m] = 0);
+  
+  transactions.forEach(transaction => {
+    if (transaction.month && MONTHS.includes(transaction.month)) {
+      monthlySummary[transaction.month] += parseFloat(transaction.amount);
+    }
+  });
+  
+  return monthlySummary;
+}
+
+// Calculate member lifetime totals from transactions
+function calculateMemberTotals(transactions) {
+  const memberTotals = {};
+  transactions.forEach(transaction => {
+    const memberId = transaction.member_id;
+    memberTotals[memberId] = (memberTotals[memberId] || 0) + parseFloat(transaction.amount);
+  });
+  return memberTotals;
+}
 
 /**
  * Assigns a color based on contribution relative to the max.
- * @param {number} contribution - The member’s contribution
- * @param {number} maxContribution - The highest contribution among all members
- * @returns {string} - A color name (or hex)
  */
 function colorForContribution(contribution, maxContribution) {
-  if (maxContribution === 0) return "gray"; // fallback
+  if (maxContribution === 0) return "gray";
   
   const percentage = (contribution / maxContribution) * 100;
 
   if (percentage >= 100) {
-    return "darkgreen";   // top contributor
+    return "darkgreen";
   } else if (percentage >= 75) {
-    return "lightgreen";  // strong contributor
+    return "lightgreen";
   } else if (percentage >= 50) {
-    return "lightblue";   // medium contributor
+    return "lightblue";
   } else if (percentage >= 25) {
-    return "yellow";      // lower contributor
+    return "yellow";
   } else {
-    return "red";         // very low contributor
+    return "red";
   }
-}
-
-
-// Build summary (per member totals + percentages) from filtered rows
-function buildSummaryFromRows(rows) {
-  const perMember = new Map(); // id -> sum
-  let all = 0;
-
-  for (const r of rows) {
-    const current = perMember.get(r.member_id) || 0;
-    perMember.set(r.member_id, current + r.total_year);
-    all += r.total_year;
-  }
-
-  const members = rows
-    .reduce((acc, r) => {
-      if (!acc.some(x => x.member_id === r.member_id)) {
-        acc.push({
-          member_id: r.member_id,
-          full_name: `${r.first_name} ${r.middle_name || ''} ${r.sur_name}`.replace(/\s+/g,' ').trim(),
-        });
-      }
-      return acc;
-    }, [])
-   
-.map(m => {
-  const total = Number(perMember.get(m.member_id) || 0);
-  const maxContribution = Math.max(...rows.map(r => r.total_year));
-  const color = colorForContribution(total, maxContribution);
-
-  return {
-    ...m,
-    total_contribution: total,
-    percentageOfAll: all ? Number(((total / all) * 100).toFixed(2)) : 0,
-    color
-  };
-})
-
-    .sort((a, b) => b.total_contribution - a.total_contribution);
-
-  return { members, totalAll: all };
-}
-
-// Build monthly total summary for the displayed rows
-function buildMonthlySummary(rows) {
-  const monthlySummary = {};
-  MONTHS.forEach(m => monthlySummary[m] = 0);
-  for (const row of rows) {
-    MONTHS.forEach(m => monthlySummary[m] += Number(row[m] || 0));
-  }
-  return monthlySummary;
 }
 
 // ----------------------------------------
 // Routes
 // ----------------------------------------
 
-//  specific update route (leave as-is)
+// Enhanced Update contribution route - preserves transaction history
 router.post('/update/:member_id/:year/:month', async (req, res) => {
   const member_id = parseInt(req.params.member_id);
   const year = parseInt(req.params.year);
@@ -211,20 +202,91 @@ router.post('/update/:member_id/:year/:month', async (req, res) => {
   const { amount } = req.body;
 
   try {
+    console.log(`🔄 Processing update: member=${member_id}, year=${year}, month=${month}, amount=${amount}`);
+    
+    // Perform the update
     await contributionModel.updateContribution({ member_id, year, month, amount });
-    req.flash('success', 'Contribution updated successfully.');
+    
+    req.flash('success', `Contribution updated successfully!`);
     res.redirect('/contributions');
   } catch (err) {
-    console.error(err);
+    console.error('❌ Update error:', err);
     req.flash('error', err.message || 'Error updating contribution');
     res.redirect('/contributions');
   }
 });
 
+// GET contribution form
 router.get('/form', requireRole('chief_signatory'), (req, res) => {
   const formData = req.session.formData || {};
   req.session.formData = null;
   res.render('contribution-form', { formData });
+});
+
+// GET transactions view
+router.get('/transactions', async (req, res) => {
+  try {
+    const filters = {
+      member_id: req.query.member_id,
+      year: req.query.year,
+      from: req.query.from,
+      to: req.query.to
+    };
+
+    const transactions = await contributionModel.getTransactions(filters);
+    const members = await contributionModel.getAllMembers();
+    
+    // Get distinct years from transactions
+    const years = [...new Set(transactions.map(t => t.year))].sort((a, b) => b - a);
+
+    res.render('transaction-details', {
+      user: req.session.user,
+      transactions,
+      members,
+      years,
+      filters,
+      selectedMember: filters.member_id || '',
+      selectedYear: filters.year || '',
+      from: filters.from || '',
+      to: filters.to || '',
+      activePage: 'transactions'
+    });
+  } catch (error) {
+    console.error('Error loading transactions:', error);
+    req.flash('error', 'Failed to load transactions');
+    res.redirect('/contributions');
+  }
+});
+
+// GET monthly transactions details
+router.get('/monthly-transactions/:member_id/:year/:month', async (req, res) => {
+  try {
+    const { member_id, year, month } = req.params;
+    const transactions = await contributionModel.getMonthlyTransactions(member_id, year, month);
+    const members = await contributionModel.getAllMembers();
+    const currentMember = members.find(m => m.id == member_id);
+
+    if (!currentMember) {
+      req.flash('error', 'Member not found');
+      return res.redirect('/contributions');
+    }
+
+    const monthTotal = transactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+    res.render('monthly-transactions', {
+      user: req.session.user,
+      transactions,
+      member: currentMember,
+      year,
+      month,
+      monthTotal,
+      activePage: 'transactions'
+    });
+  } catch (error) {
+    console.error('Error loading monthly transactions:', error);
+    req.flash('error', 'Failed to load monthly transactions');
+    res.redirect('/contributions');
+  }
 });
 
 // GET contribution edit form
@@ -237,7 +299,6 @@ router.get('/edit/:member_id/:year', async (req, res) => {
       return res.redirect('/contributions');
     }
 
-    // (Optional) default UI month for your edit form
     contribution.month = 'jan';
 
     res.render('contributionEditing-form', {
@@ -252,96 +313,137 @@ router.get('/edit/:member_id/:year', async (req, res) => {
   }
 });
 
-// Add contribution
+// Add contribution - USES CURRENT DATE
 router.post('/add', async (req, res) => {
   const { member_id, year, month, amount } = req.body;
+  
   try {
     req.session.formData = req.body;
-    await contributionModel.addContributionByMonth({ member_id, year, month, amount });
+    
+    // Always use current date on server side
+    const transaction_date = new Date().toISOString().split('T')[0];
+    
+    await contributionModel.addContributionTransaction({
+      member_id,
+      amount,
+      transaction_date
+    });
+    
     req.session.formData = null;
     req.flash('success', 'Contribution added successfully!');
+    
+    // Check if this is coming from payment approval
+    if (req.headers.referer && req.headers.referer.includes('/payments/history')) {
+      return res.redirect('/payments/history?view=all');
+    }
+    
     res.redirect('/contributions/form');
   } catch (err) {
     console.error(err);
-    let errorMessage = 'Error saving contribution';
-    if (err.message.includes('Invalid month')) errorMessage = 'Invalid month selected';
-    else if (err.message.includes('member_id')) errorMessage = 'Invalid member ID';
-    req.flash('error', errorMessage);
+    req.flash('error', err.message || 'Error saving contribution');
+    
+    // Check if this is coming from payment approval
+    if (req.headers.referer && req.headers.referer.includes('/payments/history')) {
+      return res.redirect('/payments/history?view=all');
+    }
+    
     res.redirect('/contributions/form');
+  }
+});
+
+// Add transaction with specific date
+router.post('/add-transaction', async (req, res) => {
+  const { member_id, amount, transaction_date } = req.body;
+  
+  try {
+    await contributionModel.addContributionTransaction({
+      member_id,
+      amount,
+      transaction_date
+    });
+    
+    req.flash('success', 'Transaction added successfully!');
+    res.redirect('/contributions/transactions');
+  } catch (err) {
+    console.error(err);
+    req.flash('error', err.message || 'Error adding transaction');
+    res.redirect('/contributions/transactions');
   }
 });
 
 // Main view (both tables) with filters
 router.get('/', async (req, res) => {
   try {
-    const allContributions = await contributionModel.getAllContributions();
+    // Get all transactions with member details
+    const allTransactions = await contributionModel.getTransactions();
     const members = await contributionModel.getAllMembers();
 
     // Make a quick map for names -> id
     const membersById = new Map(members.map(m => [m.id, m]));
 
-    // Distinct years
-    const years = [...new Set(allContributions.map(r => r.year))].sort((a, b) => a - b);
+    // Distinct years from transactions
+    const years = [...new Set(allTransactions.map(t => t.year))].sort((a, b) => b - a);
 
     // Filters
     const { year: selectedYear, from, to, member_id: selectedMember } = req.query;
 
     // Build filtered dataset
-    const entries = toMonthEntries(allContributions);
-    const filteredEntries = filterMonthEntries(entries, { selectedMember, selectedYear, from, to });
-    const rows = groupToRows(filteredEntries);
+    const filteredTransactions = filterTransactions(allTransactions, { 
+      selectedMember, 
+      selectedYear, 
+      from, 
+      to 
+    });
 
-    // Lifetime totals (based on filtered rows! You wanted filter-led display)
-    const memberTotals = {};
-    for (const row of rows) {
-      memberTotals[row.member_id] = (memberTotals[row.member_id] || 0) + row.total_year;
-    }
+    // Convert to monthly format for backward compatibility with UI
+    const rows = transactionsToMonthlyEntries(filteredTransactions);
 
-    // Monthly summary for the displayed rows
-    const monthlySummary = buildMonthlySummary(rows);
+    // Calculate lifetime totals
+    const memberTotals = calculateMemberTotals(filteredTransactions);
 
-    // Summary table (per member + %)
-    const summaryData = buildSummaryFromRows(rows);
+    // Monthly summary
+    const monthlySummary = buildMonthlySummaryFromTransactions(filteredTransactions);
 
-    // Chart uses the displayed rows (filter-aware)
+    // Summary table
+    const summaryData = buildSummaryFromTransactions(filteredTransactions);
+
+    // For chart data (using the monthly rows)
     const rowsData = rows;
 
-// Build filter summary string for UI
-let filterSummary = 'Showing all contributions';
-if (from || to || selectedMember || selectedYear) {
-  filterSummary = 'Showing contributions ';
-  if (selectedMember) {
-    const m = members.find(mem => mem.id == selectedMember);
-    if (m) filterSummary += `for ${m.first_name} ${m.middle_name || ''} ${m.sur_name} `;
-  }
-  if (from && to) {
-    filterSummary += `from ${from} to ${to}`;
-  } else if (from) {
-    filterSummary += `from ${from}`;
-  } else if (to) {
-    filterSummary += `up to ${to}`;
-  } else if (selectedYear) {
-    filterSummary += `for year ${selectedYear}`;
-  }
-}
+    // Build filter summary string for UI
+    let filterSummary = 'Showing all contributions';
+    if (from || to || selectedMember || selectedYear) {
+      filterSummary = 'Showing contributions ';
+      if (selectedMember) {
+        const m = members.find(mem => mem.id == selectedMember);
+        if (m) filterSummary += `for ${m.first_name} ${m.middle_name || ''} ${m.sur_name} `;
+      }
+      if (from && to) {
+        filterSummary += `from ${from} to ${to}`;
+      } else if (from) {
+        filterSummary += `from ${from}`;
+      } else if (to) {
+        filterSummary += `up to ${to}`;
+      } else if (selectedYear) {
+        filterSummary += `for year ${selectedYear}`;
+      }
+    }
 
-res.render('contributions', {
-  user: req.session.user,
-  rows,
-  years,
-  members,
-  selectedYear: selectedYear ? parseInt(selectedYear) : '',
-  selectedMember: selectedMember ? parseInt(selectedMember) : '',
-  from: from || '',
-  to: to || '',
-  monthlySummary,
-  memberTotals,
-  rowsData,
-  summaryData,
-  filterSummary
-});
-
-
+    res.render('contributions', {
+      user: req.session.user,
+      rows,
+      years,
+      members,
+      selectedYear: selectedYear ? parseInt(selectedYear) : '',
+      selectedMember: selectedMember ? parseInt(selectedMember) : '',
+      from: from || '',
+      to: to || '',
+      monthlySummary,
+      memberTotals,
+      rowsData,
+      summaryData,
+      filterSummary
+    });
 
   } catch (error) {
     console.error('Error loading contributions:', error);
@@ -350,21 +452,32 @@ res.render('contributions', {
   }
 });
 
-// Import CSV
+// Import CSV - supports both old and new formats
 router.post('/import', upload.single('csvfile'), async (req, res) => {
-  const csvPath = req.file.path;                       // ✅ don't shadow `path` module
+  const csvPath = req.file.path;
   const parser = parse({ columns: true, trim: true });
 
   const stream = fs.createReadStream(csvPath).pipe(parser);
 
   try {
     for await (const row of stream) {
-      await contributionModel.addContributionByMonth({
-        member_id: parseInt(row.member_id),
-        year: parseInt(row.year),
-        month: String(row.month).slice(0,3).toLowerCase(), // tolerant normalization
-        amount: parseFloat(row.amount)
-      });
+      // Support both old format (member_id, year, month, amount) 
+      // and new format (member_id, amount, transaction_date)
+      if (row.transaction_date) {
+        await contributionModel.addContributionTransaction({
+          member_id: parseInt(row.member_id),
+          amount: parseFloat(row.amount),
+          transaction_date: row.transaction_date
+        });
+      } else {
+        // Use current date for old format imports
+        const transaction_date = new Date().toISOString().split('T')[0];
+        await contributionModel.addContributionTransaction({
+          member_id: parseInt(row.member_id),
+          amount: parseFloat(row.amount),
+          transaction_date
+        });
+      }
     }
     fs.unlinkSync(csvPath);
     req.flash('success', 'CSV imported successfully!');
@@ -372,11 +485,12 @@ router.post('/import', upload.single('csvfile'), async (req, res) => {
   } catch (err) {
     console.error('CSV import failed:', err);
     if (fs.existsSync(csvPath)) fs.unlinkSync(csvPath);
-    res.status(500).send('CSV import failed');
+    req.flash('error', 'CSV import failed: ' + err.message);
+    res.redirect('/contributions');
   }
 });
 
-// ----------- PDF helpers (tables) -----------
+// ----------- PDF helpers -----------
 function drawTableHeader(doc, headers, colWidths, startX, y, rowHeight) {
   doc.font('Helvetica-Bold').fontSize(11);
   headers.forEach((h, i) => {
@@ -486,18 +600,23 @@ function addFooter(doc, username) {
   }
 }
 
-// ---------------- Member Contributions PDF (filter-aware) ----------------
+// ---------------- Member Contributions PDF ----------------
 router.get('/download/contributions/pdf', async (req, res) => {
   try {
-    const allContributions = await contributionModel.getAllContributions();
+    const allTransactions = await contributionModel.getTransactions();
     const allMembers = await contributionModel.getAllMembers();
     const membersById = new Map(allMembers.map(m => [m.id, m]));
 
     const { member_id: selectedMember, year: selectedYear, from, to } = req.query;
 
-    const entries = toMonthEntries(allContributions);
-    const filteredEntries = filterMonthEntries(entries, { selectedMember, selectedYear, from, to });
-    const rows = groupToRows(filteredEntries);
+    const filteredTransactions = filterTransactions(allTransactions, { 
+      selectedMember, 
+      selectedYear, 
+      from, 
+      to 
+    });
+    
+    const rows = transactionsToMonthlyEntries(filteredTransactions);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="Member_Contributions.pdf"`);
@@ -539,19 +658,23 @@ router.get('/download/contributions/pdf', async (req, res) => {
   }
 });
 
-// ---------------- Contribution Summary PDF (filter-aware) ----------------
+// ---------------- Contribution Summary PDF ----------------
 router.get('/download/summary/pdf', async (req, res) => {
   try {
-    const allContributions = await contributionModel.getAllContributions();
+    const allTransactions = await contributionModel.getTransactions();
     const allMembers = await contributionModel.getAllMembers();
     const membersById = new Map(allMembers.map(m => [m.id, m]));
 
     const { member_id: selectedMember, year: selectedYear, from, to } = req.query;
 
-    const entries = toMonthEntries(allContributions);
-    const filteredEntries = filterMonthEntries(entries, { selectedMember, selectedYear, from, to });
-    const rows = groupToRows(filteredEntries);
-    const summary = buildSummaryFromRows(rows);
+    const filteredTransactions = filterTransactions(allTransactions, { 
+      selectedMember, 
+      selectedYear, 
+      from, 
+      to 
+    });
+    
+    const summary = buildSummaryFromTransactions(filteredTransactions);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="Contribution_Summary.pdf"`);
@@ -590,5 +713,59 @@ router.get('/download/summary/pdf', async (req, res) => {
   }
 });
 
+// ---------------- Transactions PDF export ----------------
+router.get('/download/transactions/pdf', async (req, res) => {
+  try {
+    const filters = {
+      member_id: req.query.member_id,
+      year: req.query.year,
+      from: req.query.from,
+      to: req.query.to
+    };
+
+    const transactions = await contributionModel.getTransactions(filters);
+    const allMembers = await contributionModel.getAllMembers();
+    const membersById = new Map(allMembers.map(m => [m.id, m]));
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="Transaction_Details.pdf"`);
+
+    const doc = new PDFDocument({
+      size: 'A4',
+      bufferPages: true,
+      margins: { top: 50, bottom: 50, left: 30, right: 10 }
+    });
+    doc.pipe(res);
+
+    // Header
+    const logoPath = path.join(__dirname, '../public/images/logo.png');
+    if (fs.existsSync(logoPath)) doc.image(logoPath, 50, 45, { width: 50 });
+    doc.fontSize(18).text('Family Fund Management System', 110, 57, { align: 'left' });
+    doc.moveDown(2);
+
+    const subtitle = buildReportSubtitle({ membersById, ...filters });
+    doc.fontSize(16).text(`Transaction Details — ${subtitle}`, { underline: true });
+    doc.moveDown();
+
+    const headers = ['Date', 'Member', 'Amount (TSh)', 'Month', 'Year'];
+    const tableRows = transactions.map(t => [
+      new Date(t.transaction_date).toLocaleDateString(),
+      `${t.first_name} ${t.middle_name || ''} ${t.sur_name}`.replace(/\s+/g,' ').trim(),
+      Number(t.amount).toLocaleString(),
+      t.month.toUpperCase(),
+      t.year
+    ]);
+
+    addContributionSummaryTable(doc, headers, tableRows);
+    addFooter(doc, req.session?.user?.username);
+    doc.end();
+  } catch (err) {
+    console.error('Error generating transactions PDF:', err);
+    req.flash('error', 'Failed to generate PDF.');
+    res.redirect('/contributions/transactions');
+  }
+});
+
 module.exports = router;
+
 

@@ -1,8 +1,11 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login / Sign Up</title>
+  <title>Login / Sign Up - FamilyFund</title>
 
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/header.css" />
@@ -10,59 +13,146 @@
   <link rel="stylesheet" href="/css/sidebar.css" />
 
   <style>
-    .auth-forms {
-      width: 100%;
-      max-width: 600px;
-      margin: 50px auto;
-      position: relative;
+    /* Reset container styles for auth page only */
+    body.auth-page {
+      display: flex;
+      flex-direction: column;
+      height: 90vh;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
     }
 
-    form {
+    body.auth-page .container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      padding-bottom: 0;
+      padding-top: 0;
+      max-width: none;
+      margin: 0;
+    }
+
+    /* Hide header on auth page */
+    body.auth-page .app-header {
+      display: none;
+    }
+
+    /* Auth specific styles */
+    .auth-center-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .auth-card {
+      width: 100%;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e1e8ed;
+      overflow: hidden;
+      margin: 20px 0;
+    }
+
+    .auth-logo {
+      width: 100%;
+      text-align: center;
+      padding: 40px 20px 30px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .auth-logo img {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+      border-radius: 50%;
+      background: white;
+      padding: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .auth-logo h1 {
+      font-size: 2.2rem;
+      color: white;
+      margin: 15px 0 0 0;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .auth-forms {
+      padding: 30px;
+    }
+
+    /* Form styles - specifically for auth page */
+    .auth-form {
       display: none;
       flex-direction: column;
-      gap: 15px;
-      background: #f9f9f9;
-      padding: 25px;
-      border-radius: 12px;
-      transition: opacity 0.3s ease, transform 0.3s ease;
+      gap: 20px;
     }
 
-    form.active {
+    .auth-form.active {
       display: flex;
-      opacity: 1;
-      transform: translateY(0);
     }
 
-    .toggle-link {
+    .auth-toggle-link {
       margin-top: 15px;
       text-align: center;
       cursor: pointer;
-      color: blue;
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 1rem;
+    }
+
+    .auth-toggle-link:hover {
+      color: #2980b9;
       text-decoration: underline;
     }
 
-    .input-group {
+    .auth-input-group {
       display: flex;
       flex-direction: column;
       position: relative;
     }
 
-    .input-group input,
-    .input-group select {
-      padding: 10px;
+    .auth-input-group input,
+    .auth-input-group select {
+      padding: 12px 15px;
       font-size: 1rem;
       border-radius: 8px;
-      border: 1px solid #ccc;
+      border: 1px solid #ddd;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      width: 100%;
+      box-sizing: border-box;
     }
 
-    .input-feedback {
+    .auth-input-group input:focus,
+    .auth-input-group select:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+
+    .auth-input-feedback {
       font-size: 0.85rem;
       min-height: 18px;
       margin-top: 4px;
       transition: all 0.3s ease;
     }
 
-    .strength-meter {
+    .auth-strength-meter {
       height: 6px;
       width: 100%;
       background: #eee;
@@ -71,7 +161,7 @@
       position: relative;
     }
 
-    .strength-meter .bar {
+    .auth-strength-meter .bar {
       height: 100%;
       width: 0;
       background: red;
@@ -79,108 +169,206 @@
       transition: width 0.3s ease, background 0.3s ease;
     }
 
-    .strength-meter .label {
+    .auth-strength-meter .label {
       font-size: 0.8rem;
       margin-top: 2px;
     }
 
-    .success {
-      color: green;
-      font-weight: bold;
+    .auth-success {
+      color: #27ae60;
+      font-weight: 600;
+      background: #d5f4e6;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #a3e4bc;
+      margin: 10px 0;
     }
 
-    .error {
-      color: red;
-      font-weight: bold;
+    .auth-error {
+      color: #e74c3c;
+      font-weight: 600;
+      background: #fadbd8;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #f5b7b1;
+      margin: 10px 0;
+    }
+
+    .auth-submit-btn {
+      background: #3498db;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      width: 100%;
+    }
+
+    .auth-submit-btn:hover {
+      background: #2980b9;
+    }
+
+    .auth-form-container {
+      width: 100%;
+      text-align: center;
+    }
+
+    .auth-form-container h2 {
+      color: #2c3e50;
+      margin-bottom: 25px;
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+
+    .auth-form h3 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+      font-size: 1.4rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    /* Verification notice styling */
+    .auth-verification-notice {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    
+    .auth-btn-verification {
+      display: inline-block;
+      background: #3498db;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background 0.3s;
+      margin-top: 10px;
+    }
+    
+    .auth-btn-verification:hover {
+      background: #2980b9;
+    }
+
+    /* Ensure footer stays at bottom */
+    body.auth-page footer {
+      margin-top: auto;
     }
   </style>
 </head>
-<body>
+<body class="auth-page">
   <div class="container">
     <%- include('partials/header') %>
 
-    <div class="form-container">
-      <h2>User Authentication</h2>
+    <div class="auth-center-container">
+      <div class="auth-card">
+        <!-- Logo inside auth container -->
+        <div class="auth-logo">
+          <img src="/images/logo.png" alt="FamilyFund Logo">
+          <h1>FamilyFund</h1>
+        </div>
 
-      <!-- Backend feedback -->
-      <% if (flash.error?.length) { %>
-        <p class="error"><%= flash.error[0] %></p>
-      <% } %>
-      <% if (flash.success?.length) { %>
-        <p class="success"><%= flash.success[0] %></p>
-      <% } %>
-
-      <% if (user) { %>
-        <p>You are logged in as <strong><%= user.username %></strong> (<%= user.role.replace('_', ' ') %>)</p>
-        <a href="/">Go to Home</a> | <a href="/auth/logout">Logout</a>
-      <% } else { %>
         <div class="auth-forms">
+          <div class="auth-form-container">
+            <h2>User Authentication</h2>
 
-          <!-- Login Form (default active) -->
-          <form id="loginForm" class="active" action="/auth/login" method="POST">
-            <h3>Login</h3>
-            <div class="input-group">
-              <input type="text" name="username" placeholder="Email" required />
-              <div class="input-feedback"></div>
-            </div>
-            <div class="input-group">
-              <input type="password" name="password" placeholder="Password" required />
-              <div class="input-feedback"></div>
-            </div>
-            <button type="submit">Login</button>
-            <div><a href="/auth/forgot-password">Forgot Password?</a></div>
-            <div class="toggle-link" onclick="toggleForms()">Don't have an account? Sign Up</div>
-          </form>
+            <!-- Backend feedback -->
+            <% if (flash.error?.length) { %>
+              <p class="auth-error"><%= flash.error[0] %></p>
+            <% } %>
+            <% if (flash.success?.length) { %>
+              <p class="auth-success"><%= flash.success[0] %></p>
+            <% } %>
 
-          <!-- Sign Up Form -->
-          <form id="signupForm" action="/auth/signup" method="POST">
-            <h3>Sign Up</h3>
+            <% if (user) { %>
+              <p>You are logged in as <strong><%= user.username %></strong> (<%= user.role.replace('_', ' ') %>)</p>
+              <a href="/">Go to Home</a> | <a href="/auth/logout">Logout</a>
+            <% } else { %>
+                <!-- Login Form (default active) -->
+                <form id="loginForm" class="auth-form active" action="/auth/login" method="POST">
+                  <h3>Login</h3>
+                  <div class="auth-input-group">
+                    <input type="text" name="username" placeholder="Email" required />
+                    <div class="auth-input-feedback"></div>
+                  </div>
+                  <div class="auth-input-group">
+                    <input type="password" name="password" placeholder="Password" required />
+                    <div class="auth-input-feedback"></div>
+                  </div>
+                  <button type="submit" class="auth-submit-btn">Login</button>
+                  <div><a href="/auth/forgot-password">Forgot Password?</a></div>
+                  <button type="button" class="auth-toggle-link" onclick="toggleForms()">Don't have an account? Sign Up</button>
+                </form>
 
-            <div class="input-group">
-              <input type="text" name="username" placeholder="Email" required />
-              <div class="input-feedback"></div>
-            </div>
+                <!-- Sign Up Form -->
+                <form id="signupForm" class="auth-form" action="/auth/signup" method="POST">
+                  <h3>Sign Up</h3>
 
-            <div class="input-group">
-              <input type="password" name="password" placeholder="Password" required />
-              <div class="input-feedback"></div>
-              <div class="strength-meter">
-                <div class="bar"></div>
-                <small class="label"></small>
+                  <div class="auth-input-group">
+                    <input type="text" name="username" placeholder="Email" required />
+                    <div class="auth-input-feedback"></div>
+                  </div>
+
+                  <div class="auth-input-group">
+                    <input type="password" name="password" placeholder="Password" required />
+                    <div class="auth-input-feedback"></div>
+                    <div class="auth-strength-meter">
+                      <div class="bar"></div>
+                      <small class="label"></small>
+                    </div>
+                  </div>
+
+                  <div class="auth-input-group">
+                    <input type="password" name="confirmPassword" placeholder="Confirm Password" required />
+                    <div class="auth-input-feedback"></div>
+                  </div>
+
+                  <div class="auth-input-group">
+                    <select name="role" required>
+                      <option value="">Select Role</option>
+                      <option value="member">Member</option>
+                      <option value="chief_signatory">Chief Signatory</option>
+                      <option value="assistant_signatory">Assistant Signatory</option>
+                      <option value="chairman">Chairman</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    <div class="auth-input-feedback"></div>
+                  </div>
+
+                  <!-- Backend submission feedback -->
+                  <% if (flash.signupError?.length) { %>
+                    <p class="auth-error"><%= flash.signupError[0] %></p>
+                  <% } %>
+                  <% if (flash.signupSuccess?.length) { %>
+                    <p class="auth-success"><%= flash.signupSuccess[0] %></p>
+                  <% } %>
+
+                  <button type="submit" class="auth-submit-btn">Sign Up</button>
+                  <button type="button" class="auth-toggle-link" onclick="toggleForms()">Already have an account? Login</button>
+                </form>
+            <% } %>
+          </div>
+
+          <!-- Verification Required Notice -->
+          <% if (flash.verification_required?.length) { %>
+            <div class="auth-verification-notice">
+              <p class="auth-error">Please verify your email before logging in.</p>
+              <div style="text-align: center; margin-top: 10px;">
+                <a href="/auth/resend-verification" class="auth-btn-verification">
+                  📧 Resend Verification Email
+                </a>
               </div>
             </div>
-
-            <div class="input-group">
-              <input type="password" name="confirmPassword" placeholder="Confirm Password" required />
-              <div class="input-feedback"></div>
-            </div>
-
-            <div class="input-group">
-              <select name="role" required>
-                <option value="">Select Role</option>
-                <option value="member">Member</option>
-                <option value="chief_signatory">Chief Signatory</option>
-                <option value="assistant_signatory">Assistant Signatory</option>
-                <option value="chairman">Chairman</option>
-                <option value="admin">Admin</option>
-              </select>
-              <div class="input-feedback"></div>
-            </div>
-
-            <!-- Backend submission feedback restored -->
-            <% if (flash.signupError?.length) { %>
-              <p class="error"><%= flash.signupError[0] %></p>
-            <% } %>
-            <% if (flash.signupSuccess?.length) { %>
-              <p class="success"><%= flash.signupSuccess[0] %></p>
-            <% } %>
-
-            <button type="submit">Sign Up</button>
-            <div class="toggle-link" onclick="toggleForms()">Already have an account? Login</div>
-          </form>
-
+          <% } %>
         </div>
-      <% } %>
+      </div>
     </div>
   </div>
 
@@ -191,3 +379,5 @@
   <script src="/script/auth.js"></script>
 </body>
 </html>
+
+

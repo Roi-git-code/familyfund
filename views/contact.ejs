@@ -1,0 +1,426 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Contact Support - FamilyFund</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link href="/css/app.css" rel="stylesheet">
+    
+    <style>
+        .support-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .contact-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+        }
+        
+        .contact-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .contact-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin: 0 auto 1.5rem;
+        }
+        
+        .support-form {
+            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+            border-radius: 15px;
+            padding: 2.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .feature-badge {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            margin: 0.25rem;
+            display: inline-block;
+        }
+        
+        .response-time {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        .support-option {
+            border-left: 4px solid #3498db;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            background: #f8f9ff;
+            border-radius: 0 10px 10px 0;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+  <!-- Header -->
+  <%- include('partials/header') %>
+
+  <!-- Sidebar -->
+  <%- include('partials/sidebar', { user: user, activePage: 'support' }) %>
+
+  <main class="main-content">
+    <div class="container-fluid pt-5 mt-3">
+      <div class="row">
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+          
+          <!-- Header Section -->
+          <div class="support-header text-center">
+            <div class="row align-items-center">
+              <div class="col-md-2 text-center">
+                <i class="fas fa-headset fa-4x mb-3 opacity-90"></i>
+              </div>
+              <div class="col-md-10">
+                <h1 class="display-5 fw-bold mb-3">Contact Support</h1>
+                <p class="lead mb-4 opacity-90">We're here to help you with any questions or issues</p>
+                <div class="response-time d-inline-block">
+                  <i class="fas fa-clock me-2"></i>
+                  <strong>Average Response Time:</strong> 2-4 hours
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-5">
+            <!-- Contact Methods -->
+            <div class="col-lg-4 mb-4">
+              <div class="card contact-card">
+                <div class="card-body text-center p-4">
+                  <div class="contact-icon bg-primary text-white">
+                    <i class="fas fa-envelope"></i>
+                  </div>
+                  <h4 class="card-title">Email Support</h4>
+                  <p class="card-text text-muted mb-3">Get detailed help with complex issues via email</p>
+                  <div class="support-option">
+                    <h6 class="text-primary">itzfamilyfund@gmail.com</h6>
+                    <small class="text-muted">For technical support and account issues</small>
+                  </div>
+                  <div class="support-option">
+                    <h6 class="text-primary">itzfamilyfund@gmail.com</h6>
+                    <small class="text-muted">For payment and billing inquiries</small>
+                  </div>
+                  <a href="mailto:itzfamilyfund@gmail.com" class="btn btn-primary mt-3">
+                    <i class="fas fa-paper-plane me-2"></i>Send Email
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-4 mb-4">
+              <div class="card contact-card">
+                <div class="card-body text-center p-4">
+                  <div class="contact-icon bg-success text-white">
+                    <i class="fas fa-phone"></i>
+                  </div>
+                  <h4 class="card-title">Phone Support</h4>
+                  <p class="card-text text-muted mb-3">Speak directly with our support team</p>
+                  <div class="support-option">
+                    <h6 class="text-success">+255 698 778 560 / +255 747 306 515 </h6>
+                    <small class="text-muted">General support hotline</small>
+                  </div>
+                  <div class="support-option">
+                    <h6 class="text-success">+255 748 033 536</h6>
+                    <small class="text-muted">Management issues</small>
+                  </div>
+                  <div class="mt-3">
+                    <small class="text-muted">
+                      <i class="fas fa-clock me-1"></i>
+                      Mon-Fri: 8:00 AM - 6:00 PM EAT
+                    </small>
+                  </div>
+                  <a href="tel:+255789123456" class="btn btn-success mt-3">
+                    <i class="fas fa-phone me-2"></i>Call Now
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-4 mb-4">
+              <div class="card contact-card">
+                <div class="card-body text-center p-4">
+                  <div class="contact-icon bg-warning text-white">
+                    <i class="fas fa-comments"></i>
+                  </div>
+                  <h4 class="card-title">Live Chat</h4>
+                  <p class="card-text text-muted mb-3">Instant help through our chat system</p>
+                  <div class="support-option">
+                    <h6 class="text-warning">Online Chat</h6>
+                    <small class="text-muted">Available during business hours</small>
+                  </div>
+                  <div class="support-option">
+                    <h6 class="text-warning">WhatsApp Business</h6>
+                    <small class="text-muted"> +255 698 778 560 / +255 747 306 515  </small>
+                  </div>
+                  <div class="mt-3">
+                    <span class="badge bg-success">
+                      <i class="fas fa-circle me-1"></i>
+                      Online Now
+                    </span>
+                  </div>
+                  <button class="btn btn-warning text-white mt-3" onclick="startLiveChat()">
+                    <i class="fas fa-comment me-2"></i>Start Chat
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Support Form -->
+          <div class="row">
+            <div class="col-lg-8 mx-auto">
+              <div class="support-form">
+                <h3 class="text-center mb-4">
+                  <i class="fas fa-life-ring me-2 text-primary"></i>
+                  Send us a Message
+                </h3>
+                
+                <form id="supportForm" method="POST" action="/support/submit">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="name" class="form-label">Full Name *</label>
+                      <input type="text" class="form-control" id="name" name="name" required 
+                             value="<%= user ? `${user.first_name} ${user.sur_name}` : '' %>">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="email" class="form-label">Email Address *</label>
+                      <input type="email" class="form-control" id="email" name="email" required
+                             value="<%= user ? user.email : '' %>">
+                    </div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="subject" class="form-label">Subject *</label>
+                    <select class="form-select" id="subject" name="subject" required>
+                      <option value="">Select an issue type</option>
+                      <option value="technical">Technical Support</option>
+                      <option value="billing">Billing & Payments</option>
+                      <option value="account">Account Issues</option>
+                      <option value="feature">Feature Request</option>
+                      <option value="bug">Bug Report</option>
+                      <option value="general">General Inquiry</option>
+                    </select>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="urgency" class="form-label">Urgency Level</label>
+                    <select class="form-select" id="urgency" name="urgency">
+                      <option value="low">Low - General question</option>
+                      <option value="medium" selected>Medium - Need help soon</option>
+                      <option value="high">High - System not working</option>
+                      <option value="critical">Critical - Emergency issue</option>
+                    </select>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="message" class="form-label">Message *</label>
+                    <textarea class="form-control" id="message" name="message" rows="6" 
+                              placeholder="Please describe your issue in detail..." required></textarea>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="attachments" class="form-label">
+                      <i class="fas fa-paperclip me-1"></i>
+                      Attachments (Optional)
+                    </label>
+                    <input type="file" class="form-control" id="attachments" name="attachments" 
+                           multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                    <div class="form-text">You can attach screenshots or documents (Max: 5 files, 10MB total)</div>
+                  </div>
+                  
+                  <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                      <i class="fas fa-paper-plane me-2"></i>
+                      Send Message
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Help Section -->
+          <div class="row mt-5">
+            <div class="col-12">
+              <div class="card border-0">
+                <div class="card-body text-center">
+                  <h4 class="mb-4">
+                    <i class="fas fa-lightbulb me-2 text-warning"></i>
+                    Quick Help Resources
+                  </h4>
+                  
+                  <div class="row justify-content-center">
+                    <div class="col-md-3 mb-3">
+                      <a href="/faq" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-question-circle me-2"></i>
+                        FAQ
+                      </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <a href="/user-guide" class="btn btn-outline-success w-100">
+                        <i class="fas fa-book me-2"></i>
+                        User Guide
+                      </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <a href="/video-tutorials" class="btn btn-outline-info w-100">
+                        <i class="fas fa-play-circle me-2"></i>
+                        Video Tutorials
+                      </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <a href="/community" class="btn btn-outline-warning w-100">
+                        <i class="fas fa-users me-2"></i>
+                        Community
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Emergency Contact -->
+          <div class="row mt-4">
+            <div class="col-12">
+              <div class="alert alert-warning text-center">
+                <h5 class="alert-heading">
+                  <i class="fas fa-exclamation-triangle me-2"></i>
+                  Emergency Technical Issues
+                </h5>
+                <p class="mb-2">For critical system outages or urgent security concerns, call our emergency line:</p>
+                <h4 class="text-danger mb-0">+255 763 724 710</h4>
+                <small class="text-muted">Available 24/7 for genuine emergencies only</small>
+              </div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Support form handling
+    document.getElementById('supportForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const submitBtn = this.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+      
+      // Show loading state
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
+      submitBtn.disabled = true;
+      
+      // Simulate form submission
+      setTimeout(() => {
+        // Show success message
+        showAlert('success', 'Message sent successfully! We will get back to you within 2-4 hours.');
+        
+        // Reset form
+        this.reset();
+        
+        // Restore button
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+      }, 2000);
+    });
+
+    // Live chat simulation
+    function startLiveChat() {
+      const isOnline = Math.random() > 0.2; // 80% chance online
+      
+      if (isOnline) {
+        showAlert('success', 'Connecting you to a support agent...');
+        // In a real application, this would open a chat widget
+        setTimeout(() => {
+          showAlert('info', 'Chat session started. Please check the bottom right corner of your screen.');
+        }, 1000);
+      } else {
+        showAlert('warning', 'Our chat support is currently offline. Please try email or phone support.');
+      }
+    }
+
+    // Alert helper function
+    function showAlert(type, message) {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+      alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      
+      document.querySelector('main').insertBefore(alertDiv, document.querySelector('.support-form'));
+      
+      // Auto remove after 5 seconds
+      setTimeout(() => {
+        if (alertDiv.parentElement) {
+          alertDiv.remove();
+        }
+      }, 5000);
+    }
+
+    // Auto-fill subject based on urgency for high/critical issues
+    document.getElementById('urgency').addEventListener('change', function() {
+      const subject = document.getElementById('subject');
+      if (this.value === 'high' || this.value === 'critical') {
+        if (!subject.value) {
+          subject.value = 'technical';
+        }
+      }
+    });
+
+    // Add character counter for message
+    const messageTextarea = document.getElementById('message');
+    const charCount = document.createElement('div');
+    charCount.className = 'form-text text-end';
+    charCount.innerHTML = '<span id="charCount">0</span>/2000 characters';
+    messageTextarea.parentNode.appendChild(charCount);
+
+    messageTextarea.addEventListener('input', function() {
+      document.getElementById('charCount').textContent = this.value.length;
+    });
+  </script>
+</body>
+</html>
+
+

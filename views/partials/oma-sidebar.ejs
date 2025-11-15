@@ -1,23 +1,60 @@
+
+
 <!-- views/partials/oma-sidebar.ejs -->
 <!-- Sidebar for md+ screens -->
-<nav class="d-none d-md-block bg-light border-end" style="width: 220px; min-height: 100vh;">
+<nav class="d-none d-md-block bg-light-purple border-end" style="width: 220px; min-height: 100vh;">
   <div class="p-3">
-    <h6 class="fw-bold text-primary">Navigation</h6>
+    <h6 class="fw-bold text-purple mb-3">
+      <i class="fas fa-bars me-2"></i>Navigation Menu
+    </h6>
     <ul class="nav flex-column">
-      <li class="nav-item"><a href="/oma/home" class="nav-link">🏠 Home</a></li>
-      <li class="nav-item"><a href="/oma/guide" class="nav-link">📖 Guide</a></li>
-      <li class="nav-item"><a href="/oma/apply" class="nav-link">📝 Apply</a></li>
-
-<% if (typeof omaUser !== 'undefined' && omaUser) { %>      
       <li class="nav-item">
-      <a href="/oma/applications/user/<%= omaUser.id %>" class="nav-link">📂 My Applications</a>
+        <a href="/oma/home" class="nav-link <%= active === 'home' ? 'active bg-purple-gradient text-white' : 'text-dark' %>">
+          <i class="fas fa-home me-2"></i>Home
+        </a>
       </li>
-<% } %>
+      <li class="nav-item">
+        <a href="/oma/guide" class="nav-link <%= active === 'guide' ? 'active bg-purple-gradient text-white' : 'text-dark' %>">
+          <i class="fas fa-book me-2"></i>Application Guide
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="/oma/apply" class="nav-link <%= active === 'apply' ? 'active bg-purple-gradient text-white' : 'text-dark' %>">
+          <i class="fas fa-edit me-2"></i>Apply Now
+        </a>
+      </li>
+
+      <% if (typeof omaUser !== 'undefined' && omaUser) { %>      
+      <li class="nav-item">
+        <a href="/oma/applications/user/<%= omaUser.id %>" class="nav-link <%= active === 'my-applications' ? 'active bg-purple-gradient text-white' : 'text-dark' %>">
+          <i class="fas fa-folder me-2"></i>My Applications
+        </a>
+      </li>
+      
+      <li class="nav-item">
+        <a class="nav-link <%= active === 'applications' ? 'active bg-purple-gradient text-white' : 'text-dark' %>" 
+           href="/oma/applications">
+          <i class="fas fa-list me-2"></i>Applications List
+        </a>
+      </li>
+      <% } %>
 
       <% if (typeof user !== 'undefined' && user && user.role === 'chairman') { %>
-        <li class="nav-item"><a href="/oma/admin/list" class="nav-link">👨‍💼 Admin Panel</a></li>
+        <li class="nav-item">
+          <a href="/oma/admin/list" class="nav-link <%= active === 'admin' ? 'active bg-purple-gradient text-white' : 'text-dark' %>">
+            <i class="fas fa-user-shield me-2"></i>Admin Panel
+          </a>
+        </li>
       <% } %>
     </ul>
+    
+    <!-- Quick Help Section -->
+    <div class="mt-4 pt-3 border-top">
+      <small class="text-muted d-block mb-2">Need Help?</small>
+      <a href="/oma/guide" class="btn btn-sm btn-outline-purple w-100">
+        <i class="fas fa-question-circle me-1"></i>View Guide
+      </a>
+    </div>
   </div>
 </nav>
 
@@ -27,29 +64,88 @@
     ☰ Menu
   </button>
   <div class="offcanvas offcanvas-start" tabindex="-1" id="omaSidebarOffcanvas">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title">OMAS Menu</h5>
+    <div class="offcanvas-header bg-light-purple">
+      <h5 class="offcanvas-title text-purple">
+        <i class="fas fa-bars me-2"></i>Navigation Menu
+      </h5>
       <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
-    <div class="offcanvas-body">
+    <div class="offcanvas-body bg-light-purple">
       <ul class="nav flex-column">
-        <li class="nav-item"><a href="/oma/home" class="nav-link">🏠 Home</a></li>
-        <li class="nav-item"><a href="/oma/guide" class="nav-link">📖 Guide</a></li>
-        <li class="nav-item"><a href="/oma/apply" class="nav-link">📝 Apply</a></li>
-       
-<% if (typeof omaUser !== 'undefined' && omaUser) { %>
- 
-<li class="nav-item">
-  <a href="/oma/applications/user/<%= omaUser.id %>" class="nav-link">📂 My Applications</a>
-</li>
+        <li class="nav-item">
+          <a href="/oma/home" class="nav-link <%= active === 'home' ? 'active bg-purple-gradient text-white' : 'text-dark' %>">
+            <i class="fas fa-home me-2"></i>Home
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="/oma/guide" class="nav-link <%= active === 'guide' ? 'active bg-purple-gradient text-white' : 'text-dark' %>">
+            <i class="fas fa-book me-2"></i>Application Guide
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="/oma/apply" class="nav-link <%= active === 'apply' ? 'active bg-purple-gradient text-white' : 'text-dark' %>">
+            <i class="fas fa-edit me-2"></i>Apply Now
+          </a>
+        </li>
 
-<% } %>
-
+        <% if (typeof omaUser !== 'undefined' && omaUser) { %>      
+        <li class="nav-item">
+          <a href="/oma/applications/user/<%= omaUser.id %>" class="nav-link <%= active === 'my-applications' ? 'active bg-purple-gradient text-white' : 'text-dark' %>">
+            <i class="fas fa-folder me-2"></i>My Applications
+          </a>
+        </li>
+        
+        <li class="nav-item">
+          <a class="nav-link <%= active === 'applications' ? 'active bg-purple-gradient text-white' : 'text-dark' %>" 
+             href="/oma/applications">
+            <i class="fas fa-list me-2"></i>Applications List
+          </a>
+        </li>
+        <% } %>
 
         <% if (typeof user !== 'undefined' && user && user.role === 'chairman') { %>
-          <li class="nav-item"><a href="/oma/admin/list" class="nav-link">👨‍💼 Admin Panel</a></li>
+          <li class="nav-item">
+            <a href="/oma/admin/list" class="nav-link <%= active === 'admin' ? 'active bg-purple-gradient text-white' : 'text-dark' %>">
+              <i class="fas fa-user-shield me-2"></i>Admin Panel
+            </a>
+          </li>
         <% } %>
       </ul>
+      
+      <!-- Quick Help Section -->
+      <div class="mt-4 pt-3 border-top">
+        <small class="text-muted d-block mb-2">Need Help?</small>
+        <a href="/oma/guide" class="btn btn-sm btn-outline-purple w-100">
+          <i class="fas fa-question-circle me-1"></i>View Guide
+        </a>
+      </div>
     </div>
   </div>
 </nav>
+
+<style>
+  .text-purple {
+    color: #6a0dad !important;
+  }
+  .bg-purple-gradient {
+    background: linear-gradient(135deg, #6a0dad, #4b0082);
+  }
+  .bg-light-purple {
+    background: linear-gradient(135deg, #f8f6ff, #f0ebff);
+  }
+  .btn-outline-purple {
+    color: #6a0dad;
+    border-color: #6a0dad;
+  }
+  .btn-outline-purple:hover {
+    background: linear-gradient(135deg, #6a0dad, #4b0082);
+    color: white;
+    border-color: #6a0dad;
+  }
+  
+  /* Active state for nav links */
+  .nav-link.active {
+    border-radius: 6px;
+  }
+</style>
+

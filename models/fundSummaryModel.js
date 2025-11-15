@@ -1,3 +1,5 @@
+
+
 // models/fundSummaryModel.js
 const pool = require('../db');
 
@@ -66,41 +68,45 @@ function monthRangeToDates(from, to) {
   return { startDate, endDate, start, end };
 }
 
-/* ---------- contributions / total fund ---------- */
-async function getContributionRowsBetweenYears(startYear, endYear) {
+/* ---------- contributions / total fund - UPDATED TO USE TRANSACTIONS ---------- */
+async function getContributionTransactionsBetweenDates(startDate, endDate, memberId = null) {
   const values = [];
-  let sql = 'SELECT * FROM member_contribution';
-  if (startYear != null && endYear != null) {
-    sql += ' WHERE year BETWEEN $1 AND $2';
-    values.push(startYear, endYear);
-  } else if (startYear != null) {
-    sql += ' WHERE year >= $1';
-    values.push(startYear);
-  } else if (endYear != null) {
-    sql += ' WHERE year <= $1';
-    values.push(endYear);
+  let sql = `
+    SELECT ct.*, m.first_name, m.sur_name 
+    FROM contribution_transactions ct
+    LEFT JOIN member m ON m.id = ct.member_id
+    WHERE 1=1
+  `;
+  
+  if (memberId) {
+    values.push(memberId);
+    sql += ` AND ct.member_id = $${values.length}`;
   }
+  
+  if (startDate) {
+    values.push(startDate);
+    sql += ` AND ct.transaction_date >= $${values.length}`;
+  }
+  
+  if (endDate) {
+    values.push(endDate);
+    sql += ` AND ct.transaction_date <= $${values.length}`;
+  }
+  
+  sql += ' ORDER BY ct.transaction_date ASC';
+  
   const { rows } = await pool.query(sql, values);
   return rows;
 }
-function sumContribRow(row, start, end) {
-  const y = Number(row.year);
-  if (start && y < start.year) return 0;
-  if (end && y > end.year) return 0;
-  let fromM = 1, toM = 12;
-  if (start && y === start.year) fromM = start.month;
-  if (end && y === end.year) toM = end.month;
-  let sum = 0;
-  for (let m = fromM; m <= toM; m++) {
-    const col = MONTH_COLS[m - 1];
-    sum += Number(row[col] || 0);
-  }
-  return sum;
-}
+
 async function getTotalFund(from, to) {
-  const { start, end } = ensureOrderedRange(from, to);
-  const rows = await getContributionRowsBetweenYears(start?.year ?? null, end?.year ?? null);
-  return rows.reduce((acc, r) => acc + sumContribRow(r, start, end), 0);
+  const { startDate, endDate } = monthRangeToDates(from, to);
+  
+  // Get all contribution transactions within the date range
+  const transactions = await getContributionTransactionsBetweenDates(startDate, endDate);
+  
+  // Sum all transaction amounts
+  return transactions.reduce((acc, transaction) => acc + Number(transaction.amount || 0), 0);
 }
 
 /* ---------- category storage helpers ---------- */
@@ -139,7 +145,6 @@ async function getCategoryRows() {
   }));
 }
 
-
 // ---------- percents read / write ---------- 
 async function getCategoryPercents() {
   // Returns { investment: 12, ... } (whole numbers 0..100)
@@ -171,7 +176,6 @@ async function getCategoryPercents() {
   }
 }
 
-
 async function updateCategoryPercents(newPercents) {
   const sql = `
     UPDATE fund_categories
@@ -186,9 +190,7 @@ async function updateCategoryPercents(newPercents) {
   return await getCategoryPercents();
 }
 
-
-
-/* ---------- transactions & summaries (mostly unchanged, but use whole-number percents) ---------- */
+/* ---------- transactions & summaries ---------- */
 function getSynonymsArray(categoryKey) {
   const meta = CATEGORY_META[categoryKey];
   return (meta?.requestTypeSynonyms || []).map(s => s.toLowerCase());
@@ -347,6 +349,157 @@ function toViewVars(overview) {
   };
 }
 
+// Financial statement - UPDATED TO USE TRANSACTION-BASED CONTRIBUTIONS
+/* ---------- contributions -> convert to per-transaction entries ---------- */
+async function getContributionTransactionsBetweenDatesWithMembers(startDate, endDate, memberId = null) {
+  const values = [];
+  let sql = `
+    SELECT ct.*, m.first_name, m.sur_name 
+    FROM contribution_transactions ct
+    LEFT JOIN member m ON m.id = ct.member_id
+    WHERE 1=1
+  `;
+  
+  if (memberId) {
+    values.push(memberId);
+    sql += ` AND ct.member_id = $${values.length}`;
+  }
+  
+  if (startDate) {
+    values.push(startDate);
+    sql += ` AND ct.transaction_date >= $${values.length}`;
+  }
+  
+  if (endDate) {
+    values.push(endDate);
+    sql += ` AND ct.transaction_date <= $${values.length}`;
+  }
+  
+  sql += ' ORDER BY ct.transaction_date ASC, ct.id ASC';
+  
+  const { rows } = await pool.query(sql, values);
+  return rows;
+}
+
+function buildContributionTransactions(rows) {
+  return rows.map(row => ({
+    id: `contrib-${row.id}`,
+    member_id: row.member_id,
+    first_name: row.first_name || '',
+    sur_name: row.sur_name || '',
+    amount: Number(row.amount || 0),
+    request_type: 'Contribution',
+    created_at: row.transaction_date, // Use actual transaction date
+    type: 'credit',
+    txn_trn: null // Contributions do not get TRN
+  }));
+}
+
+/* ---------- approved fund requests (debits) with TRN ---------- */
+async function getApprovedTransactions(member_id, from, to) {
+  const { start, end } = ensureOrderedRange(from, to);
+  const params = [];
+  let sql = `
+    SELECT fr.id, fr.member_id, m.first_name, m.sur_name, fr.amount, fr.request_type,
+           fr.created_at, fr.status, fr.bank_account, fr.bank_name
+    FROM fund_requests fr
+    JOIN member m ON fr.member_id = m.id
+    WHERE fr.status = 'Approved'
+  `;
+  if (member_id) {
+    params.push(member_id);
+    sql += ` AND fr.member_id = $${params.length}`;
+  }
+  if (start) {
+    params.push(`${start.year}-${String(start.month).padStart(2,'0')}-01`);
+    sql += ` AND fr.created_at >= $${params.length}::date`;
+  }
+  if (end) {
+    const lastDay = new Date(end.year, end.month, 0).getDate();
+    params.push(`${end.year}-${String(end.month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`);
+    sql += ` AND fr.created_at <= $${params.length}::date`;
+  }
+  sql += ` ORDER BY fr.created_at ASC`;
+  const { rows } = await pool.query(sql, params);
+
+  // assign sequential TRN per category (excluding contributions)
+  const categoryMap = {}; // categoryKey -> count
+  const synonymsMap = {};
+  for (const key of getCategoryKeys()) {
+    synonymsMap[key] = getSynonymsArray(key);
+  }
+
+  const processed = rows.map(r => {
+    const typeLower = (r.request_type || '').toLowerCase();
+    let categoryKey = getCategoryKeys().find(k => synonymsMap[k].includes(typeLower));
+    if (!categoryKey) categoryKey = 'other';
+
+    if (!categoryMap[categoryKey]) categoryMap[categoryKey] = 0;
+    categoryMap[categoryKey] += 1;
+
+    return {
+      ...r,
+      amount: Number(r.amount || 0),
+      type: 'debit',
+      txn_trn: `TRN ${categoryMap[categoryKey]}-${r.id}` // X-Y format
+    };
+  });
+
+  return processed;
+}
+
+/* ---------- combined financial transactions (credits + debits) with TRN - UPDATED ---------- */
+async function getFinancialTransactions(member_id, from, to) {
+  // Resolve month range to actual dates
+  const { startDate, endDate } = monthRangeToDates(from, to);
+
+  // Get contribution transactions with real dates
+  const contribTransactions = await getContributionTransactionsBetweenDatesWithMembers(startDate, endDate, member_id);
+  const contribTxns = buildContributionTransactions(contribTransactions);
+
+  // Get fund request transactions
+  const requestTxns = await getApprovedTransactions(member_id, from, to);
+
+  // unify fields and combine
+  const unified = [
+    ...contribTxns.map(t => ({
+      id: t.id,
+      member_id: t.member_id,
+      first_name: t.first_name,
+      sur_name: t.sur_name,
+      amount: Number(t.amount),
+      request_type: t.request_type,
+      created_at: t.created_at, // Real transaction date
+      type: 'credit',
+      txn_trn: null
+    })),
+    ...requestTxns.map(t => ({
+      id: `req-${t.id}`,
+      member_id: t.member_id,
+      first_name: t.first_name,
+      sur_name: t.sur_name,
+      amount: Number(t.amount),
+      request_type: t.request_type,
+      created_at: t.created_at,
+      type: 'debit',
+      bank_account: t.bank_account,
+      bank_name: t.bank_name,
+      txn_trn: t.txn_trn
+    }))
+  ];
+
+  // sort by date asc
+  unified.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+  return unified;
+}
+
+/* ---------- fixed members list helper ---------- */
+async function getMembersList() {
+  const { rows } = await pool.query('SELECT id, first_name, sur_name FROM member ORDER BY first_name');
+  return rows;
+}
+
 module.exports = {
   CATEGORY_META,
   getCategoryKeys,
@@ -360,5 +513,10 @@ module.exports = {
   getCategoryTransactionsTotal,
   getCategorySummary,
   getFundOverview,
-  toViewVars
+  toViewVars,
+  getApprovedTransactions,
+  getFinancialTransactions,
+  getMembersList
 };
+
+
