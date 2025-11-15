@@ -67,6 +67,7 @@ app.use(staticRoutes);
 app.use('/admin', adminRoutes);
 app.use(fundSummaryRoutes);
 app.use('/oma', omaRoutes);
+app.use('/', authRoutes);
 app.use('/auth', authRoutes); // Remove the duplicate app.use('/', authRoutes)
 app.use('/payments', paymentRoutes);
 app.use('/', fundRoutes);
