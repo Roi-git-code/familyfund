@@ -1,39 +1,14 @@
 
+// utils/mail.js - Updated for Resend
+const { Resend } = require('resend');
 
+// Initialize Resend with your API key
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// utils/mail.js
-const nodemailer = require('nodemailer');
-
-// Create transporter (update with your SMTP settings)
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'localhost',
-  port: process.env.SMTP_PORT || 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  },
-
-tls: {
-    rejectUnauthorized: false
-  }
-
-});
-
-// Test transporter connection (optional)
-transporter.verify(function(error, success) {
-  if (error) {
-    console.log('❌ SMTP Connection Error:', error);
-  } else {
-    console.log('✅ SMTP Server is ready to take our messages');
-  }
-});
-
-
-// utils/mail.js
+// Send verification email function
 const sendVerificationEmail = async (email, otpCode) => {
   const mailOptions = {
-    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
+    from: 'FamilyFund <onboarding@resend.dev>',
     to: email,
     subject: 'Email Verification - Family Fund Management System',
     html: `
@@ -85,20 +60,26 @@ const sendVerificationEmail = async (email, otpCode) => {
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const { data, error } = await resend.emails.send(mailOptions);
+
+    if (error) {
+      console.error('❌ Resend API error:', error);
+      throw new Error(`Email sending failed: ${error.message}`);
+    }
+
     console.log('✅ Verification email sent to:', email);
-    return info;
+    console.log('📧 Email ID:', data.id);
+    return data;
   } catch (error) {
     console.error('❌ Error sending verification email:', error);
     throw new Error('Failed to send verification email');
   }
 };
 
-
 // Send password reset email function
 const sendResetEmail = async (email, resetLink) => {
   const mailOptions = {
-    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
+    from: 'FamilyFund <onboarding@resend.dev>',
     to: email,
     subject: 'Password Reset Request - Family Fund Management System',
     html: `
@@ -484,10 +465,16 @@ const sendResetEmail = async (email, resetLink) => {
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const { data, error } = await resend.emails.send(mailOptions);
+
+    if (error) {
+      console.error('❌ Resend API error:', error);
+      throw new Error(`Email sending failed: ${error.message}`);
+    }
+
     console.log('✅ Password reset email sent to:', email);
-    console.log('📧 Message ID:', info.messageId);
-    return info;
+    console.log('📧 Email ID:', data.id);
+    return data;
   } catch (error) {
     console.error('❌ Error sending reset email:', error);
     throw new Error('Failed to send reset email');
@@ -513,7 +500,7 @@ const sendFundRequestStatusEmail = async (email, fundRequestData) => {
   const statusTitle = status === 'Approved' ? 'Request Approved' : 'Request Rejected';
 
   const mailOptions = {
-    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
+    from: 'FamilyFund <onboarding@resend.dev>',
     to: email,
     subject: `Fund Request ${status} - Family Fund Management System`,
     html: `
@@ -619,9 +606,16 @@ const sendFundRequestStatusEmail = async (email, fundRequestData) => {
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const { data, error } = await resend.emails.send(mailOptions);
+
+    if (error) {
+      console.error('❌ Resend API error:', error);
+      throw new Error(`Email sending failed: ${error.message}`);
+    }
+
     console.log(`✅ Fund request ${status} email sent to:`, email);
-    return info;
+    console.log('📧 Email ID:', data.id);
+    return data;
   } catch (error) {
     console.error(`❌ Error sending fund request ${status} email:`, error);
     throw new Error(`Failed to send ${status.toLowerCase()} notification email`);
@@ -645,7 +639,7 @@ const sendPaymentStatusEmail = async (email, paymentData) => {
   const statusTitle = status === 'Paid' ? 'Payment Completed' : 'Payment Rejected';
 
   const mailOptions = {
-    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
+    from: 'FamilyFund <onboarding@resend.dev>',
     to: email,
     subject: `Payment ${status} - Family Fund Management System`,
     html: `
@@ -750,9 +744,16 @@ const sendPaymentStatusEmail = async (email, paymentData) => {
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const { data, error } = await resend.emails.send(mailOptions);
+
+    if (error) {
+      console.error('❌ Resend API error:', error);
+      throw new Error(`Email sending failed: ${error.message}`);
+    }
+
     console.log(`✅ Payment ${status} email sent to:`, email);
-    return info;
+    console.log('📧 Email ID:', data.id);
+    return data;
   } catch (error) {
     console.error(`❌ Error sending payment ${status} email:`, error);
     throw new Error(`Failed to send payment ${status.toLowerCase()} notification email`);
@@ -768,7 +769,7 @@ const sendMemberRegistrationEmail = async (email, memberData) => {
   } = memberData;
 
   const mailOptions = {
-    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
+    from: 'FamilyFund <onboarding@resend.dev>',
     to: email,
     subject: 'Welcome to Family Fund Management System',
     html: `
@@ -820,7 +821,7 @@ const sendMemberRegistrationEmail = async (email, memberData) => {
                 <p>To access your account and manage your contributions, please complete your user account setup:</p>
                 
                 <div style="text-align: center; margin: 20px 0;">
-                    <a href="${process.env.BASE_URL || 'http://localhost:3000'}/auth" class="btn-primary">
+                    <a href="${process.env.BASE_URL || 'https://your-app.onrender.com'}/auth" class="btn-primary">
                         Sign Up for User Account
                     </a>
                 </div>
@@ -866,9 +867,16 @@ const sendMemberRegistrationEmail = async (email, memberData) => {
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const { data, error } = await resend.emails.send(mailOptions);
+
+    if (error) {
+      console.error('❌ Resend API error:', error);
+      throw new Error(`Email sending failed: ${error.message}`);
+    }
+
     console.log(`✅ Member registration email sent to:`, email);
-    return info;
+    console.log('📧 Email ID:', data.id);
+    return data;
   } catch (error) {
     console.error(`❌ Error sending member registration email:`, error);
     throw new Error('Failed to send registration notification email');
@@ -885,7 +893,7 @@ const sendMemberUpdateEmail = async (email, memberData) => {
   } = memberData;
 
   const mailOptions = {
-    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
+    from: 'FamilyFund <onboarding@resend.dev>',
     to: email,
     subject: 'Member Profile Updated - Family Fund Management System',
     html: `
@@ -966,9 +974,16 @@ const sendMemberUpdateEmail = async (email, memberData) => {
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const { data, error } = await resend.emails.send(mailOptions);
+
+    if (error) {
+      console.error('❌ Resend API error:', error);
+      throw new Error(`Email sending failed: ${error.message}`);
+    }
+
     console.log(`✅ Member update email sent to:`, email);
-    return info;
+    console.log('📧 Email ID:', data.id);
+    return data;
   } catch (error) {
     console.error(`❌ Error sending member update email:`, error);
     throw new Error('Failed to send update notification email');
@@ -985,7 +1000,7 @@ const sendMemberDeletionEmail = async (email, memberData) => {
   } = memberData;
 
   const mailOptions = {
-    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
+    from: 'FamilyFund <onboarding@resend.dev>',
     to: email,
     subject: 'Member Account Deleted - Family Fund Management System',
     html: `
@@ -1066,16 +1081,23 @@ const sendMemberDeletionEmail = async (email, memberData) => {
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const { data, error } = await resend.emails.send(mailOptions);
+
+    if (error) {
+      console.error('❌ Resend API error:', error);
+      throw new Error(`Email sending failed: ${error.message}`);
+    }
+
     console.log(`✅ Member deletion email sent to:`, email);
-    return info;
+    console.log('📧 Email ID:', data.id);
+    return data;
   } catch (error) {
     console.error(`❌ Error sending member deletion email:`, error);
     throw new Error('Failed to send deletion notification email');
   }
 };
 
-// Update the export at the bottom
+// Export all functions
 module.exports = { 
   sendResetEmail, 
   sendVerificationEmail,
@@ -1085,4 +1107,5 @@ module.exports = {
   sendMemberUpdateEmail,
   sendMemberDeletionEmail
 };
+
 
