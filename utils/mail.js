@@ -1,14 +1,17 @@
 
-// utils/mail.js - Updated for Resend
+// utils/mail.js - TEMPORARY FIX using verified email
 const { Resend } = require('resend');
 
 // Initialize Resend with your API key
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// TEMPORARY: Use your verified email address for testing
+const FROM_EMAIL = 'FamilyFund <roizacky@gmail.com>';
+
 // Send verification email function
 const sendVerificationEmail = async (email, otpCode) => {
   const mailOptions = {
-    from: 'FamilyFund <onboarding@resend.dev>',
+    from: FROM_EMAIL,
     to: email,
     subject: 'Email Verification - Family Fund Management System',
     html: `
@@ -79,7 +82,7 @@ const sendVerificationEmail = async (email, otpCode) => {
 // Send password reset email function
 const sendResetEmail = async (email, resetLink) => {
   const mailOptions = {
-    from: 'FamilyFund <onboarding@resend.dev>',
+    from: FROM_EMAIL,
     to: email,
     subject: 'Password Reset Request - Family Fund Management System',
     html: `
@@ -500,7 +503,7 @@ const sendFundRequestStatusEmail = async (email, fundRequestData) => {
   const statusTitle = status === 'Approved' ? 'Request Approved' : 'Request Rejected';
 
   const mailOptions = {
-    from: 'FamilyFund <onboarding@resend.dev>',
+    from: FROM_EMAIL,
     to: email,
     subject: `Fund Request ${status} - Family Fund Management System`,
     html: `
@@ -639,7 +642,7 @@ const sendPaymentStatusEmail = async (email, paymentData) => {
   const statusTitle = status === 'Paid' ? 'Payment Completed' : 'Payment Rejected';
 
   const mailOptions = {
-    from: 'FamilyFund <onboarding@resend.dev>',
+    from: FROM_EMAIL,
     to: email,
     subject: `Payment ${status} - Family Fund Management System`,
     html: `
@@ -769,7 +772,7 @@ const sendMemberRegistrationEmail = async (email, memberData) => {
   } = memberData;
 
   const mailOptions = {
-    from: 'FamilyFund <onboarding@resend.dev>',
+    from: FROM_EMAIL,
     to: email,
     subject: 'Welcome to Family Fund Management System',
     html: `
@@ -893,7 +896,7 @@ const sendMemberUpdateEmail = async (email, memberData) => {
   } = memberData;
 
   const mailOptions = {
-    from: 'FamilyFund <onboarding@resend.dev>',
+    from: FROM_EMAIL,
     to: email,
     subject: 'Member Profile Updated - Family Fund Management System',
     html: `
@@ -1000,7 +1003,7 @@ const sendMemberDeletionEmail = async (email, memberData) => {
   } = memberData;
 
   const mailOptions = {
-    from: 'FamilyFund <onboarding@resend.dev>',
+    from: FROM_EMAIL,
     to: email,
     subject: 'Member Account Deleted - Family Fund Management System',
     html: `
