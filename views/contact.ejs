@@ -15,6 +15,8 @@
     
     <!-- Custom CSS -->
     <link href="/css/app.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/flash.css">
+   
     
     <style>
         .support-header {
@@ -98,6 +100,8 @@
       <div class="row">
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
           
+       <%- include('partials/flash') %>
+                         
           <!-- Header Section -->
           <div class="support-header text-center">
             <div class="row align-items-center">
@@ -337,89 +341,292 @@
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+      
+    <script src="/js/flash.js"></script>
+    <script src="/script/dashboard.js"></script>
+    <script src="/script/sidebar.js"></script>
 
-  <script>
+<script>
     // Support form handling
     document.getElementById('supportForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const formData = new FormData(this);
-      const submitBtn = this.querySelector('button[type="submit"]');
-      const originalText = submitBtn.innerHTML;
-      
-      // Show loading state
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
-      submitBtn.disabled = true;
-      
-      // Simulate form submission
-      setTimeout(() => {
-        // Show success message
-        showAlert('success', 'Message sent successfully! We will get back to you within 2-4 hours.');
+        console.log('🔄 Form submission started');
         
-        // Reset form
-        this.reset();
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
         
-        // Restore button
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-      }, 2000);
+        // Show loading state
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
+        submitBtn.disabled = true;
+        
+        // Log form data for debugging
+        console.log('📋 Form data:', {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            subject: document.getElementById('subject').value,
+            urgency: document.getElementById('urgency').value,
+            message: document.getElementById('message').value
+        });
+        
+        // Allow normal form submission - NO e.preventDefault() here
     });
+
+    // Enhanced alert function
+    function showAlert(type, message) {
+        // Remove existing alerts
+        const existingAlerts = document.querySelectorAll('.auto-alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show auto-alert position-fixed top-0 start-50 translate-middle-x mt-3`;
+        alertDiv.style.zIndex = '9999';
+        alertDiv.style.minWidth = '400px';
+        alertDiv.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas ${getAlertIcon(type)} me-2"></i>
+                <div class="flex-grow-1">${message}</div>
+                <button type="button" class="btn-close ms-3" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        document.body.appendChild(alertDiv);
+        
+        // Auto remove after 8 seconds
+        setTimeout(() => {
+            if (alertDiv.parentElement) {
+                alertDiv.remove();
+            }
+        }, 8000);
+    }
+
+    function getAlertIcon(type) {
+        switch(type) {
+            case 'success': return 'fa-check-circle';
+            case 'danger': return 'fa-exclamation-circle';
+            case 'warning': return 'fa-exclamation-triangle';
+            default: return 'fa-info-circle';
+        }
+    }
+
+    // Display messages from URL parameters
+    function displayURLMessages() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const success = urlParams.get('success');
+        const error = urlParams.get('error');
+        
+        if (success) {
+            showAlert('success', decodeURIComponent(success));
+            // Clean URL without page reload
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+        }
+        
+        if (error) {
+            showAlert('danger', decodeURIComponent(error));
+            // Clean URL without page reload
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+        }
+    }
+
+    // Display flash messages from server (if they work)
+    function displayFlashMessages() {
+        <% if (flash && flash.length > 0) { %>
+            <% flash.forEach(function(message) { %>
+                <% if (message.type === 'success') { %>
+                    showAlert('success', '<%= message.message.replace(/'/g, "\\'") %>');
+                <% } else if (message.type === 'error') { %>
+                    showAlert('danger', '<%= message.message.replace(/'/g, "\\'") %>');
+                <% } %>
+            <% }); %>
+        <% } %>
+    }
 
     // Live chat simulation
     function startLiveChat() {
-      const isOnline = Math.random() > 0.2; // 80% chance online
-      
-      if (isOnline) {
-        showAlert('success', 'Connecting you to a support agent...');
-        // In a real application, this would open a chat widget
-        setTimeout(() => {
-          showAlert('info', 'Chat session started. Please check the bottom right corner of your screen.');
-        }, 1000);
-      } else {
-        showAlert('warning', 'Our chat support is currently offline. Please try email or phone support.');
-      }
-    }
-
-    // Alert helper function
-    function showAlert(type, message) {
-      const alertDiv = document.createElement('div');
-      alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-      alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      `;
-      
-      document.querySelector('main').insertBefore(alertDiv, document.querySelector('.support-form'));
-      
-      // Auto remove after 5 seconds
-      setTimeout(() => {
-        if (alertDiv.parentElement) {
-          alertDiv.remove();
+        const isOnline = Math.random() > 0.2;
+        
+        if (isOnline) {
+            showAlert('success', 'Connecting you to a support agent...');
+            setTimeout(() => {
+                showAlert('info', 'Chat session started. Please check the bottom right corner of your screen.');
+            }, 1000);
+        } else {
+            showAlert('warning', 'Our chat support is currently offline. Please try email or phone support.');
         }
-      }, 5000);
     }
 
-    // Auto-fill subject based on urgency for high/critical issues
+    // Auto-fill subject based on urgency
     document.getElementById('urgency').addEventListener('change', function() {
-      const subject = document.getElementById('subject');
-      if (this.value === 'high' || this.value === 'critical') {
-        if (!subject.value) {
-          subject.value = 'technical';
+        const subject = document.getElementById('subject');
+        if (this.value === 'high' || this.value === 'critical') {
+            if (!subject.value) {
+                subject.value = 'technical';
+            }
         }
-      }
     });
 
-    // Add character counter for message
+    // Character counter for message
     const messageTextarea = document.getElementById('message');
-    const charCount = document.createElement('div');
-    charCount.className = 'form-text text-end';
-    charCount.innerHTML = '<span id="charCount">0</span>/2000 characters';
-    messageTextarea.parentNode.appendChild(charCount);
+    if (messageTextarea) {
+        const charCount = document.createElement('div');
+        charCount.className = 'form-text text-end';
+        charCount.innerHTML = '<span id="charCount">0</span>/2000 characters';
+        messageTextarea.parentNode.appendChild(charCount);
 
-    messageTextarea.addEventListener('input', function() {
-      document.getElementById('charCount').textContent = this.value.length;
+        messageTextarea.addEventListener('input', function() {
+            document.getElementById('charCount').textContent = this.value.length;
+        });
+    }
+
+    // Form validation - FIXED VERSION
+    document.getElementById('supportForm').addEventListener('submit', function(e) {
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const subject = document.getElementById('subject').value;
+        const message = document.getElementById('message').value.trim();
+        
+        let hasErrors = false;
+        
+        // Clear previous alerts
+        const existingAlerts = document.querySelectorAll('.auto-alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Validation checks
+        if (!name) {
+            showAlert('warning', 'Please enter your full name.');
+            hasErrors = true;
+        }
+
+        if (!email) {
+            showAlert('warning', 'Please enter your email address.');
+            hasErrors = true;
+        }
+
+        if (!subject) {
+            showAlert('warning', 'Please select a subject.');
+            hasErrors = true;
+        }
+
+        if (!message) {
+            showAlert('warning', 'Please enter your message.');
+            hasErrors = true;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (email && !emailRegex.test(email)) {
+            showAlert('warning', 'Please enter a valid email address.');
+            hasErrors = true;
+        }
+
+        if (message && message.length < 10) {
+            showAlert('warning', 'Please provide a more detailed message (at least 10 characters).');
+            hasErrors = true;
+        }
+
+        // If there are errors, prevent submission and reset button
+        if (hasErrors) {
+            e.preventDefault();
+            resetSubmitButton();
+            return;
+        }
+        
+        // If no errors, allow form submission to proceed
+        console.log('✅ Form validation passed, allowing submission');
     });
-  </script>
+
+    // Reset button function
+    function resetSubmitButton() {
+        const submitBtn = document.querySelector('#supportForm button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send Message';
+            submitBtn.disabled = false;
+        }
+    }
+
+    // File upload validation
+    const fileInput = document.getElementById('attachments');
+    if (fileInput) {
+        fileInput.addEventListener('change', validateFiles);
+    }
+
+    function validateFiles() {
+        const files = this.files;
+        const maxSize = 10 * 1024 * 1024;
+        const maxFiles = 5;
+        let totalSize = 0;
+
+        if (files.length > maxFiles) {
+            showAlert('warning', `Maximum ${maxFiles} files allowed. You selected ${files.length}.`);
+            this.value = '';
+            return;
+        }
+
+        for (let i = 0; i < files.length; i++) {
+            totalSize += files[i].size;
+            if (files[i].size > maxSize) {
+                showAlert('warning', `File "${files[i].name}" is too large. Maximum size is 10MB.`);
+                this.value = '';
+                return;
+            }
+        }
+
+        if (totalSize > maxSize) {
+            showAlert('warning', 'Total file size exceeds 10MB limit.');
+            this.value = '';
+        }
+    }
+
+    // Initialize on page load
+    window.addEventListener('load', function() {
+        console.log('🚀 Support page loaded');
+        resetSubmitButton();
+        displayURLMessages(); // Check URL parameters first
+        displayFlashMessages(); // Then check flash messages
+        
+        // Auto-fill form with user data if available
+        const user = <% if (user) { %> <%- JSON.stringify(user) %> <% } else { %> null <% } %>;
+        if (user) {
+            console.log('👤 User data available:', user);
+            // Ensure name field is populated correctly
+            const nameField = document.getElementById('name');
+            if (nameField && !nameField.value) {
+                nameField.value = `${user.first_name || ''} ${user.surname || ''}`.trim();
+            }
+            // Ensure email field is populated correctly
+            const emailField = document.getElementById('email');
+            if (emailField && !emailField.value) {
+                emailField.value = user.username || '';
+            }
+        }
+    });
+
+    // Add real-time validation as user types
+    document.getElementById('message').addEventListener('input', function() {
+        if (this.value.length < 10 && this.value.length > 0) {
+            this.classList.add('is-invalid');
+        } else {
+            this.classList.remove('is-invalid');
+        }
+    });
+
+    document.getElementById('email').addEventListener('input', function() {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (this.value && !emailRegex.test(this.value)) {
+            this.classList.add('is-invalid');
+        } else {
+            this.classList.remove('is-invalid');
+        }
+    });
+
+    // Add input event listeners to clear validation styles when user starts typing
+    const formInputs = document.querySelectorAll('#supportForm input, #supportForm select, #supportForm textarea');
+    formInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+        });
+    });
+</script>
+      
 </body>
 </html>
 

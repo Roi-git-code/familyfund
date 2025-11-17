@@ -1,4 +1,5 @@
 
+
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
@@ -10,6 +11,7 @@ const paymentService = require('./services/payment');
 console.log('paymentService keys:', Object.keys(paymentService));
 console.log('initiatePayment is function?', typeof paymentService.initiatePayment);
 
+
 const staticRoutes = require('./routes/staticRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const memberRoutes = require('./routes/memberRoutes');
@@ -19,15 +21,13 @@ const userRoutes = require('./routes/userRoutes');
 const fundRoutes = require('./routes/fundRoutes');
 const omaRoutes = require('./routes/omaRoutes');
 const fundSummaryRoutes = require('./routes/fundSummaryRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
+const paymentRoutes = require('./routes/paymentRoutes'); // NEW: Import payment routes
+const supportRoutes = require('./routes/supportRoutes');
 
 const { requireAuth, requireRole, allowRoles, requireVerifiedEmail } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Initialize tempUsers if needed (add this if missing)
-const tempUsers = new Map(); // Add this line if tempUsers is used elsewhere
 
 // ----------------- Middleware -----------------
 app.use(express.urlencoded({ extended: true }));
@@ -67,42 +67,34 @@ app.use(staticRoutes);
 app.use('/admin', adminRoutes);
 app.use(fundSummaryRoutes);
 app.use('/oma', omaRoutes);
+app.use('/auth', authRoutes);
 app.use('/', authRoutes);
-app.use('/auth', authRoutes); // Remove the duplicate app.use('/', authRoutes)
-app.use('/payments', paymentRoutes);
+//app.use('/', userRoutes);
 app.use('/', fundRoutes);
+app.use('/payments', paymentRoutes);
+//app.use('/member', requireAuth, allowRoles('chairman','admin'), memberRoutes);
+//app.use('/contributions', requireAuth, allowRoles('chairman', 'chief_signatory', 'assistant_signatory'), contributionRoutes);
 
 // Protected routes with email verification
 app.use('/member', requireAuth, requireVerifiedEmail, allowRoles('chairman','admin'), memberRoutes);
 app.use('/contributions', requireAuth, requireVerifiedEmail, allowRoles('chairman', 'chief_signatory', 'assistant_signatory'), contributionRoutes);
 app.use('/', requireAuth, requireVerifiedEmail, userRoutes);
+app.use('/', requireVerifiedEmail,  supportRoutes);
 
 // 404 fallback
 app.use((req, res) => res.status(404).send('Page Not Found'));
 
-// Clean up expired temporary data every hour (only if tempUsers exists)
-if (typeof tempUsers !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    const expired = 30 * 60 * 1000; // 30 minutes
-    for (const [email, data] of tempUsers.entries()) {
-      if (now - data.createdAt > expired) {
-        tempUsers.delete(email);
-      }
+// Clean up expired temporary data every hour
+setInterval(() => {
+  const now = Date.now();
+  const expired = 30 * 60 * 1000; // 30 minutes
+  for (const [email, data] of tempUsers.entries()) {
+    if (now - data.createdAt > expired) {
+      tempUsers.delete(email);
     }
-  }, 60 * 60 * 1000);
-}
-
-// Error handling middleware (add this for better error management)
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).render('error', { 
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err : {}
-  });
-});
+  }
+}, 60 * 60 * 1000);
 
 // Start server
 app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
-
 

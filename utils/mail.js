@@ -1,17 +1,33 @@
 
-// utils/mail.js - TEMPORARY FIX using verified email
-const { Resend } = require('resend');
 
-// Initialize Resend with your API key
-const resend = new Resend(process.env.RESEND_API_KEY);
+// utils/mail.js
+const nodemailer = require('nodemailer');
 
-// TEMPORARY: Use your verified email address for testing
-const FROM_EMAIL = 'FamilyFund <roizacky@gmail.com>';
+// Create transporter (update with your SMTP settings)
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'localhost',
+  port: process.env.SMTP_PORT || 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
 
-// Send verification email function
+// Test transporter connection (optional)
+transporter.verify(function(error, success) {
+  if (error) {
+    console.log('❌ SMTP Connection Error:', error);
+  } else {
+    console.log('✅ SMTP Server is ready to take our messages');
+  }
+});
+
+
+// utils/mail.js
 const sendVerificationEmail = async (email, otpCode) => {
   const mailOptions = {
-    from: FROM_EMAIL,
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
     to: email,
     subject: 'Email Verification - Family Fund Management System',
     html: `
@@ -63,26 +79,20 @@ const sendVerificationEmail = async (email, otpCode) => {
   };
 
   try {
-    const { data, error } = await resend.emails.send(mailOptions);
-
-    if (error) {
-      console.error('❌ Resend API error:', error);
-      throw new Error(`Email sending failed: ${error.message}`);
-    }
-
+    const info = await transporter.sendMail(mailOptions);
     console.log('✅ Verification email sent to:', email);
-    console.log('📧 Email ID:', data.id);
-    return data;
+    return info;
   } catch (error) {
     console.error('❌ Error sending verification email:', error);
     throw new Error('Failed to send verification email');
   }
 };
 
+
 // Send password reset email function
 const sendResetEmail = async (email, resetLink) => {
   const mailOptions = {
-    from: FROM_EMAIL,
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
     to: email,
     subject: 'Password Reset Request - Family Fund Management System',
     html: `
@@ -468,16 +478,10 @@ const sendResetEmail = async (email, resetLink) => {
   };
 
   try {
-    const { data, error } = await resend.emails.send(mailOptions);
-
-    if (error) {
-      console.error('❌ Resend API error:', error);
-      throw new Error(`Email sending failed: ${error.message}`);
-    }
-
+    const info = await transporter.sendMail(mailOptions);
     console.log('✅ Password reset email sent to:', email);
-    console.log('📧 Email ID:', data.id);
-    return data;
+    console.log('📧 Message ID:', info.messageId);
+    return info;
   } catch (error) {
     console.error('❌ Error sending reset email:', error);
     throw new Error('Failed to send reset email');
@@ -503,7 +507,7 @@ const sendFundRequestStatusEmail = async (email, fundRequestData) => {
   const statusTitle = status === 'Approved' ? 'Request Approved' : 'Request Rejected';
 
   const mailOptions = {
-    from: FROM_EMAIL,
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
     to: email,
     subject: `Fund Request ${status} - Family Fund Management System`,
     html: `
@@ -609,16 +613,9 @@ const sendFundRequestStatusEmail = async (email, fundRequestData) => {
   };
 
   try {
-    const { data, error } = await resend.emails.send(mailOptions);
-
-    if (error) {
-      console.error('❌ Resend API error:', error);
-      throw new Error(`Email sending failed: ${error.message}`);
-    }
-
+    const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Fund request ${status} email sent to:`, email);
-    console.log('📧 Email ID:', data.id);
-    return data;
+    return info;
   } catch (error) {
     console.error(`❌ Error sending fund request ${status} email:`, error);
     throw new Error(`Failed to send ${status.toLowerCase()} notification email`);
@@ -642,7 +639,7 @@ const sendPaymentStatusEmail = async (email, paymentData) => {
   const statusTitle = status === 'Paid' ? 'Payment Completed' : 'Payment Rejected';
 
   const mailOptions = {
-    from: FROM_EMAIL,
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
     to: email,
     subject: `Payment ${status} - Family Fund Management System`,
     html: `
@@ -747,16 +744,9 @@ const sendPaymentStatusEmail = async (email, paymentData) => {
   };
 
   try {
-    const { data, error } = await resend.emails.send(mailOptions);
-
-    if (error) {
-      console.error('❌ Resend API error:', error);
-      throw new Error(`Email sending failed: ${error.message}`);
-    }
-
+    const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Payment ${status} email sent to:`, email);
-    console.log('📧 Email ID:', data.id);
-    return data;
+    return info;
   } catch (error) {
     console.error(`❌ Error sending payment ${status} email:`, error);
     throw new Error(`Failed to send payment ${status.toLowerCase()} notification email`);
@@ -772,7 +762,7 @@ const sendMemberRegistrationEmail = async (email, memberData) => {
   } = memberData;
 
   const mailOptions = {
-    from: FROM_EMAIL,
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
     to: email,
     subject: 'Welcome to Family Fund Management System',
     html: `
@@ -824,7 +814,7 @@ const sendMemberRegistrationEmail = async (email, memberData) => {
                 <p>To access your account and manage your contributions, please complete your user account setup:</p>
                 
                 <div style="text-align: center; margin: 20px 0;">
-                    <a href="${process.env.BASE_URL || 'https://your-app.onrender.com'}/auth" class="btn-primary">
+                    <a href="${process.env.BASE_URL || 'http://localhost:3000'}/auth" class="btn-primary">
                         Sign Up for User Account
                     </a>
                 </div>
@@ -870,16 +860,9 @@ const sendMemberRegistrationEmail = async (email, memberData) => {
   };
 
   try {
-    const { data, error } = await resend.emails.send(mailOptions);
-
-    if (error) {
-      console.error('❌ Resend API error:', error);
-      throw new Error(`Email sending failed: ${error.message}`);
-    }
-
+    const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Member registration email sent to:`, email);
-    console.log('📧 Email ID:', data.id);
-    return data;
+    return info;
   } catch (error) {
     console.error(`❌ Error sending member registration email:`, error);
     throw new Error('Failed to send registration notification email');
@@ -896,7 +879,7 @@ const sendMemberUpdateEmail = async (email, memberData) => {
   } = memberData;
 
   const mailOptions = {
-    from: FROM_EMAIL,
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
     to: email,
     subject: 'Member Profile Updated - Family Fund Management System',
     html: `
@@ -977,16 +960,9 @@ const sendMemberUpdateEmail = async (email, memberData) => {
   };
 
   try {
-    const { data, error } = await resend.emails.send(mailOptions);
-
-    if (error) {
-      console.error('❌ Resend API error:', error);
-      throw new Error(`Email sending failed: ${error.message}`);
-    }
-
+    const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Member update email sent to:`, email);
-    console.log('📧 Email ID:', data.id);
-    return data;
+    return info;
   } catch (error) {
     console.error(`❌ Error sending member update email:`, error);
     throw new Error('Failed to send update notification email');
@@ -1003,7 +979,7 @@ const sendMemberDeletionEmail = async (email, memberData) => {
   } = memberData;
 
   const mailOptions = {
-    from: FROM_EMAIL,
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
     to: email,
     subject: 'Member Account Deleted - Family Fund Management System',
     html: `
@@ -1084,23 +1060,578 @@ const sendMemberDeletionEmail = async (email, memberData) => {
   };
 
   try {
-    const { data, error } = await resend.emails.send(mailOptions);
-
-    if (error) {
-      console.error('❌ Resend API error:', error);
-      throw new Error(`Email sending failed: ${error.message}`);
-    }
-
+    const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Member deletion email sent to:`, email);
-    console.log('📧 Email ID:', data.id);
-    return data;
+    return info;
   } catch (error) {
     console.error(`❌ Error sending member deletion email:`, error);
     throw new Error('Failed to send deletion notification email');
   }
 };
 
-// Export all functions
+
+// Send Support Notification Email to Admin
+const sendSupportNotificationEmail = async (supportData) => {
+  const { 
+    messageId, 
+    name, 
+    email, 
+    subject, 
+    urgency, 
+    message, 
+    createdAt 
+  } = supportData;
+
+  const urgencyColors = {
+    critical: '#dc3545',
+    high: '#fd7e14', 
+    medium: '#ffc107',
+    low: '#28a745'
+  };
+
+  const urgencyLabels = {
+    critical: 'CRITICAL',
+    high: 'HIGH',
+    medium: 'MEDIUM', 
+    low: 'LOW'
+  };
+
+  const urgencyColor = urgencyColors[urgency] || '#6c757d';
+  const urgencyLabel = urgencyLabels[urgency] || 'STANDARD';
+
+  const mailOptions = {
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
+    to: process.env.ADMIN_EMAIL || 'itzfamilyfund@gmail.com',
+    subject: `📧 New Support Message: ${subject}`,
+    html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Support Message - FamilyFund</title>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            line-height: 1.6; 
+            color: #333; 
+            background-color: #f8f9fa; 
+        }
+        
+        .email-container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: #ffffff; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+        }
+        
+        .email-header { 
+            background: linear-gradient(135deg, #2c3e50, #3498db); 
+            color: white; 
+            padding: 30px 40px; 
+            text-align: center; 
+        }
+        
+        .email-header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .email-header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .email-body { 
+            padding: 40px; 
+        }
+        
+        .urgency-badge {
+            display: inline-block;
+            background: ${urgencyColor};
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .details-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 20px 0; 
+            background: #f8f9fa;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .details-table td { 
+            padding: 12px 16px; 
+            border-bottom: 1px solid #dee2e6; 
+        }
+        
+        .details-table td:first-child { 
+            font-weight: 600; 
+            color: #2c3e50; 
+            width: 30%; 
+            background: #e9ecef;
+        }
+        
+        .message-box { 
+            background: white; 
+            padding: 20px; 
+            border-left: 4px solid #3498db; 
+            margin: 20px 0; 
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 16px 0;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .action-button:hover {
+            background: linear-gradient(135deg, #2980b9, #21618c);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+        
+        .security-notice { 
+            background: #fff3cd; 
+            border: 1px solid #ffeaa7; 
+            border-radius: 6px; 
+            padding: 16px; 
+            margin: 20px 0; 
+            font-size: 14px; 
+        }
+        
+        .no-reply-notice { 
+            background: #e9ecef; 
+            padding: 12px; 
+            border-radius: 4px; 
+            text-align: center; 
+            font-size: 12px; 
+            color: #666; 
+            margin-top: 20px; 
+        }
+        
+        .message-content {
+            white-space: pre-wrap;
+            line-height: 1.8;
+            color: #495057;
+        }
+        
+        .timestamp {
+            color: #6c757d;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        
+        @media (max-width: 600px) {
+            .email-body {
+                padding: 24px;
+            }
+            
+            .email-header {
+                padding: 24px;
+            }
+            
+            .email-header h1 {
+                font-size: 24px;
+            }
+            
+            .details-table td {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+            
+            .message-box {
+                padding: 16px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .email-body {
+                padding: 16px;
+            }
+            
+            .details-table {
+                font-size: 13px;
+            }
+            
+            .details-table td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="email-header">
+            <h1>Family Fund Management System</h1>
+            <p>New Support Message Received</p>
+        </div>
+        
+        <!-- Body -->
+        <div class="email-body">
+            <div class="urgency-badge">
+                ${urgencyLabel} PRIORITY
+            </div>
+            
+            <h2 style="color: #2c3e50; margin-bottom: 20px;">New Support Message Details</h2>
+            
+            <table class="details-table">
+                <tr>
+                    <td>Message ID:</td>
+                    <td><strong>#${messageId}</strong></td>
+                </tr>
+                <tr>
+                    <td>From:</td>
+                    <td>${name} (${email})</td>
+                </tr>
+                <tr>
+                    <td>Subject:</td>
+                    <td>${subject}</td>
+                </tr>
+                <tr>
+                    <td>Urgency:</td>
+                    <td>
+                        <span style="color: ${urgencyColor}; font-weight: 600;">
+                            ${urgencyLabel}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Submitted:</td>
+                    <td>${new Date(createdAt).toLocaleString()}</td>
+                </tr>
+            </table>
+            
+            <h3 style="color: #2c3e50; margin: 24px 0 12px 0;">Message Content:</h3>
+            <div class="message-box">
+                <div class="message-content">${message.replace(/\n/g, '<br>')}</div>
+                <div class="timestamp">
+                    Received: ${new Date(createdAt).toLocaleString()}
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="${process.env.BASE_URL || 'http://localhost:3000'}/admin/support/${messageId}" 
+                   class="action-button">
+                   📋 View Message in Admin Panel
+                </a>
+            </div>
+            
+            <div class="security-notice">
+                <strong>🔒 Support Guidelines:</strong><br>
+                • Respond within 2-4 hours for standard priority<br>
+                • Critical issues require immediate attention<br>
+                • Update message status as you work on it<br>
+                • Keep the user informed of progress
+            </div>
+
+            <div class="no-reply-notice">
+                ⚠️ This is an automated notification. Please do not reply to this email.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+    `
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Support notification email sent for message #${messageId}`);
+    console.log(`📧 Message ID:`, info.messageId);
+    return info;
+  } catch (error) {
+    console.error(`❌ Error sending support notification email:`, error);
+    throw new Error('Failed to send support notification email');
+  }
+};
+
+// Send Support Response Notification to User
+const sendSupportResponseEmail = async (userEmail, supportData) => {
+  const { 
+    messageId, 
+    subject, 
+    adminName,
+    response,
+    status,
+    responseDate 
+  } = supportData;
+
+  const statusColors = {
+    in_progress: '#17a2b8',
+    resolved: '#28a745',
+    closed: '#6c757d'
+  };
+
+  const statusLabels = {
+    in_progress: 'In Progress',
+    resolved: 'Resolved', 
+    closed: 'Closed'
+  };
+
+  const statusColor = statusColors[status] || '#6c757d';
+  const statusLabel = statusLabels[status] || 'Updated';
+
+  const mailOptions = {
+    from: process.env.SMTP_FROM || 'FamilyFund Support <itzfamilyfund@gmail.com>',
+    to: userEmail,
+    subject: `📋 Update on Your Support Request: ${subject}`,
+    html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Request Update - FamilyFund</title>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            line-height: 1.6; 
+            color: #333; 
+            background-color: #f8f9fa; 
+        }
+        
+        .email-container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: #ffffff; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+        }
+        
+        .email-header { 
+            background: linear-gradient(135deg, #2c3e50, #3498db); 
+            color: white; 
+            padding: 30px 40px; 
+            text-align: center; 
+        }
+        
+        .email-header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .email-body { 
+            padding: 40px; 
+        }
+        
+        .status-banner {
+            background: ${statusColor};
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .details-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 20px 0; 
+            background: #f8f9fa;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .details-table td { 
+            padding: 12px 16px; 
+            border-bottom: 1px solid #dee2e6; 
+        }
+        
+        .details-table td:first-child { 
+            font-weight: 600; 
+            color: #2c3e50; 
+            width: 30%; 
+            background: #e9ecef;
+        }
+        
+        .response-box { 
+            background: white; 
+            padding: 20px; 
+            border-left: 4px solid ${statusColor}; 
+            margin: 20px 0; 
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .response-content {
+            white-space: pre-wrap;
+            line-height: 1.8;
+            color: #495057;
+        }
+        
+        .support-contact { 
+            background: #e8f4fd; 
+            border-radius: 8px; 
+            padding: 20px; 
+            margin: 20px 0; 
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+        }
+        
+        .no-reply-notice { 
+            background: #e9ecef; 
+            padding: 12px; 
+            border-radius: 4px; 
+            text-align: center; 
+            font-size: 12px; 
+            color: #666; 
+            margin-top: 20px; 
+        }
+        
+        @media (max-width: 600px) {
+            .email-body {
+                padding: 24px;
+            }
+            
+            .email-header {
+                padding: 24px;
+            }
+            
+            .email-header h1 {
+                font-size: 24px;
+            }
+            
+            .details-table td {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+            
+            .response-box {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="email-header">
+            <h1>Family Fund Management System</h1>
+            <p>Support Request Update</p>
+        </div>
+        
+        <!-- Body -->
+        <div class="email-body">
+            <div class="status-banner">
+                <h2 style="margin: 0; font-size: 24px;">📋 ${statusLabel}</h2>
+                <p style="margin: 5px 0 0 0; opacity: 0.9;">Your support request has been updated</p>
+            </div>
+            
+            <table class="details-table">
+                <tr>
+                    <td>Request ID:</td>
+                    <td><strong>#${messageId}</strong></td>
+                </tr>
+                <tr>
+                    <td>Subject:</td>
+                    <td>${subject}</td>
+                </tr>
+                <tr>
+                    <td>Status:</td>
+                    <td>
+                        <span style="color: ${statusColor}; font-weight: 600;">
+                            ${statusLabel}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Responded By:</td>
+                    <td>${adminName}</td>
+                </tr>
+                <tr>
+                    <td>Response Date:</td>
+                    <td>${new Date(responseDate).toLocaleString()}</td>
+                </tr>
+            </table>
+            
+            <h3 style="color: #2c3e50; margin: 24px 0 12px 0;">Support Response:</h3>
+            <div class="response-box">
+                <div class="response-content">${response.replace(/\n/g, '<br>')}</div>
+            </div>
+
+            <div class="support-contact">
+                <h4 style="margin-top: 0; color: #2c3e50;">📞 Need Further Assistance?</h4>
+                
+                <div class="contact-item">
+                    <span style="font-weight: 600;">📧 Email:</span>
+                    <span>itzfamilyfund@mail.com</span>
+                </div>
+                <div class="contact-item">
+                    <span style="font-weight: 600;">💬 WhatsApp:</span>
+                    <span>+255 782 702 502</span>
+                </div>
+                <div class="contact-item">
+                    <span style="font-weight: 600;">📞 Phone:</span>
+                    <span>+255 763 724 710</span>
+                </div>
+                
+                <p style="margin: 15px 0 0 0; font-size: 14px; color: #666;">
+                    Please mention your Request ID (<strong>#${messageId}</strong>) when contacting support.
+                </p>
+            </div>
+
+            <div class="no-reply-notice">
+                ⚠️ This is an automated notification. Please do not reply to this email.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+    `
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Support response email sent to:`, userEmail);
+    console.log(`📧 Message ID:`, info.messageId);
+    return info;
+  } catch (error) {
+    console.error(`❌ Error sending support response email:`, error);
+    throw new Error('Failed to send support response email');
+  }
+};
+
+// Module Exports
 module.exports = { 
   sendResetEmail, 
   sendVerificationEmail,
@@ -1108,7 +1639,7 @@ module.exports = {
   sendPaymentStatusEmail,
   sendMemberRegistrationEmail,
   sendMemberUpdateEmail,
-  sendMemberDeletionEmail
+  sendMemberDeletionEmail,
+  sendSupportNotificationEmail,
+  sendSupportResponseEmail
 };
-
-

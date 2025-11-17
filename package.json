@@ -24,6 +24,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@sendgrid/mail": "^8.1.6",
     "axios": "^1.6.0",
     "azampay": "^0.0.5",
     "bcryptjs": "^3.0.2",

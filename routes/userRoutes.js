@@ -78,6 +78,25 @@ router.get('/dashboard', requireAuth, async (req, res) => {
       rejectedCount = counts.rejected_count + counts.cancelled_count; // Rejected + Cancelled
     }
 
+    // Get support statistics for authorized roles
+    let supportStats = {
+      total_messages: 0,
+      new_messages: 0,
+      in_progress_messages: 0,
+      resolved_messages: 0
+    };
+
+    if (['chairman', 'chief_signatory', 'assistant_signatory', 'admin'].includes(role)) {
+      try {
+        // Import support model
+        const supportModel = require('../models/supportModel');
+        supportStats = await supportModel.getSupportStatistics();
+      } catch (error) {
+        console.error('Error loading support statistics:', error);
+        // Continue without support stats if there's an error
+      }
+    }
+
     // Calculate member-specific request counts for the stats cards
     const memberPendingProfileRequests = memberProfileRequests.filter(req => 
       req.status === 'Pending' || req.status === 'In Progress'
@@ -109,7 +128,8 @@ router.get('/dashboard', requireAuth, async (req, res) => {
       rejectedCount,
       memberProfileRequests,
       memberFundRequests,
-      totalPendingRequests
+      totalPendingRequests,
+      supportStats // Add support statistics to the template
     });
 
   } catch (err) {
