@@ -3,6 +3,13 @@
 const nodemailer = require('nodemailer');
 const { google } = require('googleapis');
 
+console.log('🔧 Initializing Email Service...');
+console.log('📧 Gmail Address:', process.env.GMAIL_ADDRESS);
+console.log('🔑 Client ID:', process.env.CLIENT_ID ? '✅ Set' : '❌ Missing');
+console.log('🔒 Client Secret:', process.env.CLIENT_SECRET ? '✅ Set' : '❌ Missing');
+console.log('🔄 Refresh Token:', process.env.REFRESH_TOKEN ? '✅ Set' : '❌ Missing');
+console.log('📨 SMTP User:', process.env.SMTP_USER ? '✅ Set' : '❌ Missing');
+
 // OAuth2 client configuration
 const oAuth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
@@ -10,15 +17,32 @@ const oAuth2Client = new google.auth.OAuth2(
   'https://developers.google.com/oauthplayground'
 );
 
-oAuth2Client.setCredentials({
-  refresh_token: process.env.REFRESH_TOKEN
-});
+// Set credentials only if refresh token exists
+if (process.env.REFRESH_TOKEN) {
+  oAuth2Client.setCredentials({
+    refresh_token: process.env.REFRESH_TOKEN
+  });
+  console.log('✅ OAuth2 credentials set');
+} else {
+  console.log('❌ No refresh token available');
+}
 
 // Create transporter with OAuth2
 const createTransporter = async () => {
   try {
+    if (!process.env.REFRESH_TOKEN) {
+      throw new Error('No refresh token available');
+    }
+
+    console.log('🔄 Getting access token...');
     const accessToken = await oAuth2Client.getAccessToken();
     
+    if (!accessToken || !accessToken.token) {
+      throw new Error('Failed to get access token');
+    }
+
+    console.log('✅ Access token obtained successfully');
+
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -33,38 +57,88 @@ const createTransporter = async () => {
 
     return transporter;
   } catch (error) {
-    console.error('❌ Error creating OAuth2 transporter:', error);
+    console.error('❌ Error creating OAuth2 transporter:', error.message);
     throw error;
+  }
+};
+
+// SMTP Transporter as fallback
+const createSmtpTransporter = () => {
+  console.log('🔄 Creating SMTP transporter...');
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: process.env.SMTP_PORT || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER || process.env.GMAIL_ADDRESS,
+      pass: process.env.SMTP_PASS
+    }
+  });
+};
+
+// Generic email sending function with fallback
+const sendEmail = async (mailOptions) => {
+  // Try OAuth2 first if we have credentials
+  if (process.env.CLIENT_ID && process.env.CLIENT_SECRET && process.env.REFRESH_TOKEN) {
+    try {
+      console.log('🚀 Attempting to send email via Gmail OAuth2...');
+      const transporter = await createTransporter();
+      const info = await transporter.sendMail(mailOptions);
+      console.log('✅ Email sent successfully via Gmail OAuth2');
+      console.log('📧 Message ID:', info.messageId);
+      return info;
+    } catch (oauthError) {
+      console.error('❌ Gmail OAuth2 failed:', oauthError.message);
+      console.log('🔄 Falling back to SMTP...');
+    }
+  }
+
+  // Fallback to SMTP
+  try {
+    console.log('📨 Sending email via SMTP...');
+    const smtpTransporter = createSmtpTransporter();
+    const info = await smtpTransporter.sendMail(mailOptions);
+    console.log('✅ Email sent successfully via SMTP');
+    return info;
+  } catch (smtpError) {
+    console.error('❌ SMTP failed:', smtpError.message);
+    throw new Error(`Failed to send email: ${smtpError.message}`);
   }
 };
 
 // Test transporter connection
 const testTransporter = async () => {
+  console.log('🔧 Testing email configuration...');
+  
+  if (process.env.CLIENT_ID && process.env.CLIENT_SECRET && process.env.REFRESH_TOKEN) {
+    try {
+      console.log('🔧 Testing Gmail OAuth2 connection...');
+      const transporter = await createTransporter();
+      await transporter.verify();
+      console.log('✅ Gmail OAuth2 Server is ready to take our messages');
+      return 'oauth2';
+    } catch (error) {
+      console.log('❌ Gmail OAuth2 Connection Error:', error.message);
+    }
+  }
+
+  // Test SMTP
   try {
-    const transporter = await createTransporter();
-    await transporter.verify();
-    console.log('✅ Gmail OAuth2 Server is ready to take our messages');
+    console.log('🔧 Testing SMTP connection...');
+    const smtpTransporter = createSmtpTransporter();
+    await smtpTransporter.verify();
+    console.log('✅ SMTP Server is ready to take our messages');
+    return 'smtp';
   } catch (error) {
-    console.log('❌ Gmail OAuth2 Connection Error:', error);
+    console.log('❌ SMTP Connection Error:', error.message);
+    return 'none';
   }
 };
 
 // Run test on startup
-testTransporter();
-
-// Generic email sending function
-const sendEmail = async (mailOptions) => {
-  try {
-    const transporter = await createTransporter();
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent successfully');
-    console.log('📧 Message ID:', info.messageId);
-    return info;
-  } catch (error) {
-    console.error('❌ Error sending email:', error);
-    throw new Error('Failed to send email');
-  }
-};
+setTimeout(() => {
+  testTransporter();
+}, 2000);
 
 // Send verification email function
 const sendVerificationEmail = async (email, otpCode) => {
