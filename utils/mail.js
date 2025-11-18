@@ -23,7 +23,6 @@ transporter.verify(function(error, success) {
   }
 });
 
-
 // utils/mail.js
 const sendVerificationEmail = async (email, otpCode) => {
   const mailOptions = {
