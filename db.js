@@ -1,23 +1,17 @@
 
-
-
 // db.js
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const pool = new Pool({
-  user: process.env.PGUSER,
-  host: process.env.PGHOST,
-  database: process.env.PGDATABASE,
-  password: process.env.PGPASSWORD,
-  port: process.env.PGPORT,
-  ssl: process.env.NODE_ENV === 'production'
-    ? { rejectUnauthorized: false }
-    : false
-});
+// Render sets NODE_ENV=production automatically
+const isProduction = process.env.NODE_ENV === "production";
 
-console.log('PGUSER:', process.env.PGUSER);
-console.log('PGPASSWORD:', process.env.PGPASSWORD);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: isProduction
+    ? { rejectUnauthorized: false }   // Render PostgreSQL requires SSL
+    : false                           // Local DB must NOT use SSL
+});
 
 module.exports = {
   query: (text, params) => pool.query(text, params),
