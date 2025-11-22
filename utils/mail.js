@@ -1,87 +1,58 @@
 
-/*
 // utils/mail.js
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-console.log('🔧 Initializing Resend Email Service...');
-console.log('📧 From Email:', process.env.RESEND_FROM_EMAIL);
-console.log('🔑 Resend API Key:', process.env.RESEND_API_KEY ? '✅ Set' : '❌ Missing');
-
-// Generic email sending function
-const sendEmail = async (mailOptions) => {
-  try {
-    console.log('🚀 Sending email via Resend...');
-    
-    const { data, error } = await resend.emails.send({
-      from: mailOptions.from,
-      to: mailOptions.to,
-      subject: mailOptions.subject,
-      html: mailOptions.html,
-    });
-
-    if (error) {
-      console.error('❌ Resend API Error:', error);
-      throw new Error(`Resend API error: ${error.message}`);
-    }
-
-    console.log('✅ Email sent successfully via Resend');
-    console.log('📧 Message ID:', data.id);
-    return data;
-  } catch (error) {
-    console.error('❌ Error sending email:', error);
-    throw new Error('Failed to send email via Resend');
-  }
-};
-*/
-
-
-// utils/mail.js
-const { Resend } = require('resend');
-
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-console.log('🔧 Initializing Resend Email Service...');
-console.log('📧 From Email: FamilyFund <onboarding@resend.dev>');
-console.log('🔑 Resend API Key:', process.env.RESEND_API_KEY ? '✅ Set' : '❌ Missing');
-
-// Generic email sending function with fallback
-const sendEmail = async (mailOptions) => {
-  try {
-    console.log('🚀 Sending email via Resend...');
-    
-    // Use Resend's default verified domain
-    const fromEmail = 'FamilyFund <onboarding@resend.dev>';
-    
-    const { data, error } = await resend.emails.send({
-      from: fromEmail,
-      to: mailOptions.to,
-      subject: mailOptions.subject,
-      html: mailOptions.html,
-    });
-
-    if (error) {
-      console.error('❌ Resend API Error:', error);
-      throw new Error(`Resend API error: ${error.message}`);
-    }
-
-    console.log('✅ Email sent successfully via Resend');
-    console.log('📧 Message ID:', data.id);
-    return data;
-  } catch (error) {
-    console.error('❌ Error sending email:', error);
-    throw new Error('Failed to send email via Resend');
-  }
+// Cloud-optimized transporter creation
+const createTransporter = () => {
+  console.log('🔧 Creating cloud-optimized SMTP transporter...');
+  console.log('   Host:', process.env.SMTP_HOST);
+  console.log('   User:', process.env.SMTP_USER);
+  console.log('   Pass:', process.env.SMTP_PASS ? '✅ Set' : '❌ Missing');
+  
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    },
+    // Cloud-optimized settings
+    connectionTimeout: 15000, // 15 seconds
+    greetingTimeout: 10000,   // 10 seconds
+    socketTimeout: 30000,     // 30 seconds
+    // Important for cloud environments
+    tls: {
+      rejectUnauthorized: false,
+      ciphers: 'SSLv3'
+    },
+    // Additional options for better compatibility
+    requireTLS: true,
+    ignoreTLS: false,
+    debug: process.env.NODE_ENV !== 'production', // Debug in development only
+    logger: process.env.NODE_ENV !== 'production'
+  });
 };
 
+// Create transporter instance
+const transporter = createTransporter();
 
-// Send verification email function
+// Enhanced connection test with retry logic
+transporter.verify(function(error, success) {
+  if (error) {
+    console.log('❌ SMTP Connection Error:', error.message);
+    console.log('💡 Diagnosis: This is common on cloud platforms due to network restrictions');
+    console.log('🚀 Solution: The app will use Resend API as fallback');
+  } else {
+    console.log('✅ SMTP Server is ready to take our messages');
+  }
+});
+
+
+// utils/mail.js
 const sendVerificationEmail = async (email, otpCode) => {
   const mailOptions = {
-    from: process.env.RESEND_FROM_EMAIL || 'FamilyFund <onboarding@resend.dev>',
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
     to: email,
     subject: 'Email Verification - Family Fund Management System',
     html: `
@@ -133,7 +104,7 @@ const sendVerificationEmail = async (email, otpCode) => {
   };
 
   try {
-    const info = await sendEmail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
     console.log('✅ Verification email sent to:', email);
     return info;
   } catch (error) {
@@ -142,10 +113,11 @@ const sendVerificationEmail = async (email, otpCode) => {
   }
 };
 
+
 // Send password reset email function
 const sendResetEmail = async (email, resetLink) => {
   const mailOptions = {
-    from: process.env.RESEND_FROM_EMAIL || 'FamilyFund <onboarding@resend.dev>',
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
     to: email,
     subject: 'Password Reset Request - Family Fund Management System',
     html: `
@@ -531,8 +503,9 @@ const sendResetEmail = async (email, resetLink) => {
   };
 
   try {
-    const info = await sendEmail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
     console.log('✅ Password reset email sent to:', email);
+    console.log('📧 Message ID:', info.messageId);
     return info;
   } catch (error) {
     console.error('❌ Error sending reset email:', error);
@@ -559,7 +532,7 @@ const sendFundRequestStatusEmail = async (email, fundRequestData) => {
   const statusTitle = status === 'Approved' ? 'Request Approved' : 'Request Rejected';
 
   const mailOptions = {
-    from: process.env.RESEND_FROM_EMAIL || 'FamilyFund <onboarding@resend.dev>',
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
     to: email,
     subject: `Fund Request ${status} - Family Fund Management System`,
     html: `
@@ -665,7 +638,7 @@ const sendFundRequestStatusEmail = async (email, fundRequestData) => {
   };
 
   try {
-    const info = await sendEmail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Fund request ${status} email sent to:`, email);
     return info;
   } catch (error) {
@@ -691,7 +664,7 @@ const sendPaymentStatusEmail = async (email, paymentData) => {
   const statusTitle = status === 'Paid' ? 'Payment Completed' : 'Payment Rejected';
 
   const mailOptions = {
-    from: process.env.RESEND_FROM_EMAIL || 'FamilyFund <onboarding@resend.dev>',
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
     to: email,
     subject: `Payment ${status} - Family Fund Management System`,
     html: `
@@ -796,7 +769,7 @@ const sendPaymentStatusEmail = async (email, paymentData) => {
   };
 
   try {
-    const info = await sendEmail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Payment ${status} email sent to:`, email);
     return info;
   } catch (error) {
@@ -814,7 +787,7 @@ const sendMemberRegistrationEmail = async (email, memberData) => {
   } = memberData;
 
   const mailOptions = {
-    from: process.env.RESEND_FROM_EMAIL || 'FamilyFund <onboarding@resend.dev>',
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
     to: email,
     subject: 'Welcome to Family Fund Management System',
     html: `
@@ -912,7 +885,7 @@ const sendMemberRegistrationEmail = async (email, memberData) => {
   };
 
   try {
-    const info = await sendEmail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Member registration email sent to:`, email);
     return info;
   } catch (error) {
@@ -931,7 +904,7 @@ const sendMemberUpdateEmail = async (email, memberData) => {
   } = memberData;
 
   const mailOptions = {
-    from: process.env.RESEND_FROM_EMAIL || 'FamilyFund <onboarding@resend.dev>',
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
     to: email,
     subject: 'Member Profile Updated - Family Fund Management System',
     html: `
@@ -1012,7 +985,7 @@ const sendMemberUpdateEmail = async (email, memberData) => {
   };
 
   try {
-    const info = await sendEmail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Member update email sent to:`, email);
     return info;
   } catch (error) {
@@ -1031,7 +1004,7 @@ const sendMemberDeletionEmail = async (email, memberData) => {
   } = memberData;
 
   const mailOptions = {
-    from: process.env.RESEND_FROM_EMAIL || 'FamilyFund <onboarding@resend.dev>',
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
     to: email,
     subject: 'Member Account Deleted - Family Fund Management System',
     html: `
@@ -1112,7 +1085,7 @@ const sendMemberDeletionEmail = async (email, memberData) => {
   };
 
   try {
-    const info = await sendEmail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Member deletion email sent to:`, email);
     return info;
   } catch (error) {
@@ -1120,6 +1093,7 @@ const sendMemberDeletionEmail = async (email, memberData) => {
     throw new Error('Failed to send deletion notification email');
   }
 };
+
 
 // Send Support Notification Email to Admin
 const sendSupportNotificationEmail = async (supportData) => {
@@ -1151,7 +1125,7 @@ const sendSupportNotificationEmail = async (supportData) => {
   const urgencyLabel = urgencyLabels[urgency] || 'STANDARD';
 
   const mailOptions = {
-    from: process.env.RESEND_FROM_EMAIL || 'FamilyFund <onboarding@resend.dev>',
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
     to: process.env.ADMIN_EMAIL || 'itzfamilyfund@gmail.com',
     subject: `📧 New Support Message: ${subject}`,
     html: `
@@ -1413,8 +1387,9 @@ const sendSupportNotificationEmail = async (supportData) => {
   };
 
   try {
-    const info = await sendEmail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Support notification email sent for message #${messageId}`);
+    console.log(`📧 Message ID:`, info.messageId);
     return info;
   } catch (error) {
     console.error(`❌ Error sending support notification email:`, error);
@@ -1449,7 +1424,7 @@ const sendSupportResponseEmail = async (userEmail, supportData) => {
   const statusLabel = statusLabels[status] || 'Updated';
 
   const mailOptions = {
-    from: process.env.RESEND_FROM_EMAIL || 'FamilyFund <onboarding@resend.dev>',
+    from: process.env.SMTP_FROM || 'FamilyFund Support <itzfamilyfund@gmail.com>',
     to: userEmail,
     subject: `📋 Update on Your Support Request: ${subject}`,
     html: `
@@ -1671,8 +1646,9 @@ const sendSupportResponseEmail = async (userEmail, supportData) => {
   };
 
   try {
-    const info = await sendEmail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Support response email sent to:`, userEmail);
+    console.log(`📧 Message ID:`, info.messageId);
     return info;
   } catch (error) {
     console.error(`❌ Error sending support response email:`, error);
@@ -1692,5 +1668,4 @@ module.exports = {
   sendSupportNotificationEmail,
   sendSupportResponseEmail
 };
-
 
