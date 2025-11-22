@@ -10,6 +10,7 @@ const paymentService = require('./services/payment');
 console.log('paymentService keys:', Object.keys(paymentService));
 console.log('initiatePayment is function?', typeof paymentService.initiatePayment);
 
+
 const staticRoutes = require('./routes/staticRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const memberRoutes = require('./routes/memberRoutes');
@@ -19,7 +20,7 @@ const userRoutes = require('./routes/userRoutes');
 const fundRoutes = require('./routes/fundRoutes');
 const omaRoutes = require('./routes/omaRoutes');
 const fundSummaryRoutes = require('./routes/fundSummaryRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
+const paymentRoutes = require('./routes/paymentRoutes'); // NEW: Import payment routes
 const supportRoutes = require('./routes/supportRoutes');
 
 const { requireAuth, requireRole, allowRoles, requireVerifiedEmail } = require('./middleware/auth');
@@ -36,19 +37,14 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Fixed path
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
-// Session configuration - FIXED for production
+// Session
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your_secret_key_change_in_production',
+  secret: process.env.SESSION_SECRET || 'your_secret_key',
   resave: false,
   saveUninitialized: false,
-  cookie: { 
-    secure: process.env.NODE_ENV === 'production', // Auto-set based on environment
-    maxAge: 1000 * 60 * 60 * 24, // 24 hours
-    httpOnly: true 
-  },
-  store: require('./config/sessionStore') // Add proper session store
+  cookie: { secure: false, maxAge: 1000 * 60 * 30, httpOnly: true }
 }));
 
 // Flash messages
@@ -60,58 +56,44 @@ app.use((req, res, next) => {
   res.locals.flash = req.flash();
   res.locals.user = req.session.user || null;
   res.locals.omaUser = req.session.omaUser || null;
-  res.locals.currentPath = req.path; // Useful for navigation
   next();
 });
 
 // ----------------- Routes -----------------
 app.get('/', (req, res) => res.render('home', { user: req.session.user }));
 
-// Public routes
 app.use(staticRoutes);
+app.use('/admin', adminRoutes);
+app.use(fundSummaryRoutes);
 app.use('/oma', omaRoutes);
 app.use('/auth', authRoutes);
 app.use('/', authRoutes);
+//app.use('/', userRoutes);
+app.use('/', fundRoutes);
+app.use('/payments', paymentRoutes);
+//app.use('/member', requireAuth, allowRoles('chairman','admin'), memberRoutes);
+//app.use('/contributions', requireAuth, allowRoles('chairman', 'chief_signatory', 'assistant_signatory'), contributionRoutes);
 
-// Email verification middleware (add this if missing)
-const { checkVerification } = require('./middleware/auth');
-
-// Protected routes with proper ordering
-app.use('/admin', requireAuth, requireRole('admin'), adminRoutes);
+// Protected routes with email verification
 app.use('/member', requireAuth, requireVerifiedEmail, allowRoles('chairman','admin'), memberRoutes);
 app.use('/contributions', requireAuth, requireVerifiedEmail, allowRoles('chairman', 'chief_signatory', 'assistant_signatory'), contributionRoutes);
-app.use('/payments', requireAuth, requireVerifiedEmail, paymentRoutes);
-app.use('/support', requireAuth, requireVerifiedEmail, supportRoutes);
-
-// General authenticated routes
 app.use('/', requireAuth, requireVerifiedEmail, userRoutes);
-app.use('/', requireAuth, requireVerifiedEmail, fundRoutes);
-app.use('/', requireAuth, requireVerifiedEmail, fundSummaryRoutes);
+app.use('/', requireVerifiedEmail,  supportRoutes);
 
 // 404 fallback
-app.use((req, res) => {
-  res.status(404).render('404', { 
-    title: 'Page Not Found',
-    user: req.session.user 
-  });
-});
+app.use((req, res) => res.status(404).send('Page Not Found'));
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Server Error:', err);
-  res.status(500).render('error', {
-    title: 'Server Error',
-    message: process.env.NODE_ENV === 'production' ? 'Something went wrong!' : err.message,
-    user: req.session.user
-  });
-});
-
-// Remove the tempUsers cleanup if not defined, or define it properly
-// If you need temporary user storage, use a proper database solution
+// Clean up expired temporary data every hour
+setInterval(() => {
+  const now = Date.now();
+  const expired = 30 * 60 * 1000; // 30 minutes
+  for (const [email, data] of tempUsers.entries()) {
+    if (now - data.createdAt > expired) {
+      tempUsers.delete(email);
+    }
+  }
+}, 60 * 60 * 1000);
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
 
