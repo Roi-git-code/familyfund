@@ -1,4 +1,5 @@
 
+/*
 // utils/mail.js
 const { Resend } = require('resend');
 
@@ -34,6 +35,48 @@ const sendEmail = async (mailOptions) => {
     throw new Error('Failed to send email via Resend');
   }
 };
+*/
+
+
+// utils/mail.js
+const { Resend } = require('resend');
+
+// Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+console.log('🔧 Initializing Resend Email Service...');
+console.log('📧 From Email: FamilyFund <onboarding@resend.dev>');
+console.log('🔑 Resend API Key:', process.env.RESEND_API_KEY ? '✅ Set' : '❌ Missing');
+
+// Generic email sending function with fallback
+const sendEmail = async (mailOptions) => {
+  try {
+    console.log('🚀 Sending email via Resend...');
+    
+    // Use Resend's default verified domain
+    const fromEmail = 'FamilyFund <onboarding@resend.dev>';
+    
+    const { data, error } = await resend.emails.send({
+      from: fromEmail,
+      to: mailOptions.to,
+      subject: mailOptions.subject,
+      html: mailOptions.html,
+    });
+
+    if (error) {
+      console.error('❌ Resend API Error:', error);
+      throw new Error(`Resend API error: ${error.message}`);
+    }
+
+    console.log('✅ Email sent successfully via Resend');
+    console.log('📧 Message ID:', data.id);
+    return data;
+  } catch (error) {
+    console.error('❌ Error sending email:', error);
+    throw new Error('Failed to send email via Resend');
+  }
+};
+
 
 // Send verification email function
 const sendVerificationEmail = async (email, otpCode) => {
