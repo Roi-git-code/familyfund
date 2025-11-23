@@ -487,9 +487,9 @@ const sendResetEmail = async (email, resetLink) => {
         <!-- Footer -->
         <div class="email-footer">
             <div class="footer-links">
-                <a href="#" style="color: #3498db;">Privacy Policy</a>
-                <a href="#" style="color: #3498db;">Terms of Service</a>
-                <a href="#" style="color: #3498db;">Help Center</a>
+                <a href="https://familyfund.onrender.com/privacy" style="color: #3498db;">Privacy Policy</a>
+                <a href="https://familyfund.onrender.com/terms" style="color: #3498db;">Terms of Service</a>
+                <a href="https://familyfund.onrender.com/contact" style="color: #3498db;">Help Center</a>
             </div>
             <p class="copyright">
                 © 2024 FamilyFund System. All rights reserved.<br>
@@ -839,7 +839,7 @@ const sendMemberRegistrationEmail = async (email, memberData) => {
                 <p>To access your account and manage your contributions, please complete your user account setup:</p>
                 
                 <div style="text-align: center; margin: 20px 0;">
-                    <a href="${process.env.BASE_URL || 'http://localhost:3000'}/auth" class="btn-primary">
+                    <a href="${process.env.BASE_URL || 'https://familyfund.onrender.com'||'http://localhost:3000'}/auth" class="btn-primary">
                         Sign Up for User Account
                     </a>
                 </div>
