@@ -1,47 +1,135 @@
 
-
 // models/paymentModel.js
 const pool = require('../db');
 
 class PaymentModel {
-  // Create a new payment record
-  async createPayment(paymentData) {
-    const {
-      member_id,
-      amount,
-      payment_method,
-      phone_number,
-      transaction_id,
-      status = 'pending',
-      metadata = {}
-    } = paymentData;
+   // Add payment type field to createPayment method
+async createPayment(paymentData) {
+  const {
+    member_id,
+    amount,
+    payment_method,
+    phone_number,
+    transaction_id,
+    payment_type = 'Contribution', // New field
+    status = 'pending',
+    metadata = {}
+  } = paymentData;
 
-    const query = `
-      INSERT INTO payments (
-        member_id, amount, payment_method, phone_number,
-        transaction_id, status, metadata
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING *
-    `;
+  const query = `
+    INSERT INTO payments (
+      member_id, amount, payment_method, phone_number,
+      transaction_id, payment_type, status, metadata
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    RETURNING *
+  `;
 
-    const values = [
-      member_id,
-      amount,
-      payment_method,
-      phone_number,
-      transaction_id,
-      status,
-      metadata ? JSON.stringify(metadata) : null
-    ];
+  const values = [
+    member_id,
+    amount,
+    payment_method,
+    phone_number,
+    transaction_id,
+    payment_type,
+    status,
+    metadata ? JSON.stringify(metadata) : null
+  ];
 
-    try {
-      const result = await pool.query(query, values);
-      return result.rows[0];
-    } catch (err) {
-      console.error('Error creating payment:', err);
-      throw err;
-    }
+  try {
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  } catch (err) {
+    console.error('Error creating payment:', err);
+    throw err;
   }
+}
+
+// Add new methods for ROI and Refunds
+async createROI(roiData) {
+  const {
+    member_id,
+    payment_id,
+    amount,
+    roi_percentage,
+    period_start,
+    period_end,
+    calculated_amount,
+    status = 'Pending',
+    notes = ''
+  } = roiData;
+
+  const query = `
+    INSERT INTO roi (
+      member_id, payment_id, amount, roi_percentage,
+      period_start, period_end, calculated_amount,
+      status, notes
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    RETURNING *
+  `;
+
+  const values = [
+    member_id,
+    payment_id,
+    amount,
+    roi_percentage,
+    period_start,
+    period_end,
+    calculated_amount,
+    status,
+    notes
+  ];
+
+  try {
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  } catch (err) {
+    console.error('Error creating ROI record:', err);
+    throw err;
+  }
+}
+
+async createRefund(refundData) {
+  const {
+    member_id,
+    payment_id,
+    request_id,
+    amount,
+    reason,
+    status = 'Pending',
+    payment_method = 'Bank Transfer',
+    account_details = {},
+    notes = ''
+  } = refundData;
+
+  const query = `
+    INSERT INTO refunds (
+      member_id, payment_id, request_id, amount,
+      reason, status, payment_method, account_details, notes
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    RETURNING *
+  `;
+
+  const values = [
+    member_id,
+    payment_id,
+    request_id,
+    amount,
+    reason,
+    status,
+    payment_method,
+    JSON.stringify(account_details),
+    notes
+  ];
+
+  try {
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  } catch (err) {
+    console.error('Error creating refund record:', err);
+    throw err;
+  }
+}
+  
 
   // Update status and optionally store gateway response
   async updatePaymentStatus(transactionId, status, gatewayResponse = null) {
@@ -69,19 +157,27 @@ class PaymentModel {
     }
   }
 
-  // Get payment by transaction ID
-  async getPaymentByTransactionId(transactionId) {
-    const query = `
-      SELECT * FROM payments WHERE transaction_id = $1
-    `;
-    try {
-      const result = await pool.query(query, [transactionId]);
-      return result.rows[0];
-    } catch (err) {
-      console.error('Error fetching payment by transactionId:', err);
-      throw err;
-    }
+// Get payment with type information
+async getPaymentByTransactionId(transactionId) {
+  const query = `
+    SELECT p.*, 
+           m.first_name,
+           m.sur_name,
+           m.phone AS member_phone,
+           m.email AS member_email
+    FROM payments p
+    LEFT JOIN member m ON p.member_id = m.id
+    WHERE p.transaction_id = $1
+  `;
+  try {
+    const result = await pool.query(query, [transactionId]);
+    return result.rows[0];
+  } catch (err) {
+    console.error('Error fetching payment by transactionId:', err);
+    throw err;
   }
+}
+  
 
   // Get payment by transaction ID with member info
   async getPaymentWithMemberInfo(transactionId) {

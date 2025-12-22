@@ -1,6 +1,4 @@
 
-
-// models/fundSummaryModel.js
 const pool = require('../db');
 
 /*
@@ -381,20 +379,6 @@ async function getContributionTransactionsBetweenDatesWithMembers(startDate, end
   return rows;
 }
 
-function buildContributionTransactions(rows) {
-  return rows.map(row => ({
-    id: `contrib-${row.id}`,
-    member_id: row.member_id,
-    first_name: row.first_name || '',
-    sur_name: row.sur_name || '',
-    amount: Number(row.amount || 0),
-    request_type: 'Contribution',
-    created_at: row.transaction_date, // Use actual transaction date
-    type: 'credit',
-    txn_trn: null // Contributions do not get TRN
-  }));
-}
-
 /* ---------- approved fund requests (debits) with TRN ---------- */
 async function getApprovedTransactions(member_id, from, to) {
   const { start, end } = ensureOrderedRange(from, to);
@@ -448,7 +432,22 @@ async function getApprovedTransactions(member_id, from, to) {
   return processed;
 }
 
+// Add this helper function to count contributions per member per day
+async function getContributionCountPerDay(memberId, date) {
+  const sql = `
+    SELECT COUNT(*) as count
+    FROM contribution_transactions
+    WHERE member_id = $1 
+    AND DATE(transaction_date) = DATE($2)
+  `;
+  const { rows } = await pool.query(sql, [memberId, date]);
+  return parseInt(rows[0]?.count || 0);
+}
+
+
 /* ---------- combined financial transactions (credits + debits) with TRN - UPDATED ---------- */
+// models/fundSummaryModel.js - Enhanced getFinancialTransactions
+
 async function getFinancialTransactions(member_id, from, to) {
   // Resolve month range to actual dates
   const { startDate, endDate } = monthRangeToDates(from, to);
@@ -457,22 +456,18 @@ async function getFinancialTransactions(member_id, from, to) {
   const contribTransactions = await getContributionTransactionsBetweenDatesWithMembers(startDate, endDate, member_id);
   const contribTxns = buildContributionTransactions(contribTransactions);
 
-  // Get fund request transactions
+  // Get fund request transactions (debits)
   const requestTxns = await getApprovedTransactions(member_id, from, to);
+
+  // Get ROI transactions (credits - only for overall statement)
+  const roiTxns = await getROITransactions(member_id, from, to);
+
+  // Get Refund transactions (credits - for both overall and individual)
+  const refundTxns = await getRefundTransactions(member_id, from, to);
 
   // unify fields and combine
   const unified = [
-    ...contribTxns.map(t => ({
-      id: t.id,
-      member_id: t.member_id,
-      first_name: t.first_name,
-      sur_name: t.sur_name,
-      amount: Number(t.amount),
-      request_type: t.request_type,
-      created_at: t.created_at, // Real transaction date
-      type: 'credit',
-      txn_trn: null
-    })),
+    ...contribTxns, // Already has proper C-memberID-year-month-day-X/Y format
     ...requestTxns.map(t => ({
       id: `req-${t.id}`,
       member_id: t.member_id,
@@ -485,6 +480,28 @@ async function getFinancialTransactions(member_id, from, to) {
       bank_account: t.bank_account,
       bank_name: t.bank_name,
       txn_trn: t.txn_trn
+    })),
+    ...roiTxns.map(t => ({
+      id: `roi-${t.id}`,
+      member_id: t.member_id,
+      first_name: t.first_name,
+      sur_name: t.sur_name,
+      amount: Number(t.amount),
+      request_type: 'ROI Payment',
+      created_at: t.created_at,
+      type: 'credit',
+      txn_trn: t.roi_trn || `ROI-${t.id}`
+    })),
+    ...refundTxns.map(t => ({
+      id: `refund-${t.id}`,
+      member_id: t.member_id,
+      first_name: t.first_name,
+      sur_name: t.sur_name,
+      amount: Number(t.amount),
+      request_type: 'Refund',
+      created_at: t.created_at,
+      type: 'credit',
+      txn_trn: t.refund_trn || `REF-${t.id}`
     }))
   ];
 
@@ -492,6 +509,159 @@ async function getFinancialTransactions(member_id, from, to) {
   unified.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
   return unified;
+}
+
+/* ---------- New helper function for generating contribution IDs ---------- */
+function generateContributionId(transaction, memberId) {
+  if (!transaction || !transaction.created_at) return `C-${memberId}-UNKNOWN`;
+  
+  const transactionDate = new Date(transaction.created_at);
+  const year = transactionDate.getFullYear();
+  const month = String(transactionDate.getMonth() + 1).padStart(2, '0');
+  const day = String(transactionDate.getDate()).padStart(2, '0');
+  
+  // For counting contributions per member per day
+  // This would require a separate function to count contributions per day
+  const count = 1; // Default count, you might want to implement actual counting
+  
+  return `C-${memberId}-${year}-${month}-${day}-${count}`;
+}
+
+/* ---------- Get ROI transactions ---------- */
+/* ---------- Get ROI transactions ---------- */
+async function getROITransactions(member_id, from, to) {
+  const { start, end } = ensureOrderedRange(from, to);
+  const params = [];
+  let sql = `
+    SELECT r.id, r.member_id, m.first_name, m.sur_name, r.amount, 
+           r.created_at, r.status, r.payment_date,
+           CONCAT('ROI-', r.id) as roi_trn
+    FROM roi r
+    JOIN member m ON r.member_id = m.id
+    WHERE 1=1  -- Remove status filter: r.status = 'Approved'
+  `;
+  
+  if (member_id) {
+    params.push(member_id);
+    sql += ` AND r.member_id = $${params.length}`;
+  }
+  
+  if (start) {
+    params.push(`${start.year}-${String(start.month).padStart(2,'0')}-01`);
+    sql += ` AND r.created_at >= $${params.length}::date`;
+  }
+  
+  if (end) {
+    const lastDay = new Date(end.year, end.month, 0).getDate();
+    params.push(`${end.year}-${String(end.month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`);
+    sql += ` AND r.created_at <= $${params.length}::date`;
+  }
+  
+  sql += ` ORDER BY r.created_at ASC`;
+  
+  const { rows } = await pool.query(sql, params);
+  return rows;
+}
+
+/* ---------- Get Refund transactions ---------- */
+async function getRefundTransactions(member_id, from, to) {
+  const { start, end } = ensureOrderedRange(from, to);
+  const params = [];
+  let sql = `
+    SELECT rf.id, rf.member_id, m.first_name, m.sur_name, rf.amount, 
+           rf.created_at, rf.status, rf.reason,
+           CONCAT('REF-', rf.id) as refund_trn
+    FROM refunds rf
+    JOIN member m ON rf.member_id = m.id
+    WHERE 1=1  -- Remove status filter: rf.status = 'Approved'
+  `;
+  
+  if (member_id) {
+    params.push(member_id);
+    sql += ` AND rf.member_id = $${params.length}`;
+  }
+  
+  if (start) {
+    params.push(`${start.year}-${String(start.month).padStart(2,'0')}-01`);
+    sql += ` AND rf.created_at >= $${params.length}::date`;
+  }
+  
+  if (end) {
+    const lastDay = new Date(end.year, end.month, 0).getDate();
+    params.push(`${end.year}-${String(end.month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`);
+    sql += ` AND rf.created_at <= $${params.length}::date`;
+  }
+  
+  sql += ` ORDER BY rf.created_at ASC`;
+  
+  const { rows } = await pool.query(sql, params);
+  console.log(`Found ${rows.length} refund transactions for member ${member_id || 'all'}`); // Debug logging
+  return rows;
+}
+
+
+/* ---------- Update buildContributionTransactions to use new ID format ---------- */
+function buildContributionTransactions(rows) {
+  // First, sort by member and date
+  rows.sort((a, b) => {
+    if (a.member_id !== b.member_id) {
+      return a.member_id - b.member_id;
+    }
+    return new Date(a.transaction_date) - new Date(b.transaction_date);
+  });
+  
+  // Count contributions per member per day
+  const dailyCounts = {};
+  
+  // First pass: count total contributions per member per day
+  rows.forEach(row => {
+    const transactionDate = new Date(row.transaction_date);
+    const year = transactionDate.getFullYear();
+    const month = String(transactionDate.getMonth() + 1).padStart(2, '0');
+    const day = String(transactionDate.getDate()).padStart(2, '0');
+    const memberId = row.member_id;
+    
+    const key = `${memberId}_${year}-${month}-${day}`;
+    dailyCounts[key] = (dailyCounts[key] || 0) + 1;
+  });
+  
+  // Second pass: assign IDs with X/Y format
+  const processedCounts = {};
+  const results = [];
+  
+  rows.forEach(row => {
+    const transactionDate = new Date(row.transaction_date);
+    const year = transactionDate.getFullYear();
+    const month = String(transactionDate.getMonth() + 1).padStart(2, '0');
+    const day = String(transactionDate.getDate()).padStart(2, '0');
+    const memberId = row.member_id;
+    
+    const key = `${memberId}_${year}-${month}-${day}`;
+    
+    // Initialize or increment processed count
+    if (!processedCounts[key]) {
+      processedCounts[key] = 1;
+    } else {
+      processedCounts[key]++;
+    }
+    
+    const dailyIndex = processedCounts[key];
+    const totalDailyCount = dailyCounts[key];
+    
+    results.push({
+      id: row.id,
+      member_id: row.member_id,
+      first_name: row.first_name || '',
+      sur_name: row.sur_name || '',
+      amount: Number(row.amount || 0),
+      request_type: 'Contribution',
+      created_at: row.transaction_date,
+      type: 'credit',
+      txn_trn: `C-${memberId}-${year}-${month}-${day}-${dailyIndex}/${totalDailyCount}`
+    });
+  });
+  
+  return results;
 }
 
 /* ---------- fixed members list helper ---------- */
@@ -518,5 +688,6 @@ module.exports = {
   getFinancialTransactions,
   getMembersList
 };
+
 
 

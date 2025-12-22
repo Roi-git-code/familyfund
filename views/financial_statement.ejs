@@ -1,7 +1,4 @@
 
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -95,7 +92,6 @@
     .transaction-id { 
       font-family: 'Courier New', monospace; 
       font-size: 0.85rem; 
-      color: #7f8c8d; 
     }
     .filter-form { 
       background: white; 
@@ -118,6 +114,18 @@
     .badge-debit { 
       background: #e74c3c; 
     }
+    .badge-roi {
+      background: #f39c12 !important;
+      color: #000 !important;
+    }
+    .badge-refund {
+      background: #3498db !important;
+      color: #fff !important;
+    }
+    .badge-contribution {
+      background: #27ae60 !important;
+      color: #fff !important;
+    }
     .summary-card { 
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
       color: white; 
@@ -139,6 +147,27 @@
       font-weight: 700; 
       font-size: 1.1rem; 
     }
+    
+    /* Transaction type row coloring */
+    tr.roi-transaction {
+      background-color: rgba(243, 156, 18, 0.1) !important;
+    }
+    tr.refund-transaction {
+      background-color: rgba(52, 152, 219, 0.1) !important;
+    }
+    tr.contribution-transaction {
+      background-color: rgba(39, 174, 96, 0.1) !important;
+    }
+    
+    /* Transaction type badges */
+    .transaction-type-badge {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      margin-left: 5px;
+    }
+    
     .financial-statement-page .main-content {
       margin-left: 250px;
       padding: 20px;
@@ -204,6 +233,29 @@
       margin: 20px 0;
     }
     
+    /* Transaction Legend */
+    .transaction-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 15px 0;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border: 1px solid #dee2e6;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.85rem;
+    }
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+    
     /* Mobile Optimizations */
     @media (max-width: 768px) {
       .financial-statement-page .main-content {
@@ -256,6 +308,11 @@
       
       h3 {
         font-size: 1.3rem;
+      }
+      
+      .transaction-legend {
+        flex-direction: column;
+        gap: 5px;
       }
     }
     
@@ -321,6 +378,26 @@
             <i class="fas fa-download me-1"></i>Download PDF
           </a>
         <% } %>
+      </div>
+    </div>
+
+    <!-- Transaction Legend -->
+    <div class="transaction-legend">
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #27ae60;"></div>
+        <span>Contribution</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #f39c12;"></div>
+        <span>ROI Payment (Overall only)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #3498db;"></div>
+        <span>Refund</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #e74c3c;"></div>
+        <span>Fund Request (Debit)</span>
       </div>
     </div>
 
@@ -404,6 +481,42 @@
               </div>
             </div>
           </div>
+          
+          <!-- Transaction Breakdown -->
+          <div class="row">
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header bg-success text-white">
+                  <i class="fas fa-arrow-up me-2"></i>Credit Breakdown
+                </div>
+                <div class="card-body">
+                  <% 
+                    const contributionTotal = individualTransactions.filter(t => t.request_type === 'Contribution').reduce((sum, t) => sum + Number(t.amount), 0);
+                    const refundTotal = individualTransactions.filter(t => t.request_type === 'Refund').reduce((sum, t) => sum + Number(t.amount), 0);
+                    const roiTotal = individualTransactions.filter(t => t.request_type === 'ROI Payment').reduce((sum, t) => sum + Number(t.amount), 0);
+                  %>
+                  <p><i class="fas fa-circle text-success me-2"></i>Contributions: <strong>TSh <%= contributionTotal.toLocaleString() %></strong></p>
+                  <p><i class="fas fa-circle text-primary me-2"></i>Refunds: <strong>TSh <%= refundTotal.toLocaleString() %></strong></p>
+                  <% if (isOfficial && roiTotal > 0) { %>
+                    <p><i class="fas fa-circle text-warning me-2"></i>ROI Payments: <strong>TSh <%= roiTotal.toLocaleString() %></strong></p>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header bg-danger text-white">
+                  <i class="fas fa-arrow-down me-2"></i>Debit Breakdown
+                </div>
+                <div class="card-body">
+                  <%
+                    const fundRequestTotal = individualTransactions.filter(t => t.type === 'debit').reduce((sum, t) => sum + Number(t.amount), 0);
+                  %>
+                  <p><i class="fas fa-circle text-danger me-2"></i>Fund Requests: <strong>TSh <%= fundRequestTotal.toLocaleString() %></strong></p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -451,23 +564,29 @@
                     </thead>
                     <tbody>
                       <% let runningMonthBalance = monthData.openingBalance; %>
-                      <% monthData.transactions.forEach((t, index) => { %>
-                        <tr>
+                      <% monthData.transactions.forEach((t, index) => { 
+                          // Determine row class based on transaction type
+                          let rowClass = '';
+                          if (t.request_type === 'ROI Payment') rowClass = 'roi-transaction';
+                          else if (t.request_type === 'Refund') rowClass = 'refund-transaction';
+                          else if (t.request_type === 'Contribution') rowClass = 'contribution-transaction';
+                      %>
+                        <tr class="<%= rowClass %>">
                           <td class="fw-bold"><%= index + 1 %></td>
                           <td><%= new Date(t.created_at).toLocaleDateString('en-GB') %></td>
                           <td class="transaction-id">
                             <% if (t.txn_trn) { %>
-                              <span class="badge bg-secondary"><%= t.txn_trn %></span>
+                              <% if (t.request_type === 'ROI Payment') { %>
+                                <span class="badge badge-roi"><%= t.txn_trn %></span>
+                              <% } else if (t.request_type === 'Refund') { %>
+                                <span class="badge badge-refund"><%= t.txn_trn %></span>
+                              <% } else if (t.request_type === 'Contribution') { %>
+                                <span class="badge badge-contribution"><%= t.txn_trn %></span>
+                              <% } else { %>
+                                <span class="badge bg-secondary"><%= t.txn_trn %></span>
+                              <% } %>
                             <% } else { %>
-                              <%
-                                // Generate contribution ID in format: C-YYYY-MM-ID
-                                const transactionDate = new Date(t.created_at);
-                                const year = transactionDate.getFullYear();
-                                const month = String(transactionDate.getMonth() + 1).padStart(2, '0');
-                                const memberId = t.member_id || '000';
-                                const contribId = `C-${year}-${month}-${memberId}`;
-                              %>
-                              <span class="badge bg-info"><%= contribId %></span>
+                              <span class="badge bg-light text-dark">NO TRN</span>
                             <% } %>
                           </td>
                           <td>
@@ -476,9 +595,17 @@
                           <td>
                             <%= t.request_type %>
                             <% if (t.type === 'credit') { %>
-                              <span class="badge badge-credit ms-1">CR</span>
+                              <% if (t.request_type === 'ROI Payment') { %>
+                                <span class="badge badge-roi transaction-type-badge">ROI</span>
+                              <% } else if (t.request_type === 'Refund') { %>
+                                <span class="badge badge-refund transaction-type-badge">REF</span>
+                              <% } else if (t.request_type === 'Contribution') { %>
+                                <span class="badge badge-contribution transaction-type-badge">C</span>
+                              <% } else { %>
+                                <span class="badge badge-credit transaction-type-badge">CR</span>
+                              <% } %>
                             <% } else { %>
-                              <span class="badge badge-debit ms-1">DR</span>
+                              <span class="badge badge-debit transaction-type-badge">DR</span>
                             <% } %>
                           </td>
                           <td class="text-end credit">
@@ -515,6 +642,11 @@
         <span class="badge bg-primary"><%= Object.keys(monthlyGroups.individual).length %> months</span>
       </div>
       <p class="text-muted">Period: <%= timeRange %></p>
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Note:</strong> ROI payments are only shown in overall statements (available to officials only). 
+        Refunds and contributions are included in both individual and overall statements.
+      </div>
       
       <% if (!individualTransactions || individualTransactions.length === 0) { %>
         <div class="alert alert-info text-center">
@@ -549,31 +681,40 @@
                   </thead>
                   <tbody>
                     <% let runningMonthBalance = monthData.openingBalance; %>
-                    <% monthData.transactions.forEach((t, index) => { %>
-                      <tr>
+                    <% monthData.transactions.forEach((t, index) => { 
+                        // Determine row class based on transaction type
+                        let rowClass = '';
+                        if (t.request_type === 'Refund') rowClass = 'refund-transaction';
+                        else if (t.request_type === 'Contribution') rowClass = 'contribution-transaction';
+                    %>
+                      <tr class="<%= rowClass %>">
                         <td class="fw-bold"><%= index + 1 %></td>
                         <td><%= new Date(t.created_at).toLocaleDateString('en-GB') %></td>
                         <td class="transaction-id">
                           <% if (t.txn_trn) { %>
-                            <span class="badge bg-secondary"><%= t.txn_trn %></span>
+                            <% if (t.request_type === 'Refund') { %>
+                              <span class="badge badge-refund"><%= t.txn_trn %></span>
+                            <% } else if (t.request_type === 'Contribution') { %>
+                              <span class="badge badge-contribution"><%= t.txn_trn %></span>
+                            <% } else { %>
+                              <span class="badge bg-secondary"><%= t.txn_trn %></span>
+                            <% } %>
                           <% } else { %>
-                            <%
-                              // Generate contribution ID in format: C-YYYY-MM-ID
-                              const transactionDate = new Date(t.created_at);
-                              const year = transactionDate.getFullYear();
-                              const month = String(transactionDate.getMonth() + 1).padStart(2, '0');
-                              const memberId = t.member_id || user.id || '000';
-                              const contribId = `C-${year}-${month}-${memberId}`;
-                            %>
-                            <span class="badge bg-info"><%= contribId %></span>
+                            <span class="badge bg-light text-dark">NO TRN</span>
                           <% } %>
                         </td>
                         <td>
                           <%= t.request_type %>
                           <% if (t.type === 'credit') { %>
-                            <span class="badge badge-credit ms-1">CR</span>
+                            <% if (t.request_type === 'Refund') { %>
+                              <span class="badge badge-refund transaction-type-badge">REF</span>
+                            <% } else if (t.request_type === 'Contribution') { %>
+                              <span class="badge badge-contribution transaction-type-badge">C</span>
+                            <% } else { %>
+                              <span class="badge badge-credit transaction-type-badge">CR</span>
+                            <% } %>
                           <% } else { %>
-                            <span class="badge badge-debit ms-1">DR</span>
+                            <span class="badge badge-debit transaction-type-badge">DR</span>
                           <% } %>
                         </td>
                         <td class="text-end credit">
@@ -842,16 +983,6 @@
     }
   }
 
-  // Format currency function
-  function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-TZ', {
-      style: 'currency',
-      currency: 'TZS',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  }
-
   // Export to CSV functionality
   function exportFinancialStatementToCSV(type = 'both') {
     let transactions = [];
@@ -876,14 +1007,15 @@
       return;
     }
 
-    const headers = ['Date', 'Type', 'Transaction ID', 'Member', 'Description', 'Credit', 'Debit', 'Amount'];
+    const headers = ['Date', 'Type', 'Transaction ID', 'Transaction Type', 'Member', 'Description', 'Credit', 'Debit', 'Amount'];
     
     const csvContent = [
       headers.join(','),
       ...transactions.map(t => [
         new Date(t.created_at).toLocaleDateString('en-GB'),
         t.type,
-        t.txn_trn || 'CONTRIB',
+        t.txn_trn || 'NO-TRN',
+        t.request_type,
         `"${t.first_name} ${t.sur_name}"`,
         `"${t.request_type}"`,
         t.type === 'credit' ? Number(t.amount).toLocaleString() : '',
@@ -902,6 +1034,26 @@
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   }
+
+  // Export buttons functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add export buttons if needed
+    const exportButtons = `
+      <div class="btn-group ms-2">
+        <button class="btn btn-outline-secondary btn-sm" onclick="exportFinancialStatementToCSV('overall')">
+          <i class="fas fa-file-csv me-1"></i>Export Overall CSV
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" onclick="exportFinancialStatementToCSV('individual')">
+          <i class="fas fa-file-csv me-1"></i>Export Individual CSV
+        </button>
+      </div>
+    `;
+    
+    const headerContainer = document.querySelector('.d-flex.justify-content-between.align-items-center.mb-4');
+    if (headerContainer && <% if (isOfficial) { %>true<% } else { %>false<% } %>) {
+      headerContainer.querySelector('.btn-group').insertAdjacentHTML('afterend', exportButtons);
+    }
+  });
 </script>
 </body>
 </html>

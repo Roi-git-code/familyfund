@@ -276,7 +276,7 @@ router.post('/auth/resend-otp', async (req, res) => {
   }
 });
 
-// In routes/authRoutes.js - Update the resend verification route
+//Update the resend verification route
 router.get('/auth/resend-verification', (req, res) => {
   const pendingEmail = req.session.pendingVerification;
   res.render('resendVerification', { 

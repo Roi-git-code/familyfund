@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -337,6 +336,53 @@
                     </div>
                   </div>
 
+<!-- Add this section after the Phone Number input -->
+<div class="row mb-4">
+  <div class="col-12">
+    <label for="payment_type" class="form-label fw-bold">Payment Type</label>
+    <div class="input-group">
+      <span class="input-group-text bg-light">
+        <i class="fas fa-tag"></i>
+      </span>
+      <select class="form-select" id="payment_type" name="payment_type" required>
+        <option value="Contribution" selected>Contribution</option>
+        <option value="ROI">Return on Investment (ROI)</option>
+        <option value="Refund">Refund</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="form-text text-muted">
+      <i class="fas fa-info-circle me-1"></i>
+      Select the purpose of this payment. This determines how it will be recorded.
+    </div>
+  </div>
+</div>
+
+<!-- Add dynamic fields based on payment type -->
+<div id="paymentTypeFields" style="display: none;">
+  <!-- ROI Fields -->
+  <div class="row mb-3 roi-fields" style="display: none;">
+    <div class="col-md-6">
+      <label for="roi_percentage" class="form-label">ROI Percentage</label>
+      <input type="number" class="form-control" id="roi_percentage" name="roi_percentage" 
+             min="1" max="100" step="0.01" value="10">
+    </div>
+    <div class="col-md-6">
+      <label for="period_start" class="form-label">Period Start</label>
+      <input type="date" class="form-control" id="period_start" name="period_start">
+    </div>
+  </div>
+  
+  <!-- Refund Fields -->
+  <div class="row mb-3 refund-fields" style="display: none;">
+    <div class="col-12">
+      <label for="reason" class="form-label">Refund Reason</label>
+      <textarea class="form-control" id="reason" name="reason" rows="2" 
+                placeholder="Enter reason for refund"></textarea>
+    </div>
+  </div>
+</div>
+                                
                   <!-- Payment Method Selection -->
                   <div class="row mb-4">
                     <div class="col-12">
@@ -735,6 +781,81 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  // Payment Type Change Handler
+document.getElementById('payment_type').addEventListener('change', function() {
+  const paymentType = this.value;
+  const typeFields = document.getElementById('paymentTypeFields');
+  const roiFields = document.querySelector('.roi-fields');
+  const refundFields = document.querySelector('.refund-fields');
+  
+  // Hide all fields first
+  typeFields.style.display = 'none';
+  if (roiFields) roiFields.style.display = 'none';
+  if (refundFields) refundFields.style.display = 'none';
+  
+  // Show relevant fields based on type
+  switch(paymentType) {
+    case 'ROI':
+      typeFields.style.display = 'block';
+      if (roiFields) {
+        roiFields.style.display = 'flex';
+        // Set default dates for ROI
+        const today = new Date().toISOString().split('T')[0];
+        const nextMonth = new Date();
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        const nextMonthStr = nextMonth.toISOString().split('T')[0];
+        
+        document.getElementById('period_start').value = today;
+        document.getElementById('period_end').value = nextMonthStr;
+      }
+      break;
+      
+    case 'Refund':
+      typeFields.style.display = 'block';
+      if (refundFields) refundFields.style.display = 'block';
+      break;
+      
+    default:
+      typeFields.style.display = 'none';
+  }
+  
+  // Update amount description based on payment type
+  updateAmountDescription(paymentType);
+});
+
+function updateAmountDescription(paymentType) {
+  const amountInput = document.getElementById('amount');
+  const amountDescription = document.getElementById('amountDescription');
+  
+  if (!amountInput.value) return;
+  
+  const descriptions = {
+    'Contribution': 'Member contribution payment',
+    'ROI': 'Return on Investment payment',
+    'Refund': 'Refund payment to member',
+    'Other': 'Other payment type'
+  };
+  
+  amountDescription.textContent = descriptions[paymentType] || 'Payment';
+}
+
+// Initialize payment type on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const paymentTypeSelect = document.getElementById('payment_type');
+  if (paymentTypeSelect) {
+    paymentTypeSelect.dispatchEvent(new Event('change'));
+  }
+  
+  // Also trigger when amount changes
+  const amountInput = document.getElementById('amount');
+  if (amountInput) {
+    amountInput.addEventListener('input', function() {
+      const paymentType = document.getElementById('payment_type').value;
+      updateAmountDescription(paymentType);
+    });
+  }
+});
+  
   // Form validation and submission
   const paymentForm = document.getElementById('paymentForm');
   

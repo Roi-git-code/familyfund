@@ -1,4 +1,5 @@
 
+
 // routes/fundSummaryRoutes.js
 const express = require('express');
 const PDFDocument = require('pdfkit');
@@ -403,6 +404,9 @@ function normalizeDateParams(req, res, next) {
 }
 
 // Enhanced Financial Statement route with monthly groupings
+// routes/fundSummaryRoutes.js - Updated financial statement route
+
+// GET: Financial Statement
 router.get('/financial-statement', requireAuth, validateDateParams, async (req, res) => {
   try {
     let { from, to, member_id } = req.query || {};
@@ -413,7 +417,7 @@ router.get('/financial-statement', requireAuth, validateDateParams, async (req, 
     const sessionMemberId = user.member_id || user.member_Id || null;
     const isOfficial = ['chairman', 'chief_signatory', 'assistant_signatory'].includes(user.role);
 
-    // Get transactions - NOW USING TRANSACTION-BASED DATA
+    // Get transactions - NOW INCLUDING ROI AND REFUNDS
     const individualTransactions = await fundSummaryModel.getFinancialTransactions(sessionMemberId, from, to);
     let overallTransactions = [];
     let membersList = [];
@@ -436,8 +440,13 @@ router.get('/financial-statement', requireAuth, validateDateParams, async (req, 
     const overallTotals = calculateTotals(overallTransactions);
     const individualTotals = calculateTotals(individualTransactions);
 
+    // Filter individual transactions to exclude ROI (only for regular members)
+    const filteredIndividualTransactions = user.role === 'member' 
+      ? individualTransactions.filter(t => t.request_type !== 'ROI Payment')
+      : individualTransactions;
+
     // Group transactions by month
-    const groupByMonth = (transactions) => {
+    const groupByMonth = (transactions, isIndividual = false) => {
       const groups = {};
       let runningBalance = 0;
       
@@ -468,7 +477,7 @@ router.get('/financial-statement', requireAuth, validateDateParams, async (req, 
 
     const monthlyGroups = {
       overall: groupByMonth(overallTransactions),
-      individual: groupByMonth(individualTransactions)
+      individual: groupByMonth(filteredIndividualTransactions, true)
     };
 
     // Build PDF query string
@@ -495,7 +504,7 @@ router.get('/financial-statement', requireAuth, validateDateParams, async (req, 
       member_id,
       isOfficial,
       overallTransactions,
-      individualTransactions,
+      individualTransactions: filteredIndividualTransactions,
       membersList,
       pdfQuery,
       timeRange,
@@ -514,34 +523,32 @@ router.get('/financial-statement', requireAuth, validateDateParams, async (req, 
   }
 });
 
+
+
 // Enhanced Professional Financial Statement PDF
+// Enhanced Professional Financial Statement PDF with ROI and Refunds
 router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
   try {
     const { type, member_id, from, to } = req.query;
     const user = req.session.user || {};
 
-    // Get transaction data - NOW USING TRANSACTION-BASED DATA
+    // Get transaction data - INCLUDING ROI AND REFUNDS
     const sessionMemberId = user.member_id || user.member_Id || null;
-    const individualTransactions = await fundSummaryModel.getFinancialTransactions(sessionMemberId, from, to);
+    let individualTransactions = await fundSummaryModel.getFinancialTransactions(sessionMemberId, from, to);
     let overallTransactions = [];
     
     if (['chairman', 'chief_signatory', 'assistant_signatory'].includes(user.role)) {
       overallTransactions = await fundSummaryModel.getFinancialTransactions(member_id || null, from, to);
     }
 
+    // Filter out ROI from individual statements for regular members
+    if (user.role === 'member') {
+      individualTransactions = individualTransactions.filter(t => t.request_type !== 'ROI Payment');
+    }
+
     // Sort transactions by date
     overallTransactions.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
     individualTransactions.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-
-    // Function to generate contribution ID in format: C-YYYY-MM-DD-ID
-    const generateContribId = (transaction, memberId) => {
-      const transactionDate = new Date(transaction.created_at);
-      const year = transactionDate.getFullYear();
-      const month = String(transactionDate.getMonth() + 1).padStart(2, '0');
-      const day = String(transactionDate.getDate()).padStart(2, '0');
-      const memberIdToUse = memberId || transaction.member_id || '000';
-      return `C-${year}-${month}-${day}-${memberIdToUse}`;
-    };
 
     // Function to get full member name from user object
     const getFullMemberName = (user) => {
@@ -550,7 +557,6 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
       if (user.middle_name) names.push(user.middle_name);
       if (user.sur_name) names.push(user.sur_name);
       
-      // If no names found, try username as fallback
       if (names.length === 0 && user.username) {
         names.push(user.username);
       }
@@ -562,7 +568,6 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
 
     res.setHeader('Content-Type', 'application/pdf');
     
-    // Increased margins for better readability
     const doc = new PDFDocument({ 
       margin: 50,
       size: "A4",
@@ -580,7 +585,6 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
     const addHeader = (title, subtitle = '', showMemberName = false) => {
       const logoPath = path.join(__dirname, '../public/images/logo.png');
       
-      // Calculate header height based on content
       let headerHeight = 100;
       if (showMemberName) headerHeight = 120;
       if (subtitle && !showMemberName) headerHeight = 110;
@@ -591,18 +595,16 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
       
       try {
         if (fs.existsSync(logoPath)) {
-          // Logo respects left margin
           doc.image(logoPath, doc.page.margins.left, 25, { width: 50, height: 50 });
         }
       } catch (err) {
         console.log('Logo not found, proceeding without logo');
       }
       
-      // Calculate vertical center position for main content
       const centerStartY = showMemberName ? 40 : 45;
       const contentWidth = doc.page.width - (doc.page.margins.left + doc.page.margins.right);
       
-      // System name and title - respects margins
+      // System name and title
       doc.fontSize(16).font('Helvetica-Bold')
          .fillColor('#ffffff')
          .text('FAMILY FUND MANAGEMENT SYSTEM', doc.page.margins.left, centerStartY, { 
@@ -617,7 +619,7 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
            align: 'center' 
          });
       
-      // Main title - respects margins
+      // Main title
       doc.fontSize(18).font('Helvetica-Bold')
          .fillColor('#ffffff')
          .text(title, doc.page.margins.left, centerStartY + 40, { 
@@ -625,7 +627,7 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
            align: 'center' 
          });
       
-      // Subtitle or member name - respects margins
+      // Subtitle or member name
       if (showMemberName) {
         doc.fontSize(14)
            .fillColor('#ffffff')
@@ -642,7 +644,7 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
            });
       }
       
-      // Period information - respects margins
+      // Period information
       const timeRange = formatTimeRange(from, to);
       const periodStartY = centerStartY + 15;
       
@@ -664,7 +666,6 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
         });
       }
       
-      // Move cursor below the header
       doc.y = headerHeight + 20;
     };
 
@@ -674,14 +675,13 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
       const bottomY = doc.page.height - 50;
       const contentWidth = doc.page.width - (doc.page.margins.left + doc.page.margins.right);
       
-      // Footer separator line - respects margins
+      // Footer separator line
       doc.moveTo(doc.page.margins.left, bottomY - 20)
          .lineTo(doc.page.width - doc.page.margins.right, bottomY - 20)
          .strokeColor('#cccccc')
          .lineWidth(1)
          .stroke();
       
-      // Footer content - respects margins
       doc.fontSize(8)
          .fillColor('#666666');
       
@@ -705,16 +705,16 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
       });
     };
 
-    // Enhanced table drawing function with margin-respecting positioning
+    // Enhanced table drawing function with transaction type coloring
     const drawTransactionTable = (transactions, isOverall = false, showMemberName = false) => {
       const startY = doc.y;
       const tableTop = startY + 10;
       
-      // Define column widths based on content type
+      // Define column widths
       const baseColumns = [
         { key: 'number', label: '#', width: 25, align: 'center' },
         { key: 'date', label: 'Date', width: 65, align: 'left' },
-        { key: 'trn', label: 'TRN ID', width: 90, align: 'left' },
+        { key: 'trn', label: 'Transaction ID', width: 90, align: 'left' },
         { key: 'description', label: 'Description', width: isOverall ? 100 : 150, align: 'left' },
         { key: 'credit', label: 'Credit (TSh)', width: 75, align: 'right' },
         { key: 'debit', label: 'Debit (TSh)', width: 75, align: 'right' },
@@ -726,11 +726,10 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
         baseColumns.splice(3, 0, { key: 'member', label: 'Member', width: 90, align: 'left' });
       }
 
-      // Calculate total table width respecting margins
+      // Calculate total table width
       const totalWidth = baseColumns.reduce((sum, col) => sum + col.width, 0);
       const maxAllowedWidth = doc.page.width - (doc.page.margins.left + doc.page.margins.right);
       
-      // Scale table if it exceeds available width
       let scaleFactor = 1;
       if (totalWidth > maxAllowedWidth) {
         scaleFactor = maxAllowedWidth / totalWidth;
@@ -776,7 +775,7 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
       doc.fontSize(8).font('Helvetica');
       
       transactions.forEach((transaction, index) => {
-        // Check for page break - respects bottom margin
+        // Check for page break
         if (y > doc.page.height - doc.page.margins.bottom - 30) {
           addFooter(showMemberName);
           doc.addPage();
@@ -813,62 +812,87 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
           doc.fontSize(8).font('Helvetica');
         }
 
-        // Alternate row background
+        // Alternate row background with transaction type coloring
         const isEvenRow = index % 2 === 0;
-        if (isEvenRow) {
-          x = startX;
-          baseColumns.forEach(col => {
-            doc.rect(x, y, col.width, 18)
-               .fill('#f8f9fa');
-            x += col.width;
-          });
+        
+        // Determine transaction type color
+        let rowColor = '#f8f9fa'; // Default light
+        if (transaction.request_type === 'ROI Payment') {
+          rowColor = '#fff9e6'; // Light orange for ROI
+        } else if (transaction.request_type === 'Refund') {
+          rowColor = '#e6f7ff'; // Light blue for Refund
+        } else if (transaction.request_type === 'Contribution') {
+          rowColor = '#e8f6ef'; // Light green for Contribution
         }
+        
+        x = startX;
+        baseColumns.forEach(col => {
+          doc.rect(x, y, col.width, 18)
+             .fill(rowColor);
+          x += col.width;
+        });
 
         // Calculate running balance
         runningBalance += (transaction.type === 'credit' ? Number(transaction.amount) : -Number(transaction.amount));
-
-        // Generate transaction ID - NOW USING REAL TRANSACTION DATES
-        let transactionId;
-        if (transaction.txn_trn) {
-          transactionId = transaction.txn_trn;
-        } else {
-          // For contributions, use real transaction date in the ID
-          const transactionDate = new Date(transaction.created_at);
-          const year = transactionDate.getFullYear();
-          const month = String(transactionDate.getMonth() + 1).padStart(2, '0');
-          const day = String(transactionDate.getDate()).padStart(2, '0');
-          
-          if (isOverall) {
-            transactionId = `C-${year}-${month}-${day}-${transaction.member_id}`;
-          } else {
-            transactionId = `C-${year}-${month}-${day}-${sessionMemberId}`;
-          }
-        }
 
         // Prepare row data
         const rowData = {
           number: (index + 1).toString(),
           date: new Date(transaction.created_at).toLocaleDateString('en-GB'),
-          trn: transactionId,
-          description: `${transaction.request_type} ${transaction.type === 'credit' ? '(CR)' : '(DR)'}`,
+          trn: transaction.txn_trn || 'NO-TRN',
+          description: transaction.request_type,
           credit: transaction.type === 'credit' ? Number(transaction.amount).toLocaleString() : '-',
           debit: transaction.type === 'debit' ? Number(transaction.amount).toLocaleString() : '-',
           balance: runningBalance.toLocaleString(),
           member: isOverall ? `${transaction.first_name} ${transaction.sur_name}`.substring(0, 20) : ''
         };
 
-        // Draw row cells
+        // Draw row cells with transaction type coloring
         x = startX;
         baseColumns.forEach(col => {
           const value = rowData[col.key];
           
-          // Set text color based on column type
+          // Set text color based on transaction type
           if (col.key === 'credit' && value !== '-') {
-            doc.fillColor('#27ae60');
+            if (transaction.request_type === 'ROI Payment') {
+              doc.fillColor('#e67e22'); // Dark orange for ROI
+            } else if (transaction.request_type === 'Refund') {
+              doc.fillColor('#3498db'); // Blue for Refund
+            } else if (transaction.request_type === 'Contribution') {
+              doc.fillColor('#27ae60'); // Green for Contribution
+            } else {
+              doc.fillColor('#27ae60'); // Default green for other credits
+            }
           } else if (col.key === 'debit' && value !== '-') {
-            doc.fillColor('#e74c3c');
+            doc.fillColor('#e74c3c'); // Red for debits
           } else if (col.key === 'balance') {
-            doc.fillColor('#2c3e50');
+            doc.fillColor('#2c3e50'); // Dark blue for balance
+          } else if (col.key === 'trn') {
+            // Color code TRN based on transaction type
+            if (transaction.request_type === 'ROI Payment') {
+              doc.fillColor('#e67e22');
+            } else if (transaction.request_type === 'Refund') {
+              doc.fillColor('#3498db');
+            } else if (transaction.request_type === 'Contribution') {
+              doc.fillColor('#27ae60');
+            } else if (transaction.request_type.includes('TRN')) {
+              doc.fillColor('#7f8c8d'); // Gray for fund requests
+            } else {
+              doc.fillColor('#000000');
+            }
+          } else if (col.key === 'description') {
+            // Color code description based on transaction type
+            if (transaction.request_type === 'ROI Payment') {
+              doc.fillColor('#e67e22');
+            } else if (transaction.request_type === 'Refund') {
+              doc.fillColor('#3498db');
+            } else if (transaction.request_type === 'Contribution') {
+              doc.fillColor('#27ae60');
+            } else if (transaction.type === 'credit') {
+              doc.fillColor('#27ae60');
+            } else {
+              doc.fillColor('#000000');
+            }
           } else {
             doc.fillColor('#000000');
           }
@@ -890,8 +914,44 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
         y += 18;
       });
 
+      // Draw transaction type legend
+      if (transactions.length > 0) {
+        y += 10;
+        const legendWidth = adjustedTotalWidth;
+        const legendX = startX;
+        
+        doc.rect(legendX, y, legendWidth, 25)
+           .fill('#f8f9fa')
+           .strokeColor('#dee2e6')
+           .stroke();
+        
+        const legendItems = [
+          { color: '#27ae60', label: 'Contribution' },
+          { color: '#e67e22', label: 'ROI Payment' },
+          { color: '#3498db', label: 'Refund' },
+          { color: '#e74c3c', label: 'Fund Request' }
+        ];
+        
+        const itemWidth = legendWidth / legendItems.length;
+        let legendTextX = legendX + 5;
+        
+        doc.fontSize(7);
+        legendItems.forEach(item => {
+          // Draw color box
+          doc.rect(legendTextX, y + 8, 8, 8)
+             .fill(item.color);
+          
+          // Draw label
+          doc.fillColor('#2c3e50')
+             .text(item.label, legendTextX + 12, y + 8, { align: 'left' });
+          
+          legendTextX += itemWidth;
+        });
+        
+        y += 35;
+      }
+
       // Draw closing balance
-      y += 10;
       const balanceWidth = baseColumns.slice(-3).reduce((sum, col) => sum + col.width, 0);
       const balanceX = startX + adjustedTotalWidth - balanceWidth;
       
@@ -907,20 +967,35 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
       doc.y = y + 40;
     };
 
-    // Generate PDF content based on type - ALL CONTENT RESPECTS MARGINS
+    // Generate PDF content based on type
     const contentWidth = doc.page.width - (doc.page.margins.left + doc.page.margins.right);
 
     if (type === 'overall') {
       addHeader('OVERALL FINANCIAL STATEMENT', 'Complete transaction history for all members');
       if (overallTransactions.length > 0) {
-        // Add summary statistics - respects margins
+        // Add summary statistics
         const totalCredits = overallTransactions.filter(t => t.type === 'credit').reduce((sum, t) => sum + Number(t.amount), 0);
         const totalDebits = overallTransactions.filter(t => t.type === 'debit').reduce((sum, t) => sum + Number(t.amount), 0);
         const netBalance = totalCredits - totalDebits;
         
+        // Transaction type breakdown
+        const roiTotal = overallTransactions.filter(t => t.request_type === 'ROI Payment').reduce((sum, t) => sum + Number(t.amount), 0);
+        const refundTotal = overallTransactions.filter(t => t.request_type === 'Refund').reduce((sum, t) => sum + Number(t.amount), 0);
+        const contributionTotal = overallTransactions.filter(t => t.request_type === 'Contribution').reduce((sum, t) => sum + Number(t.amount), 0);
+        
         doc.fontSize(10)
            .fillColor('#666666')
            .text(`Summary: ${overallTransactions.length} transactions | Credits: TSh ${totalCredits.toLocaleString()} | Debits: TSh ${totalDebits.toLocaleString()} | Net: TSh ${netBalance.toLocaleString()}`, 
+                 doc.page.margins.left, doc.y, { 
+                   width: contentWidth,
+                   align: 'left' 
+                 });
+        
+        doc.moveDown(0.5);
+        
+        doc.fontSize(9)
+           .fillColor('#7f8c8d')
+           .text(`Breakdown: Contributions: TSh ${contributionTotal.toLocaleString()} | ROI: TSh ${roiTotal.toLocaleString()} | Refunds: TSh ${refundTotal.toLocaleString()}`, 
                  doc.page.margins.left, doc.y, { 
                    width: contentWidth,
                    align: 'left' 
@@ -942,14 +1017,28 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
       addHeader('INDIVIDUAL FINANCIAL STATEMENT', '', true);
       
       if (individualTransactions.length > 0) {
-        // Add summary statistics - respects margins
+        // Add summary statistics
         const totalCredits = individualTransactions.filter(t => t.type === 'credit').reduce((sum, t) => sum + Number(t.amount), 0);
         const totalDebits = individualTransactions.filter(t => t.type === 'debit').reduce((sum, t) => sum + Number(t.amount), 0);
         const netBalance = totalCredits - totalDebits;
         
+        // Transaction type breakdown (excluding ROI for individual)
+        const refundTotal = individualTransactions.filter(t => t.request_type === 'Refund').reduce((sum, t) => sum + Number(t.amount), 0);
+        const contributionTotal = individualTransactions.filter(t => t.request_type === 'Contribution').reduce((sum, t) => sum + Number(t.amount), 0);
+        
         doc.fontSize(10)
            .fillColor('#666666')
            .text(`Summary: ${individualTransactions.length} transactions | Credits: TSh ${totalCredits.toLocaleString()} | Debits: TSh ${totalDebits.toLocaleString()} | Net: TSh ${netBalance.toLocaleString()}`, 
+                 doc.page.margins.left, doc.y, { 
+                   width: contentWidth,
+                   align: 'left' 
+                 });
+        
+        doc.moveDown(0.5);
+        
+        doc.fontSize(9)
+           .fillColor('#7f8c8d')
+           .text(`Breakdown: Contributions: TSh ${contributionTotal.toLocaleString()} | Refunds: TSh ${refundTotal.toLocaleString()}`, 
                  doc.page.margins.left, doc.y, { 
                    width: contentWidth,
                    align: 'left' 
@@ -972,7 +1061,6 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
       addHeader('COMPREHENSIVE FINANCIAL STATEMENT', 'Overall and Individual Transaction Reports');
       
       if (overallTransactions.length > 0) {
-        // Section title respects margins
         doc.fontSize(12).font('Helvetica-Bold')
            .fillColor('#2c3e50')
            .text('PART 1: OVERALL STATEMENT', doc.page.margins.left, doc.y);
@@ -982,13 +1070,11 @@ router.get('/financial-statement/pdf', requireAuth, async (req, res) => {
       }
 
       if (individualTransactions.length > 0) {
-        // Add new page for individual statement
         addFooter();
         doc.addPage();
         
         addHeader('COMPREHENSIVE FINANCIAL STATEMENT', 'PART 2: INDIVIDUAL STATEMENT', true);
         
-        // Section title respects margins
         doc.fontSize(12).font('Helvetica-Bold')
            .fillColor('#2c3e50')
            .text('PART 2: INDIVIDUAL STATEMENT', doc.page.margins.left, doc.y);

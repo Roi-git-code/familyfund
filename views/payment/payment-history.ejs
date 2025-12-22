@@ -1,6 +1,5 @@
 
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,6 +31,10 @@
     .status-badge {
       font-size: 0.75rem;
       padding: 0.35em 0.65em;
+    }
+    .payment-type-badge {
+      font-size: 0.7rem;
+      padding: 0.3em 0.6em;
     }
     .action-dropdown .btn-group {
       display: flex;
@@ -166,6 +169,32 @@
     .section-toggle.secondary:hover {
       background: linear-gradient(135deg, #5a6268 0%, #3d4348 100%);
     }
+    /* Payment type specific colors */
+    .payment-type-contribution {
+      background-color: #007bff;
+      color: white;
+    }
+    .payment-type-roi {
+      background-color: #28a745;
+      color: white;
+    }
+    .payment-type-refund {
+      background-color: #ffc107;
+      color: #000;
+    }
+    .payment-type-other {
+      background-color: #6c757d;
+      color: white;
+    }
+    /* ROI/Refund action buttons */
+    .roi-refund-actions {
+      display: flex;
+      gap: 5px;
+    }
+    .roi-refund-btn {
+      padding: 2px 8px;
+      font-size: 0.75rem;
+    }
   </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -295,7 +324,7 @@
                 
                 <div class="row g-3">
                   <!-- Basic Filters -->
-                  <div class="col-md-6">
+                  <div class="col-md-4">
                     <label class="form-label fw-bold">Date Range</label>
                     <div class="row g-2">
                       <div class="col-6">
@@ -307,13 +336,24 @@
                     </div>
                   </div>
 
-                  <div class="col-md-3">
+                  <div class="col-md-2">
                     <label class="form-label fw-bold">Status</label>
                     <select name="status" class="form-select form-select-sm">
                       <option value="">All Status</option>
                       <option value="Paid" <%= (typeof status !== 'undefined' && status === 'Paid') ? 'selected' : '' %>>Paid</option>
                       <option value="Pending" <%= (typeof status !== 'undefined' && status === 'Pending') ? 'selected' : '' %>>Pending</option>
                       <option value="Failed" <%= (typeof status !== 'undefined' && status === 'Failed') ? 'selected' : '' %>>Failed</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-3">
+                    <label class="form-label fw-bold">Payment Type</label>
+                    <select name="payment_type" class="form-select form-select-sm">
+                      <option value="">All Types</option>
+                      <option value="Contribution" <%= (typeof payment_type !== 'undefined' && payment_type === 'Contribution') ? 'selected' : '' %>>Contribution</option>
+                      <option value="ROI" <%= (typeof payment_type !== 'undefined' && payment_type === 'ROI') ? 'selected' : '' %>>Return on Investment (ROI)</option>
+                      <option value="Refund" <%= (typeof payment_type !== 'undefined' && payment_type === 'Refund') ? 'selected' : '' %>>Refund</option>
+                      <option value="Other" <%= (typeof payment_type !== 'undefined' && payment_type === 'Other') ? 'selected' : '' %>>Other</option>
                     </select>
                   </div>
 
@@ -432,6 +472,9 @@
                       <% if (status) { %>
                         <span class="badge bg-success filter-badge">Status: <%= status %></span>
                       <% } %>
+                      <% if (payment_type) { %>
+                        <span class="badge bg-info filter-badge">Type: <%= payment_type %></span>
+                      <% } %>
                       <% if (amount_range) { %>
                         <span class="badge bg-warning filter-badge">Amount: <%= amount_range %></span>
                       <% } %>
@@ -482,6 +525,7 @@
                       <% } %>
                       <th>Date & Time</th>
                       <th>Amount (Tsh)</th>
+                      <th>Payment Type</th>
                       <th>Phone</th>
                       <th>Transaction ID</th>
                       <th>Payment Method</th>
@@ -513,6 +557,27 @@
                         </td>
                         <td class="fw-bold text-primary">
                            <%= Number(payment.amount).toLocaleString() %>
+                        </td>
+                        <td>
+                          <span class="badge payment-type-badge 
+                            <%= payment.payment_type === 'Contribution' ? 'payment-type-contribution' :
+                                payment.payment_type === 'ROI' ? 'payment-type-roi' :
+                                payment.payment_type === 'Refund' ? 'payment-type-refund' :
+                                'payment-type-other' %>">
+                            <i class="fas 
+                              <%= payment.payment_type === 'Contribution' ? 'fa-money-bill-wave' :
+                                  payment.payment_type === 'ROI' ? 'fa-chart-line' :
+                                  payment.payment_type === 'Refund' ? 'fa-undo' :
+                                  'fa-tag' %> me-1">
+                            </i>
+                            <%= payment.payment_type || 'Contribution' %>
+                          </span>
+                          <% if (payment.payment_type === 'ROI' && payment.metadata && payment.metadata.roi_percentage) { %>
+                            <br>
+                            <small class="text-muted">
+                              <%= payment.metadata.roi_percentage %>% ROI
+                            </small>
+                          <% } %>
                         </td>
                         <td>
                           <code class="small"><%= payment.phone_number %></code>
@@ -556,21 +621,62 @@
                               </li>
                               <% if ((user.role === 'chief_signatory' || user.role === 'assistant_signatory' || user.role === 'chairman') && payment.status === 'Pending') { %>
                                 <li><hr class="dropdown-divider"></li>
-                                <li>
-                                  <a class="dropdown-item text-success mark-as-paid-btn" href="#" 
-                                     data-transaction-id="<%= payment.transaction_id %>"
-                                     data-member-id="<%= payment.member_id %>"
-                                     data-amount="<%= payment.amount %>"
-                                     data-payment-date="<%= new Date(payment.created_at).toISOString() %>"
-                                     data-member-name="<%= payment.first_name %> <%= payment.sur_name %>">
-                                    <i class="fas fa-check me-2"></i>Mark as Paid
-                                  </a>
-                                </li>
+                                <% if (payment.payment_type === 'Contribution' || !payment.payment_type) { %>
+                                  <li>
+                                    <a class="dropdown-item text-success mark-as-paid-btn" href="#" 
+                                       data-transaction-id="<%= payment.transaction_id %>"
+                                       data-member-id="<%= payment.member_id %>"
+                                       data-amount="<%= payment.amount %>"
+                                       data-payment-date="<%= new Date(payment.created_at).toISOString() %>"
+                                       data-member-name="<%= payment.first_name %> <%= payment.sur_name %>"
+                                       data-payment-type="<%= payment.payment_type || 'Contribution' %>">
+                                      <i class="fas fa-check me-2"></i>Mark as Paid (Contribution)
+                                    </a>
+                                  </li>
+                                <% } else if (payment.payment_type === 'ROI') { %>
+                                  <li>
+                                    <a class="dropdown-item text-success roi-payment-btn" href="#" 
+                                       data-transaction-id="<%= payment.transaction_id %>"
+                                       data-member-id="<%= payment.member_id %>"
+                                       data-amount="<%= payment.amount %>"
+                                       data-payment-date="<%= new Date(payment.created_at).toISOString() %>"
+                                       data-member-name="<%= payment.first_name %> <%= payment.sur_name %>">
+                                      <i class="fas fa-chart-line me-2"></i>Process ROI Payment
+                                    </a>
+                                  </li>
+                                <% } else if (payment.payment_type === 'Refund') { %>
+                                  <li>
+                                    <a class="dropdown-item text-warning refund-payment-btn" href="#" 
+                                       data-transaction-id="<%= payment.transaction_id %>"
+                                       data-member-id="<%= payment.member_id %>"
+                                       data-amount="<%= payment.amount %>"
+                                       data-payment-date="<%= new Date(payment.created_at).toISOString() %>"
+                                       data-member-name="<%= payment.first_name %> <%= payment.sur_name %>">
+                                      <i class="fas fa-undo me-2"></i>Process Refund
+                                    </a>
+                                  </li>
+                                <% } %>
                                 <li>
                                   <a class="dropdown-item text-danger" href="#" onclick="updateStatus('<%= payment.transaction_id %>', 'Failed')">
                                     <i class="fas fa-times me-2"></i>Mark as Failed
                                   </a>
                                 </li>
+                              <% } %>
+                              <!-- Additional actions for completed payments -->
+                              <% if (payment.status === 'Paid') { %>
+                                <% if (payment.payment_type === 'ROI') { %>
+                                  <li>
+                                    <a class="dropdown-item text-info" href="/roi" target="_blank">
+                                      <i class="fas fa-chart-line me-2"></i>View ROI Details
+                                    </a>
+                                  </li>
+                                <% } else if (payment.payment_type === 'Refund') { %>
+                                  <li>
+                                    <a class="dropdown-item text-info" href="/refunds" target="_blank">
+                                      <i class="fas fa-undo me-2"></i>View Refund Details
+                                    </a>
+                                  </li>
+                                <% } %>
                               <% } %>
                             </ul>
                           </div>
@@ -701,6 +807,10 @@
           <div class="payment-details-summary">
             <h6 class="mb-3">Payment Details:</h6>
             <div class="detail-item">
+              <span class="fw-bold">Payment Type:</span>
+              <span id="modal-payment-type" class="badge payment-type-badge">Contribution</span>
+            </div>
+            <div class="detail-item">
               <span class="fw-bold">Member:</span>
               <span id="modal-member-name">-</span>
             </div>
@@ -722,7 +832,7 @@
             </div>
           </div>
 
-          <div class="contribution-form-section mt-4">
+          <div class="contribution-form-section mt-4" id="contributionFormSection">
             <h6 class="mb-3">Contribution Details:</h6>
             <form id="contributionForm" method="POST" action="/contributions/add">
               <!-- Hidden fields for required data -->
@@ -781,11 +891,74 @@
               </div>
             </form>
           </div>
+
+          <!-- ROI Form Section (hidden by default) -->
+          <div class="roi-form-section mt-4" id="roiFormSection" style="display: none;">
+            <h6 class="mb-3">ROI Payment Details:</h6>
+            <form id="roiForm">
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                This payment will be recorded as a Return on Investment (ROI) to the member.
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="roi_percentage" class="form-label">ROI Percentage (%)</label>
+                  <input type="number" class="form-control" id="roi_percentage" name="roi_percentage" 
+                         min="1" max="100" step="0.01" value="10" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="period_start" class="form-label">Period Start</label>
+                  <input type="date" class="form-control" id="roi_period_start" name="period_start" required>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="period_end" class="form-label">Period End</label>
+                  <input type="date" class="form-control" id="roi_period_end" name="period_end" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="roi_notes" class="form-label">Notes (Optional)</label>
+                  <textarea class="form-control" id="roi_notes" name="notes" rows="1"></textarea>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Refund Form Section (hidden by default) -->
+          <div class="refund-form-section mt-4" id="refundFormSection" style="display: none;">
+            <h6 class="mb-3">Refund Payment Details:</h6>
+            <form id="refundForm">
+              <div class="alert alert-warning">
+                <i class="fas fa-info-circle me-2"></i>
+                This payment will be recorded as a refund to the member.
+              </div>
+              <div class="mb-3">
+                <label for="refund_reason" class="form-label">Refund Reason *</label>
+                <textarea class="form-control" id="refund_reason" name="reason" rows="2" 
+                          placeholder="Enter reason for refund" required></textarea>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="refund_method" class="form-label">Refund Method</label>
+                  <select class="form-select" id="refund_method" name="payment_method" required>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Mobile Money">Mobile Money</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="refund_notes" class="form-label">Notes (Optional)</label>
+                  <textarea class="form-control" id="refund_notes" name="notes" rows="1"></textarea>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-success" id="confirmMarkAsPaid">
-            <i class="fas fa-check me-1"></i>Confirm & Add Contribution
+          <button type="button" class="btn btn-success" id="confirmPaymentProcessing">
+            <i class="fas fa-check me-1"></i>Confirm & Process Payment
           </button>
         </div>
       </div>
@@ -922,10 +1095,72 @@
       });
     }
 
-    // Mark as Paid with contribution integration
+    // Process payment based on type
+     // In payment-history.ejs, update the processPayment function:
+function processPayment(paymentData, formData = {}) {
+  fetch(`/payments/update-status/${paymentData.transactionId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      status: 'Paid',
+      notes: `Approved as ${paymentData.paymentType} payment via payment history`,
+      ...formData
+    })
+  })
+  .then(response => response.json())
+  .then(paymentResult => {
+    if (paymentResult.success) {
+      // For contributions only, also add to contributions table
+      if (paymentData.paymentType === 'Contribution') {
+        return fetch('/contributions/add-transaction', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            member_id: paymentData.memberId,
+            amount: paymentData.amount,
+            transaction_date: new Date().toISOString().split('T')[0]
+          })
+        })
+        .then(response => {
+          if (response.ok) {
+            return { success: true };
+          } else {
+            throw new Error('Failed to add contribution');
+          }
+        });
+      } else {
+        return { success: true };
+      }
+    } else {
+      throw new Error(paymentResult.message || 'Failed to update payment status');
+    }
+  })
+  .then(() => {
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('markAsPaidModal'));
+    if (modal) modal.hide();
+    
+    // Show success message
+    alert(`Payment processed successfully as ${paymentData.paymentType}!`);
+    
+    // Reload page after a short delay
+    setTimeout(() => {
+      location.reload();
+    }, 1500);
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error: ' + error.message);
+  });
+}
+                      
     document.addEventListener('DOMContentLoaded', function() {
-      // Add event listeners to all "Mark as Paid" buttons
-      document.querySelectorAll('.mark-as-paid-btn').forEach(button => {
+      // Add event listeners to all payment processing buttons
+      document.querySelectorAll('.mark-as-paid-btn, .roi-payment-btn, .refund-payment-btn').forEach(button => {
         button.addEventListener('click', function(e) {
           e.preventDefault();
           
@@ -934,7 +1169,9 @@
             memberId: this.getAttribute('data-member-id'),
             amount: this.getAttribute('data-amount'),
             paymentDate: this.getAttribute('data-payment-date'),
-            memberName: this.getAttribute('data-member-name')
+            memberName: this.getAttribute('data-member-name'),
+            paymentType: this.classList.contains('roi-payment-btn') ? 'ROI' : 
+                         this.classList.contains('refund-payment-btn') ? 'Refund' : 'Contribution'
           };
 
           // Populate modal with payment data
@@ -942,24 +1179,67 @@
           document.getElementById('modal-member-id').textContent = currentPaymentData.memberId;
           document.getElementById('modal-amount').textContent = 'TSh ' + Number(currentPaymentData.amount).toLocaleString();
           document.getElementById('modal-transaction-id').textContent = currentPaymentData.transactionId;
+          
+          // Update payment type badge
+          const paymentTypeBadge = document.getElementById('modal-payment-type');
+          paymentTypeBadge.textContent = currentPaymentData.paymentType;
+          paymentTypeBadge.className = 'badge payment-type-badge ' + 
+            (currentPaymentData.paymentType === 'Contribution' ? 'payment-type-contribution' :
+             currentPaymentData.paymentType === 'ROI' ? 'payment-type-roi' :
+             currentPaymentData.paymentType === 'Refund' ? 'payment-type-refund' : 'payment-type-other');
 
           const paymentDate = new Date(currentPaymentData.paymentDate);
           document.getElementById('modal-payment-date').textContent = paymentDate.toLocaleDateString() + ' ' + paymentDate.toLocaleTimeString();
 
-          // Populate contribution form (using hidden fields for submission)
-          document.getElementById('contribution-member-id').value = currentPaymentData.memberId;
-          document.getElementById('contribution-amount').value = currentPaymentData.amount;
+          // Show/hide appropriate form sections
+          document.getElementById('contributionFormSection').style.display = 
+            currentPaymentData.paymentType === 'Contribution' ? 'block' : 'none';
+          document.getElementById('roiFormSection').style.display = 
+            currentPaymentData.paymentType === 'ROI' ? 'block' : 'none';
+          document.getElementById('refundFormSection').style.display = 
+            currentPaymentData.paymentType === 'Refund' ? 'block' : 'none';
 
-          // Set display fields (readonly)
-          document.getElementById('contribution-member-id-display').value = currentPaymentData.memberId;
-          document.getElementById('contribution-amount-display').value = 'TSh ' + Number(currentPaymentData.amount).toLocaleString();
+          // Populate contribution form (for Contribution payments)
+          if (currentPaymentData.paymentType === 'Contribution') {
+            document.getElementById('contribution-member-id').value = currentPaymentData.memberId;
+            document.getElementById('contribution-amount').value = currentPaymentData.amount;
+            document.getElementById('contribution-member-id-display').value = currentPaymentData.memberId;
+            document.getElementById('contribution-amount-display').value = 'TSh ' + Number(currentPaymentData.amount).toLocaleString();
+            
+            const paymentYear = paymentDate.getFullYear();
+            const paymentMonth = paymentDate.getMonth();
+            document.getElementById('contribution-year').value = paymentYear;
+            document.getElementById('contribution-month').selectedIndex = paymentMonth;
+          }
+          
+          // Populate ROI form (for ROI payments)
+          if (currentPaymentData.paymentType === 'ROI') {
+            const today = new Date().toISOString().split('T')[0];
+            const nextMonth = new Date();
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            const nextMonthStr = nextMonth.toISOString().split('T')[0];
+            
+            document.getElementById('roi_period_start').value = today;
+            document.getElementById('roi_period_end').value = nextMonthStr;
+          }
 
-          // Set year and month based on payment date
-          const paymentYear = paymentDate.getFullYear();
-          const paymentMonth = paymentDate.getMonth(); // 0-11
+          // Update modal title based on payment type
+          const modalTitle = document.getElementById('markAsPaidModalLabel');
+          modalTitle.innerHTML = 
+            currentPaymentData.paymentType === 'Contribution' ? 
+              '<i class="fas fa-check-circle me-2"></i>Confirm Contribution Payment' :
+            currentPaymentData.paymentType === 'ROI' ? 
+              '<i class="fas fa-chart-line me-2"></i>Process ROI Payment' :
+              '<i class="fas fa-undo me-2"></i>Process Refund Payment';
 
-          document.getElementById('contribution-year').value = paymentYear;
-          document.getElementById('contribution-month').selectedIndex = paymentMonth;
+          // Update confirm button text
+          const confirmBtn = document.getElementById('confirmPaymentProcessing');
+          confirmBtn.innerHTML = 
+            currentPaymentData.paymentType === 'Contribution' ? 
+              '<i class="fas fa-check me-1"></i>Confirm & Add Contribution' :
+            currentPaymentData.paymentType === 'ROI' ? 
+              '<i class="fas fa-chart-line me-1"></i>Process ROI Payment' :
+              '<i class="fas fa-undo me-1"></i>Process Refund';
 
           // Show modal
           const modal = new bootstrap.Modal(document.getElementById('markAsPaidModal'));
@@ -967,12 +1247,26 @@
         });
       });
 
-      // Confirm mark as paid and add contribution
-      document.getElementById('confirmMarkAsPaid').addEventListener('click', function() {
+      // Confirm payment processing
+      document.getElementById('confirmPaymentProcessing').addEventListener('click', function() {
         if (!currentPaymentData) return;
 
-        const contributionForm = document.getElementById('contributionForm');
-        const formData = new FormData(contributionForm);
+        let formData = {};
+        
+        // Collect form data based on payment type
+        if (currentPaymentData.paymentType === 'Contribution') {
+          const contributionForm = document.getElementById('contributionForm');
+          const formDataObj = new FormData(contributionForm);
+          formData = Object.fromEntries(formDataObj);
+        } else if (currentPaymentData.paymentType === 'ROI') {
+          const roiForm = document.getElementById('roiForm');
+          const formDataObj = new FormData(roiForm);
+          formData = Object.fromEntries(formDataObj);
+        } else if (currentPaymentData.paymentType === 'Refund') {
+          const refundForm = document.getElementById('refundForm');
+          const formDataObj = new FormData(refundForm);
+          formData = Object.fromEntries(formDataObj);
+        }
 
         // First, update payment status to Paid
         fetch(`/payments/update-status/${currentPaymentData.transactionId}`, {
@@ -982,44 +1276,47 @@
           },
           body: JSON.stringify({
             status: 'Paid',
-            notes: 'Approved and contribution added via payment history'
+            notes: `Approved as ${currentPaymentData.paymentType} payment via payment history`,
+            ...formData
           })
         })
         .then(response => response.json())
         .then(paymentResult => {
           if (paymentResult.success) {
-            // Then, add the contribution using the transaction endpoint
-            return fetch('/contributions/add-transaction', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-              },
-              body: new URLSearchParams({
-                member_id: currentPaymentData.memberId,
-                amount: currentPaymentData.amount,
-                transaction_date: new Date().toISOString().split('T')[0]
+            // For contributions, also add to contributions table
+            if (currentPaymentData.paymentType === 'Contribution') {
+              return fetch('/contributions/add-transaction', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                  member_id: currentPaymentData.memberId,
+                  amount: currentPaymentData.amount,
+                  transaction_date: new Date().toISOString().split('T')[0]
+                })
               })
-            })
-            .then(response => {
-              if (response.redirected) {
-                // Contribution was added successfully, reload the page
-                window.location.href = response.url;
-              } else {
-                return response.text().then(html => {
-                  // Check if there's an error in the response
-                  const parser = new DOMParser();
-                  const doc = parser.parseFromString(html, 'text/html');
-                  const errorFlash = doc.querySelector('.alert-danger');
-                  
-                  if (errorFlash) {
-                    throw new Error(errorFlash.textContent.trim());
-                  } else {
-                    // Success, reload to show updated status
-                    location.reload();
-                  }
-                });
-              }
-            });
+              .then(response => {
+                if (response.redirected) {
+                  return { success: true };
+                } else {
+                  return response.text().then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const errorFlash = doc.querySelector('.alert-danger');
+                    
+                    if (errorFlash) {
+                      throw new Error(errorFlash.textContent.trim());
+                    } else {
+                      return { success: true };
+                    }
+                  });
+                }
+              });
+            } else {
+              // For ROI and Refund, just return success
+              return { success: true };
+            }
           } else {
             throw new Error(paymentResult.message || 'Failed to update payment status');
           }
@@ -1030,7 +1327,12 @@
           modal.hide();
           
           // Show success message
-          alert('Payment marked as paid and contribution added successfully!');
+          alert(`Payment marked as paid and processed as ${currentPaymentData.paymentType} successfully!`);
+          
+          // Reload page after a short delay
+          setTimeout(() => {
+            location.reload();
+          }, 1500);
         })
         .catch(error => {
           console.error('Error:', error);

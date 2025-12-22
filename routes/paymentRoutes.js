@@ -1,5 +1,4 @@
 
-
 //routes/paymentRoutes.js
 const express = require('express');
 const router = express.Router();
@@ -318,20 +317,29 @@ router.get('/admin/links/debug', requireAuth, async (req, res) => {
 });
 
 // ----------------- POST /payments/initiate-lipia -----------------
+// Updated initiate-lipia route to include payment type
 router.post('/initiate-lipia', requireAuth, async (req, res) => {
   try {
-    const { amount, phone_number } = req.body;
+    const { amount, phone_number, payment_type = 'Contribution' } = req.body;
     const user = req.session.user;
 
     console.log('💰 Lipia Payment Initiation:', { 
       amount, 
       phone_number,
+      payment_type,
       user: user.username 
     });
 
     const paymentAmount = parseFloat(amount);
     if (isNaN(paymentAmount) || paymentAmount < 100) {
       req.flash('error', 'Invalid amount (minimum TSh 100)');
+      return res.redirect('/payments');
+    }
+
+    // Validate payment type
+    const validPaymentTypes = ['Contribution', 'ROI', 'Refund', 'Other'];
+    if (!validPaymentTypes.includes(payment_type)) {
+      req.flash('error', 'Invalid payment type');
       return res.redirect('/payments');
     }
 
@@ -348,13 +356,14 @@ router.post('/initiate-lipia', requireAuth, async (req, res) => {
     // Generate unique transaction ID
     const transactionId = `LIPIA${Date.now()}${Math.random().toString(36).slice(2,9).toUpperCase()}`;
 
-    // Create payment record in database
+    // Create payment record in database with payment type
     const payment = await paymentModel.createPayment({
       member_id: user.member_Id,
       amount: paymentAmount,
       payment_method: 'azam_lipia',
       phone_number,
       transaction_id: transactionId,
+      payment_type: payment_type, // Add payment type
       status: 'Pending',
       metadata: {
         initiated_at: new Date().toISOString(),
@@ -363,15 +372,15 @@ router.post('/initiate-lipia', requireAuth, async (req, res) => {
         requested_amount: paymentAmount,
         phone: phone_number,
         description: paymentLink.description,
-        source: paymentLink.id ? 'database' : 'config' // Track where link came from
+        source: paymentLink.id ? 'database' : 'config'
       }
     });
 
-    console.log(`📝 Payment record created: ${transactionId} for amount ${paymentAmount}`);
+    console.log(`📝 Payment record created: ${transactionId} for amount ${paymentAmount}, type: ${payment_type}`);
     console.log(`🔗 Using Lipia link for amount: ${paymentLink.amount} (${paymentLink.description})`);
 
     // Redirect to payment status page with instructions
-    req.flash('info', `Payment record created. Please complete your payment of TSh ${paymentAmount.toLocaleString()} using the Azam Lipia link.`);
+    req.flash('info', `${payment_type} payment record created. Please complete your payment of TSh ${paymentAmount.toLocaleString()} using the Azam Lipia link.`);
     res.redirect(`/payments/status/${transactionId}`);
 
   } catch (err) {
@@ -380,6 +389,7 @@ router.post('/initiate-lipia', requireAuth, async (req, res) => {
     res.redirect('/payments');
   }
 });
+
 
 // ----------------- GET /payments/status/:transactionId -----------------
 router.get('/status/:transactionId', requireAuth, async (req, res) => {
@@ -439,10 +449,11 @@ router.get('/status/:transactionId', requireAuth, async (req, res) => {
 
 
 // ----------------- POST /payments/update-status/:transactionId -----------------
+// ----------------- POST /payments/update-status/:transactionId -----------------
 router.post('/update-status/:transactionId', requireAuth, async (req, res) => {
   try {
     const { transactionId } = req.params;
-    const { status, notes } = req.body;
+    const { status, notes, payment_type, roi_percentage, period_start, period_end, refund_reason } = req.body;
     const user = req.session.user;
 
     // Check if user has permission to update status
@@ -455,16 +466,65 @@ router.post('/update-status/:transactionId', requireAuth, async (req, res) => {
       return res.json({ success: false, message: 'Invalid status' });
     }
 
+    // Get payment details
+    const payment = await paymentModel.getPaymentByTransactionId(transactionId);
+    if (!payment) {
+      return res.json({ success: false, message: 'Payment not found' });
+    }
+
+    // Store the old status to check if we're changing to 'Paid'
+    const oldStatus = payment.status;
+    
+    // Update payment status
     await paymentModel.updatePaymentStatus(transactionId, status, {
       manual_update: true,
       updated_by: user.username,
-      notes: notes,
+      notes: notes || 'Updated via payment history',
       updated_at: new Date().toISOString()
     });
 
+    // If status changed to 'Paid', handle payment type-specific operations
+    if (oldStatus !== 'Paid' && status === 'Paid') {
+      try {
+        // Prepare additional data based on payment type
+        const additionalData = {};
+        
+        switch(payment.payment_type) {
+          case 'ROI':
+            additionalData.roi_percentage = roi_percentage || 10;
+            additionalData.period_start = period_start || new Date().toISOString().split('T')[0];
+            additionalData.period_end = period_end || 
+              new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0];
+            await handleROIPayment(payment, user, additionalData);
+            break;
+            
+          case 'Refund':
+            additionalData.reason = refund_reason || 'General refund';
+            await handleRefundPayment(payment, user, additionalData);
+            break;
+            
+          case 'Contribution':
+            // DO NOT add contribution here - it's already handled elsewhere
+            console.log(`ℹ️ Contribution payment ${transactionId} marked as Paid. Contribution will be added automatically by the system.`);
+            break;
+            
+          default:
+            console.log(`ℹ️ Payment type ${payment.payment_type} doesn't require special handling`);
+            break;
+        }
+        
+        console.log(`✅ ${payment.payment_type} payment processed successfully for ${transactionId}`);
+        
+      } catch (typeError) {
+        console.error(`❌ Error processing ${payment.payment_type} payment:`, typeError);
+        // Don't return error here - just log it
+      }
+    }
+
     res.json({ 
       success: true, 
-      message: `Payment status updated to ${status}` 
+      message: `Payment status updated to ${status}`,
+      payment_type: payment.payment_type
     });
 
   } catch (err) {
@@ -472,6 +532,127 @@ router.post('/update-status/:transactionId', requireAuth, async (req, res) => {
     res.json({ success: false, message: 'Failed to update status' });
   }
 });
+
+
+// Helper function to handle paid payments based on type
+async function handlePaidPayment(payment, user, additionalData = {}) {
+  const { payment_type } = payment;
+  
+  switch(payment_type) {
+    case 'Contribution':
+      // Add to contributions table
+      await handleContributionPayment(payment, user);
+      break;
+      
+    case 'ROI':
+      // Add to ROI table
+      await handleROIPayment(payment, user, additionalData);
+      break;
+      
+    case 'Refund':
+      // Add to refunds table
+      await handleRefundPayment(payment, user, additionalData);
+      break;
+      
+    default:
+      console.log(`ℹ️ Payment type ${payment_type} doesn't require special handling`);
+      break;
+  }
+}
+
+async function handleContributionPayment(payment, user) {
+  try {
+    // Use current date for contribution
+    const transaction_date = new Date().toISOString().split('T')[0];
+    
+    // Use the contribution model to add transaction
+    const contributionModel = require('../models/contributionModel');
+    
+    await contributionModel.addContributionTransaction({
+      member_id: payment.member_id,
+      amount: payment.amount,
+      transaction_date: transaction_date,
+      // You can add payment_id reference if your contribution_transactions table has it
+      // payment_id: payment.id
+    });
+    
+    console.log(`✅ Contribution added for payment ${payment.transaction_id}`);
+    
+  } catch (error) {
+    console.error('❌ Error adding contribution:', error);
+    throw error;
+  }
+}
+
+async function handleROIPayment(payment, user, additionalData) {
+  try {
+    const { roi_percentage = 10, period_start, period_end } = additionalData;
+    
+    // Calculate ROI amount if not provided
+    const calculated_amount = payment.amount * (parseFloat(roi_percentage) / 100);
+    
+    // Use default periods if not provided
+    const startDate = period_start || new Date().toISOString().split('T')[0];
+    const endDate = period_end || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0];
+    
+    await paymentModel.createROI({
+      member_id: payment.member_id,
+      payment_id: payment.id,
+      amount: payment.amount,
+      roi_percentage: parseFloat(roi_percentage),
+      period_start: startDate,
+      period_end: endDate,
+      calculated_amount: calculated_amount,
+      status: 'Approved',
+      notes: `ROI payment approved by ${user.username}`
+    });
+    
+    console.log(`✅ ROI record created for payment ${payment.transaction_id}`);
+    
+  } catch (error) {
+    console.error('❌ Error creating ROI record:', error);
+    throw error;
+  }
+}
+
+async function handleRefundPayment(payment, user, additionalData) {
+  try {
+    const { reason = 'General refund' } = additionalData;
+    
+    await paymentModel.createRefund({
+      member_id: payment.member_id,
+      payment_id: payment.id,
+      amount: payment.amount,
+      reason: reason,
+      status: 'Completed',
+      payment_method: payment.payment_method || 'Bank Transfer',
+      account_details: {
+        phone_number: payment.phone_number,
+        processed_by: user.username
+      },
+      notes: `Refund processed by ${user.username}`
+    });
+    
+    console.log(`✅ Refund record created for payment ${payment.transaction_id}`);
+    
+  } catch (error) {
+    console.error('❌ Error creating refund record:', error);
+    throw error;
+  }
+}
+
+// Add a new route to get payment types
+router.get('/payment-types', requireAuth, (req, res) => {
+  const paymentTypes = [
+    { value: 'Contribution', label: 'Contribution', description: 'Regular member contribution' },
+    { value: 'ROI', label: 'Return on Investment', description: 'ROI payment to member' },
+    { value: 'Refund', label: 'Refund', description: 'Refund to member' },
+    { value: 'Other', label: 'Other', description: 'Other type of payment' }
+  ];
+  
+  res.json({ success: true, paymentTypes });
+});
+
 
 // ----------------- GET /payments/check-status/:transactionId -----------------
 router.get('/check-status/:transactionId', requireAuth, async (req, res) => {
@@ -495,6 +676,8 @@ router.get('/check-status/:transactionId', requireAuth, async (req, res) => {
 
 
 // ----------------- GET /payments/history (with filter support) -----------------
+
+
 // ----------------- GET /payments/history (with advanced filter support) -----------------
 router.get('/history', requireAuth, async (req, res) => {
   try {
@@ -511,6 +694,7 @@ router.get('/history', requireAuth, async (req, res) => {
       from, 
       to, 
       status, 
+      payment_type,  // Add this line
       amount_range, 
       member_search, 
       transaction_id, 
@@ -552,6 +736,11 @@ router.get('/history', requireAuth, async (req, res) => {
 
     if (status) {
       payments = payments.filter(payment => payment.status === status);
+    }
+
+    // ADD THIS FILTER FOR PAYMENT TYPE
+    if (payment_type) {
+      payments = payments.filter(payment => payment.payment_type === payment_type);
     }
 
     if (amount_range) {
@@ -630,7 +819,8 @@ router.get('/history', requireAuth, async (req, res) => {
     const paidCount = payments.filter(p => p.status === 'Paid').length;
     const pendingCount = payments.filter(p => p.status === 'Pending').length;
 
-    const hasActiveFilters = !!(from || to || status || amount_range || member_search || transaction_id || phone_number);
+    // UPDATE THIS LINE TO INCLUDE PAYMENT_TYPE
+    const hasActiveFilters = !!(from || to || status || payment_type || amount_range || member_search || transaction_id || phone_number);
 
     // Helper functions
     const buildPaginationLink = (pageNum) => {
@@ -639,6 +829,7 @@ router.get('/history', requireAuth, async (req, res) => {
       if (from) params.set('from', from);
       if (to) params.set('to', to);
       if (status) params.set('status', status);
+      if (payment_type) params.set('payment_type', payment_type); // Add this line
       if (amount_range) params.set('amount_range', amount_range);
       if (member_search) params.set('member_search', member_search);
       if (transaction_id) params.set('transaction_id', transaction_id);
@@ -655,6 +846,7 @@ router.get('/history', requireAuth, async (req, res) => {
       if (from) params.set('from', from);
       if (to) params.set('to', to);
       if (status) params.set('status', status);
+      if (payment_type) params.set('payment_type', payment_type); // Add this line
       if (amount_range) params.set('amount_range', amount_range);
       if (member_search) params.set('member_search', member_search);
       if (transaction_id) params.set('transaction_id', transaction_id);
@@ -670,6 +862,7 @@ router.get('/history', requireAuth, async (req, res) => {
       if (from) params.set('from', from);
       if (to) params.set('to', to);
       if (status) params.set('status', status);
+      if (payment_type) params.set('payment_type', payment_type); // Add this line
       if (amount_range) params.set('amount_range', amount_range);
       if (member_search) params.set('member_search', member_search);
       if (transaction_id) params.set('transaction_id', transaction_id);
@@ -685,6 +878,7 @@ router.get('/history', requireAuth, async (req, res) => {
       from: from || '',
       to: to || '',
       status: status || '',
+      payment_type: payment_type || '', // Add this line - VERY IMPORTANT!
       amount_range: amount_range || '',
       member_search: member_search || '',
       transaction_id: transaction_id || '',
@@ -712,6 +906,7 @@ router.get('/history', requireAuth, async (req, res) => {
     res.redirect('/payments');
   }
 });
+
 
 // ----------------- GET /payments/admin -----------------
 router.get('/admin', requireAuth, requireRole('chairman'), async (req, res) => {

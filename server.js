@@ -22,6 +22,8 @@ const omaRoutes = require('./routes/omaRoutes');
 const fundSummaryRoutes = require('./routes/fundSummaryRoutes');
 const paymentRoutes = require('./routes/paymentRoutes'); // NEW: Import payment routes
 const supportRoutes = require('./routes/supportRoutes');
+const roiRoutes = require('./routes/roiRoutes');
+const refundRoutes = require('./routes/refundRoutes');
 
 const { requireAuth, requireRole, allowRoles, requireVerifiedEmail } = require('./middleware/auth');
 
@@ -79,6 +81,8 @@ app.use('/member', requireAuth, requireVerifiedEmail, allowRoles('chairman','adm
 app.use('/contributions', requireAuth, requireVerifiedEmail, allowRoles('chairman', 'chief_signatory', 'assistant_signatory'), contributionRoutes);
 app.use('/', requireAuth, requireVerifiedEmail, userRoutes);
 app.use('/', requireVerifiedEmail,  supportRoutes);
+app.use('/roi', roiRoutes);
+app.use('/refunds', refundRoutes);
 
 // 404 fallback
 app.use((req, res) => res.status(404).send('Page Not Found'));
