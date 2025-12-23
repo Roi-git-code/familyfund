@@ -114,6 +114,22 @@
       box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
       color: white;
     }
+
+    /* Modal styling */
+    .modal-reminder .modal-header {
+      background: linear-gradient(135deg, #ffc107, #ff9800);
+      color: white;
+    }
+
+    .modal-reminder .modal-body {
+      padding: 2rem;
+    }
+
+    .modal-reminder .bi-exclamation-triangle {
+      font-size: 3rem;
+      color: #ffc107;
+      margin-bottom: 1rem;
+    }
   </style>
 
 </head>
@@ -204,11 +220,13 @@
               Actions
             </h5>
             <div class="d-grid gap-2">
-              <a href="/contributions/reminders/send-now" 
+              <!-- Button triggers modal instead of direct link -->
+              <button type="button" 
                  class="btn btn-reminder" 
-                 onclick="return confirm('Send reminders to ALL members who have contributed less than TSh 20,000 this month?')">
+                 data-bs-toggle="modal" 
+                 data-bs-target="#reminderConfirmationModal">
                  <i class="bi bi-send-fill"></i> Send Reminders Now
-              </a>
+              </button>
             </div>
             
             <% if (!isReminderDay) { %>
@@ -355,6 +373,63 @@
   </div>
 </div>
 
+<!-- Reminder Confirmation Modal -->
+<div class="modal fade" id="reminderConfirmationModal" tabindex="-1" aria-labelledby="reminderConfirmationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-reminder">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reminderConfirmationModalLabel">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          Send Reminder Confirmation
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <div class="mb-4">
+          <i class="bi bi-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
+        </div>
+        
+        <h4 class="mb-3">Are you sure?</h4>
+        
+        <div class="alert alert-warning mb-4">
+          <p class="mb-0">
+            <strong>Send reminders to ALL members who have contributed less than TSh 20,000 this month?</strong>
+          </p>
+        </div>
+        
+        <div class="mb-4">
+          <p class="text-muted">
+            This will send email reminders to <strong><%= needReminderCount %> members</strong> who haven't reached the monthly target.
+          </p>
+          
+          <% if (needReminderCount > 0) { %>
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            <small>
+              <strong>Affected Members:</strong> <%= needReminderCount %> members will receive reminders.<br>
+              <strong>Excluded:</strong> <%= checkedMembers - needReminderCount %> members have already paid TSh 20,000+.
+            </small>
+          </div>
+          <% } else { %>
+          <div class="alert alert-success">
+            <i class="bi bi-check-circle"></i>
+            <small>No members need reminders - all have paid TSh 20,000 or more this month.</small>
+          </div>
+          <% } %>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle"></i> Cancel
+        </button>
+        <a href="/contributions/reminders/send-now" class="btn btn-warning" id="confirmSendReminders">
+          <i class="bi bi-send-fill"></i> Yes, Send Reminders
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <%- include('partials/change_password_modal') %>
 
 <%- include('partials/footer') %>
@@ -373,20 +448,43 @@
       // You could add auto-refresh logic here if needed
     }, 300000); // 5 minutes
     
-    // Add confirmation for manual reminder send
-    const sendButton = document.querySelector('a[href="/contributions/reminders/send-now"]');
-    if (sendButton) {
-      sendButton.addEventListener('click', function(e) {
-        if (!confirm('Are you sure you want to send reminders to all members who have contributed less than TSh 20,000 this month?')) {
-          e.preventDefault();
-        }
-      });
-    }
-    
     // Highlight current day if it's a reminder day
     const reminderDayBadge = document.querySelector('.stat-number:last-child');
     if (reminderDayBadge && reminderDayBadge.textContent === 'YES') {
       reminderDayBadge.parentElement.classList.add('border-success', 'border-2');
+    }
+    
+    // Handle modal confirmation button
+    const confirmButton = document.getElementById('confirmSendReminders');
+    const needReminderCount = <%= needReminderCount %>;
+    
+    if (confirmButton) {
+      confirmButton.addEventListener('click', function(e) {
+        if (needReminderCount === 0) {
+          e.preventDefault();
+          alert('No members need reminders. All members have already paid TSh 20,000 or more this month.');
+          const modal = bootstrap.Modal.getInstance(document.getElementById('reminderConfirmationModal'));
+          if (modal) modal.hide();
+        }
+      });
+    }
+    
+    // Update modal content dynamically based on needReminderCount
+    const reminderModal = document.getElementById('reminderConfirmationModal');
+    if (reminderModal) {
+      reminderModal.addEventListener('show.bs.modal', function(event) {
+        const modalTitle = this.querySelector('.modal-title');
+        const modalBody = this.querySelector('.modal-body');
+        const confirmBtn = this.querySelector('#confirmSendReminders');
+        
+        if (needReminderCount === 0) {
+          modalTitle.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> No Reminders Needed';
+          confirmBtn.classList.remove('btn-warning');
+          confirmBtn.classList.add('btn-success');
+          confirmBtn.innerHTML = '<i class="bi bi-check-circle"></i> OK';
+          confirmBtn.disabled = true;
+        }
+      });
     }
   });
 </script>

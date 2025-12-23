@@ -1,4 +1,5 @@
 
+
 const express = require('express');
 const router = express.Router();
 const fs = require('fs');
@@ -767,53 +768,64 @@ router.get('/download/transactions/pdf', async (req, res) => {
 });
 
 // ============================================
-// REMINDER ROUTES
+// REMINDER ROUTES (with Flash Messages)
 // ============================================
 
-// Send reminders manually (force send)
+// Send reminders manually (POST request) - with flash messages
 router.post('/reminders/send-now', async (req, res) => {
   try {
     console.log('🔧 Manually triggering reminders (FORCED)...');
-    // Pass true to force send regardless of day
     const result = await ReminderService.sendMonthlyReminders(true);
     
-    res.json({
-      success: true,
-      message: 'Reminders sent successfully',
-      result
-    });
+    // Format flash messages as arrays to match your system
+    if (result.sent === 0 && result.skipped === 0 && result.errors === 0) {
+      req.flash('info', ['No reminders needed - all members have paid TSh 20,000 or more this month.']);
+    } else if (result.errors > 0) {
+      req.flash('warning', [`Reminders partially sent: ${result.sent} sent, ${result.skipped} skipped, ${result.errors} errors.`]);
+    } else if (result.sent === 0) {
+      req.flash('info', [`No reminders sent: ${result.skipped} members skipped (already paid ≥ TSh 20,000).`]);
+    } else {
+      req.flash('success', [`✅ Successfully sent ${result.sent} reminder emails! ${result.skipped} members skipped (already paid ≥ TSh 20,000).`]);
+    }
+    
+    // Redirect to status page to show the flash message
+    res.redirect('/contributions/reminders/status');
+    
   } catch (error) {
     console.error('Send error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    req.flash('error', [`Failed to send reminders: ${error.message}`]);
+    res.redirect('/contributions/reminders/status');
   }
 });
 
-// update GET version
+// Send reminders manually (GET request) - with flash messages
 router.get('/reminders/send-now', async (req, res) => {
   try {
     console.log('🔧 Manually triggering reminders via GET (FORCED)...');
     const result = await ReminderService.sendMonthlyReminders(true);
     
-    res.json({
-      success: true,
-      message: 'Reminders sent successfully',
-      result
-    });
+    // Format flash messages as arrays to match your system
+    if (result.sent === 0 && result.skipped === 0 && result.errors === 0) {
+      req.flash('info', ['No reminders needed - all members have paid TSh 20,000 or more this month.']);
+    } else if (result.errors > 0) {
+      req.flash('warning', [`Reminders partially sent: ${result.sent} sent, ${result.skipped} skipped, ${result.errors} errors.`]);
+    } else if (result.sent === 0) {
+      req.flash('info', [`No reminders sent: ${result.skipped} members skipped (already paid ≥ TSh 20,000).`]);
+    } else {
+      req.flash('success', [`✅ Successfully sent ${result.sent} reminder emails! ${result.skipped} members skipped (already paid ≥ TSh 20,000).`]);
+    }
+    
+    // Redirect to status page to show the flash message
+    res.redirect('/contributions/reminders/status');
+    
   } catch (error) {
     console.error('Send error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    req.flash('error', [`Failed to send reminders: ${error.message}`]);
+    res.redirect('/contributions/reminders/status');
   }
 });
 
-
-
-// Status page
+// Status page - already uses flash messages from above
 router.get('/reminders/status', async (req, res) => {
   try {
     const members = await ReminderService.getActiveMembers();
@@ -863,7 +875,7 @@ router.get('/reminders/status', async (req, res) => {
     });
   } catch (error) {
     console.error('Status error:', error);
-    req.flash('error', 'Error loading reminder status: ' + error.message);
+    req.flash('error', ['Error loading reminder status: ' + error.message]);
     res.redirect('/contributions');
   }
 });
