@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -129,7 +128,7 @@
       transition: max-height 0.3s ease;
     }
     .filter-main.show {
-      max-height: 500px;
+      max-height: 1000px;
     }
     .sticky-top {
       position: sticky;
@@ -194,6 +193,89 @@
     .roi-refund-btn {
       padding: 2px 8px;
       font-size: 0.75rem;
+    }
+    /* Permanent action buttons - Mobile responsive */
+    .permanent-action-buttons {
+      background: #f8f9fa;
+      border-top: 1px solid #dee2e6;
+      padding: 15px;
+      border-radius: 0 0 10px 10px;
+    }
+    .action-buttons-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .action-buttons-container .btn-group.view-toggle {
+      margin-left: auto;
+    }
+    /* Mobile-specific adjustments */
+    @media (max-width: 768px) {
+      .permanent-action-buttons {
+        padding: 12px 10px;
+      }
+      .action-buttons-container {
+        flex-direction: column;
+        gap: 10px;
+      }
+      .action-buttons-container .btn-group.view-toggle {
+        margin-left: 0;
+        width: 100%;
+        justify-content: center;
+      }
+      .action-buttons-container .btn-group.view-toggle .btn {
+        flex: 1;
+      }
+      .action-buttons-container .btn-group:not(.view-toggle) {
+        width: 100%;
+      }
+      .action-buttons-container > .btn:not(.dropdown-toggle) {
+        width: 100%;
+      }
+      .filter-main.show {
+        max-height: 1500px; /* More space for mobile */
+      }
+      .filter-advanced.show {
+        max-height: 800px;
+      }
+      .stats-card .h5 {
+        font-size: 1.1rem;
+      }
+      .table-actions {
+        width: auto;
+      }
+      .transaction-id {
+        max-width: 100px;
+        font-size: 0.7rem;
+      }
+      .payment-type-badge {
+        font-size: 0.65rem;
+        padding: 0.2em 0.4em;
+      }
+      .status-badge {
+        font-size: 0.65rem;
+        padding: 0.3em 0.5em;
+      }
+    }
+    @media (max-width: 576px) {
+      .filter-main.show {
+        max-height: 2000px;
+      }
+      .card-header h5, .card-header h6 {
+        font-size: 0.9rem;
+      }
+      .table th, .table td {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+      }
+      .table-actions .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+      }
+      .dropdown-menu {
+        min-width: 180px;
+      }
     }
   </style>
 </head>
@@ -324,7 +406,7 @@
                 
                 <div class="row g-3">
                   <!-- Basic Filters -->
-                  <div class="col-md-4">
+                  <div class="col-md-4 col-12">
                     <label class="form-label fw-bold">Date Range</label>
                     <div class="row g-2">
                       <div class="col-6">
@@ -336,7 +418,7 @@
                     </div>
                   </div>
 
-                  <div class="col-md-2">
+                  <div class="col-md-2 col-6">
                     <label class="form-label fw-bold">Status</label>
                     <select name="status" class="form-select form-select-sm">
                       <option value="">All Status</option>
@@ -346,7 +428,7 @@
                     </select>
                   </div>
 
-                  <div class="col-md-3">
+                  <div class="col-md-3 col-6">
                     <label class="form-label fw-bold">Payment Type</label>
                     <select name="payment_type" class="form-select form-select-sm">
                       <option value="">All Types</option>
@@ -357,7 +439,7 @@
                     </select>
                   </div>
 
-                  <div class="col-md-3">
+                  <div class="col-md-3 col-12">
                     <label class="form-label fw-bold">Amount Range</label>
                     <select name="amount_range" class="form-select form-select-sm">
                       <option value="">Any Amount</option>
@@ -382,23 +464,23 @@
                   <div class="col-12 filter-advanced" id="advancedFilters">
                     <div class="row g-3">
                       <% if (viewType === 'all') { %>
-                      <div class="col-md-6">
+                      <div class="col-md-6 col-12">
                         <label class="form-label fw-bold">Member Search</label>
                         <input type="text" name="member_search" class="form-control form-control-sm" value="<%= typeof member_search !== 'undefined' ? member_search : '' %>" placeholder="Search by member name...">
                       </div>
                       <% } %>
                       
-                      <div class="col-md-6">
+                      <div class="col-md-6 col-12">
                         <label class="form-label fw-bold">Transaction ID</label>
                         <input type="text" name="transaction_id" class="form-control form-control-sm" value="<%= typeof transaction_id !== 'undefined' ? transaction_id : '' %>" placeholder="Search by transaction ID...">
                       </div>
 
-                      <div class="col-md-6">
+                      <div class="col-md-6 col-12">
                         <label class="form-label fw-bold">Phone Number</label>
                         <input type="text" name="phone_number" class="form-control form-control-sm" value="<%= typeof phone_number !== 'undefined' ? phone_number : '' %>" placeholder="Search by phone number...">
                       </div>
 
-                      <div class="col-md-3">
+                      <div class="col-md-3 col-6">
                         <label class="form-label fw-bold">Sort By</label>
                         <select name="sort_by" class="form-select form-select-sm">
                           <option value="created_at_desc" <%= (typeof sort_by !== 'undefined' && sort_by === 'created_at_desc') ? 'selected' : 'selected' %>>Newest First</option>
@@ -408,7 +490,7 @@
                         </select>
                       </div>
 
-                      <div class="col-md-3">
+                      <div class="col-md-3 col-6">
                         <label class="form-label fw-bold">Results Per Page</label>
                         <select name="per_page" class="form-select form-select-sm">
                           <option value="10" <%= (typeof per_page !== 'undefined' && per_page == 10) ? 'selected' : '' %>>10</option>
@@ -417,44 +499,6 @@
                           <option value="100" <%= (typeof per_page !== 'undefined' && per_page == 100) ? 'selected' : '' %>>100</option>
                         </select>
                       </div>
-                    </div>
-                  </div>
-
-                  <!-- Action Buttons -->
-                  <div class="col-12">
-                    <div class="d-flex gap-2 flex-wrap">
-                      <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="fas fa-search me-1"></i>Apply Filters
-                      </button>
-                      <a href="/payments/history?view=<%= viewType %>" class="btn btn-outline-secondary btn-sm">
-                        <i class="fas fa-times me-1"></i>Clear All
-                      </a>
-                      <button type="button" class="btn btn-outline-info btn-sm" onclick="saveFilterPreset()">
-                        <i class="fas fa-save me-1"></i>Save Preset
-                      </button>
-                      <div class="btn-group">
-                        <button type="button" class="btn btn-outline-success btn-sm dropdown-toggle" data-bs-toggle="dropdown">
-                          <i class="fas fa-download me-1"></i>Export
-                        </button>
-                        <ul class="dropdown-menu">
-                          <li><a class="dropdown-item" href="#" onclick="exportToCSV()"><i class="fas fa-file-csv me-2"></i>Export CSV</a></li>
-                          <li><a class="dropdown-item" href="/payments/history/pdf?view=<%= viewType %><%= typeof buildExportQueryString === 'function' ? buildExportQueryString() : '' %>"><i class="fas fa-file-pdf me-2"></i>Export PDF</a></li>
-                        </ul>
-                      </div>
-                      
-                      <!-- View Toggle for authorized roles -->
-                      <% if (user.role === 'chief_signatory' || user.role === 'assistant_signatory' || user.role === 'chairman') { %>
-                      <div class="btn-group view-toggle ms-2">
-                        <a href="/payments/history?view=individual<%= typeof buildQueryString === 'function' ? buildQueryString({view: 'individual'}) : '' %>" 
-                           class="btn <%= viewType === 'individual' ? 'btn-primary' : 'btn-outline-primary' %> btn-sm">
-                          <i class="fas fa-user me-1"></i>My Payments
-                        </a>
-                        <a href="/payments/history?view=all<%= typeof buildQueryString === 'function' ? buildQueryString({view: 'all'}) : '' %>" 
-                           class="btn <%= viewType === 'all' ? 'btn-primary' : 'btn-outline-primary' %> btn-sm">
-                          <i class="fas fa-users me-1"></i>All Members
-                        </a>
-                      </div>
-                      <% } %>
                     </div>
                   </div>
 
@@ -495,6 +539,44 @@
                   <% } %>
                 </div>
               </form>
+            </div>
+          </div>
+
+          <!-- PERMANENT ACTION BUTTONS SECTION (always visible) -->
+          <div class="permanent-action-buttons">
+            <div class="action-buttons-container">
+              <button type="submit" form="filterForm" class="btn btn-primary btn-sm">
+                <i class="fas fa-search me-1"></i>Apply Filters
+              </button>
+              <a href="/payments/history?view=<%= viewType %>" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-times me-1"></i>Clear All
+              </a>
+              <button type="button" class="btn btn-outline-info btn-sm" onclick="saveFilterPreset()">
+                <i class="fas fa-save me-1"></i>Save Preset
+              </button>
+              <div class="btn-group">
+                <button type="button" class="btn btn-outline-success btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                  <i class="fas fa-download me-1"></i>Export
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="#" onclick="exportToCSV()"><i class="fas fa-file-csv me-2"></i>Export CSV</a></li>
+                  <li><a class="dropdown-item" href="/payments/history/pdf?view=<%= viewType %><%= typeof buildExportQueryString === 'function' ? buildExportQueryString() : '' %>"><i class="fas fa-file-pdf me-2"></i>Export PDF</a></li>
+                </ul>
+              </div>
+              
+              <!-- View Toggle for authorized roles -->
+              <% if (user.role === 'chief_signatory' || user.role === 'assistant_signatory' || user.role === 'chairman') { %>
+              <div class="btn-group view-toggle">
+                <a href="/payments/history?view=individual<%= typeof buildQueryString === 'function' ? buildQueryString({view: 'individual'}) : '' %>" 
+                   class="btn <%= viewType === 'individual' ? 'btn-primary' : 'btn-outline-primary' %> btn-sm">
+                  <i class="fas fa-user me-1"></i>My Payments
+                </a>
+                <a href="/payments/history?view=all<%= typeof buildQueryString === 'function' ? buildQueryString({view: 'all'}) : '' %>" 
+                   class="btn <%= viewType === 'all' ? 'btn-primary' : 'btn-outline-primary' %> btn-sm">
+                  <i class="fas fa-users me-1"></i>All Members
+                </a>
+              </div>
+              <% } %>
             </div>
           </div>
         </div>
@@ -1280,154 +1362,159 @@ function processPayment(paymentData, formData = {}) {
             ...formData
           })
         })
-        .then(response => response.json())
-        .then(paymentResult => {
-          if (paymentResult.success) {
-            // For contributions, also add to contributions table
-            if (currentPaymentData.paymentType === 'Contribution') {
-              return fetch('/contributions/add-transaction', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                  member_id: currentPaymentData.memberId,
-                  amount: currentPaymentData.amount,
-                  transaction_date: new Date().toISOString().split('T')[0]
-                })
+      .then(response => response.json())
+      .then(paymentResult => {
+        if (paymentResult.success) {
+          // For contributions, also add to contributions table
+          if (currentPaymentData.paymentType === 'Contribution') {
+            return fetch('/contributions/add-transaction', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: new URLSearchParams({
+                member_id: currentPaymentData.memberId,
+                amount: currentPaymentData.amount,
+                transaction_date: new Date().toISOString().split('T')[0]
               })
-              .then(response => {
-                if (response.redirected) {
-                  return { success: true };
-                } else {
-                  return response.text().then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const errorFlash = doc.querySelector('.alert-danger');
-                    
-                    if (errorFlash) {
-                      throw new Error(errorFlash.textContent.trim());
-                    } else {
-                      return { success: true };
-                    }
-                  });
-                }
-              });
-            } else {
-              // For ROI and Refund, just return success
-              return { success: true };
-            }
+            })
+            .then(response => {
+              if (response.redirected) {
+                return { success: true };
+              } else {
+                return response.text().then(html => {
+                  const parser = new DOMParser();
+                  const doc = parser.parseFromString(html, 'text/html');
+                  const errorFlash = doc.querySelector('.alert-danger');
+                  
+                  if (errorFlash) {
+                    throw new Error(errorFlash.textContent.trim());
+                  } else {
+                    return { success: true };
+                  }
+                });
+              }
+            });
           } else {
-            throw new Error(paymentResult.message || 'Failed to update payment status');
+            // For ROI and Refund, just return success
+            return { success: true };
           }
-        })
-        .then(() => {
-          // Close modal
-          const modal = bootstrap.Modal.getInstance(document.getElementById('markAsPaidModal'));
-          modal.hide();
-          
-          // Show success message
-          alert(`Payment marked as paid and processed as ${currentPaymentData.paymentType} successfully!`);
-          
-          // Reload page after a short delay
-          setTimeout(() => {
-            location.reload();
-          }, 1500);
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          alert('Error: ' + error.message);
-        });
+        } else {
+          throw new Error(paymentResult.message || 'Failed to update payment status');
+        }
+      })
+      .then(() => {
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('markAsPaidModal'));
+        modal.hide();
+        
+        // Show success message
+        alert(`Payment marked as paid and processed as ${currentPaymentData.paymentType} successfully!`);
+        
+        // Reload page after a short delay
+        setTimeout(() => {
+          location.reload();
+        }, 1500);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
       });
-
-      // Initialize filter count
-      updateActiveFiltersCount();
-
-      // Add change listeners to filter form
-      const filterForm = document.getElementById('filterForm');
-      if (filterForm) {
-        filterForm.addEventListener('change', updateActiveFiltersCount);
-        filterForm.addEventListener('input', updateActiveFiltersCount);
-      }
-
-      // Add click listener to main filter header
-      const mainFilterHeader = document.querySelector('.card-header.bg-light');
-      if (mainFilterHeader) {
-        mainFilterHeader.addEventListener('click', toggleMainFilters);
-      }
-
-      // Load saved toggle states from localStorage
-      const statsCollapsed = localStorage.getItem('statsSectionCollapsed') === 'true';
-      const mainFilterCollapsed = localStorage.getItem('mainFilterCollapsed') === 'true';
-      const advancedFilterCollapsed = localStorage.getItem('advancedFilterCollapsed') === 'true';
-
-      // Apply saved states
-      if (statsCollapsed) {
-        toggleStatsSection(); // Collapse stats
-      }
-      
-      if (!mainFilterCollapsed) {
-        toggleMainFilters(); // Show main filters if not collapsed
-      }
-      
-      if (!advancedFilterCollapsed) {
-        toggleAdvancedFilters(); // Show advanced filters if not collapsed
-      }
     });
 
-    // Export to CSV functionality
-    function exportToCSV() {
-      const table = document.getElementById('paymentsTable');
-      if (!table) return;
-      
-      let csv = [];
-      const rows = table.querySelectorAll('tr');
-      
-      for (let i = 0; i < rows.length; i++) {
-        let row = [], cols = rows[i].querySelectorAll('td, th');
-        
-        for (let j = 0; j < cols.length; j++) {
-          // Remove icons and HTML from cell content
-          let text = cols[j].innerText.replace(/,/g, '');
-          row.push(text);
-        }
-        
-        csv.push(row.join(','));
-      }
+    // Initialize filter count
+    updateActiveFiltersCount();
 
-      // Download CSV file
-      const csvContent = "data:text/csv;charset=utf-8," + csv.join('\n');
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "payment_history_<%= new Date().toISOString().split('T')[0] %>.csv");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    // Add change listeners to filter form
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+      filterForm.addEventListener('change', updateActiveFiltersCount);
+      filterForm.addEventListener('input', updateActiveFiltersCount);
     }
 
-    // Auto-refresh for pending payments (every 2 minutes)
-    <% if (payments && payments.some(p => p.status === 'Pending')) { %>
-      setTimeout(() => {
-        window.location.reload();
-      }, 120000); // 2 minutes
-    <% } %>
-
-    // Initialize dropdowns and tooltips
-    document.addEventListener('DOMContentLoaded', function() {
-      // Initialize all dropdowns
-      var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
-      var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
-        return new bootstrap.Dropdown(dropdownToggleEl)
+    // Add click listener to main filter header (EXCLUDE the permanent action buttons area)
+    const mainFilterHeader = document.querySelector('.card-header.bg-light');
+    if (mainFilterHeader) {
+      mainFilterHeader.addEventListener('click', function(e) {
+        // Don't toggle if clicking on badges or buttons inside header
+        if (!e.target.closest('.badge') && !e.target.closest('.btn')) {
+          toggleMainFilters();
+        }
       });
+    }
 
-      // Initialize tooltips
-      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
-      });
+    // Load saved toggle states from localStorage
+    const statsCollapsed = localStorage.getItem('statsSectionCollapsed') === 'true';
+    const mainFilterCollapsed = localStorage.getItem('mainFilterCollapsed') === 'true';
+    const advancedFilterCollapsed = localStorage.getItem('advancedFilterCollapsed') === 'true';
+
+    // Apply saved states
+    if (statsCollapsed) {
+      toggleStatsSection(); // Collapse stats
+    }
+    
+    if (!mainFilterCollapsed) {
+      toggleMainFilters(); // Show main filters if not collapsed
+    }
+    
+    if (!advancedFilterCollapsed) {
+      toggleAdvancedFilters(); // Show advanced filters if not collapsed
+    }
+  });
+
+  // Export to CSV functionality
+  function exportToCSV() {
+    const table = document.getElementById('paymentsTable');
+    if (!table) return;
+    
+    let csv = [];
+    const rows = table.querySelectorAll('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+      let row = [], cols = rows[i].querySelectorAll('td, th');
+      
+      for (let j = 0; j < cols.length; j++) {
+        // Remove icons and HTML from cell content
+        let text = cols[j].innerText.replace(/,/g, '');
+        row.push(text);
+      }
+      
+      csv.push(row.join(','));
+    }
+
+    // Download CSV file
+    const csvContent = "data:text/csv;charset=utf-8," + csv.join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "payment_history_<%= new Date().toISOString().split('T')[0] %>.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  // Auto-refresh for pending payments (every 2 minutes)
+  <% if (payments && payments.some(p => p.status === 'Pending')) { %>
+    setTimeout(() => {
+      window.location.reload();
+    }, 120000); // 2 minutes
+  <% } %>
+
+  // Initialize dropdowns and tooltips
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all dropdowns
+    var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+    var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+      return new bootstrap.Dropdown(dropdownToggleEl)
     });
-  </script>
+
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+  });
+</script>
 </body>
 </html>
 
