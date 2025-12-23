@@ -10,7 +10,7 @@ const paymentService = require('./services/payment');
 console.log('paymentService keys:', Object.keys(paymentService));
 console.log('initiatePayment is function?', typeof paymentService.initiatePayment);
 
-
+const ReminderJob = require('./jobs/reminderJob');
 const staticRoutes = require('./routes/staticRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const memberRoutes = require('./routes/memberRoutes');
@@ -84,6 +84,13 @@ app.use('/', requireVerifiedEmail,  supportRoutes);
 app.use('/roi', roiRoutes);
 app.use('/refunds', refundRoutes);
 
+
+// Add this to your server.js after all routes are registered, before the 404 handler
+app.use((req, res, next) => {
+  console.log(`📡 Route accessed: ${req.method} ${req.url}`);
+  next();
+});
+
 // 404 fallback
 app.use((req, res) => res.status(404).send('Page Not Found'));
 
@@ -98,6 +105,18 @@ setInterval(() => {
   }
 }, 60 * 60 * 1000);
 
+// Start reminder job AFTER all routes are set up
 // Start server
-app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
+  
+  // Initialize reminder job after server starts
+  try {
+    ReminderJob.start();
+    console.log('✅ Monthly reminder job initialized');
+  } catch (error) {
+    console.error('❌ Error initializing reminder job:', error);
+  }
+});
+
 

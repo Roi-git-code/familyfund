@@ -1656,6 +1656,380 @@ const sendSupportResponseEmail = async (userEmail, supportData) => {
   }
 };
 
+
+// Send Monthly Contribution Reminder Email
+const sendMonthlyContributionReminder = async (email, memberData) => {
+  const { 
+    memberName, 
+    memberId,
+    currentMonthTotal,
+    requiredAmount,
+    remainingAmount,
+    currentMonth,
+    currentYear,
+    dueDate
+  } = memberData;
+
+  const mailOptions = {
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
+    to: email,
+    subject: `📅 Monthly Contribution Reminder - ${currentMonth} ${currentYear}`,
+    html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Contribution Reminder</title>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            line-height: 1.6; 
+            color: #333; 
+            background-color: #f8f9fa; 
+        }
+        
+        .email-container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: #ffffff; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+        }
+        
+        .email-header { 
+            background: linear-gradient(135deg, #2c3e50, #3498db); 
+            color: white; 
+            padding: 30px 40px; 
+            text-align: center; 
+        }
+        
+        .email-header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .reminder-banner {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .progress-container {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .payment-options {
+            background: #e8f4fd;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .payment-method {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #dee2e6;
+        }
+        
+        .payment-icon {
+            font-size: 24px;
+            width: 40px;
+            text-align: center;
+        }
+        
+        .due-date-notice {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            display: inline-block;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 16px 0;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2980b9, #21618c);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+        
+        .contact-support {
+            background: #fff3cd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .support-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .important-dates {
+            background: #e8f4fd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .date-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .date-item:last-child {
+            border-bottom: none;
+        }
+        
+        @media (max-width: 600px) {
+            .email-body {
+                padding: 24px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .email-header {
+                padding: 24px;
+            }
+            
+            .email-header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="email-header">
+            <h1>Family Fund Management System</h1>
+            <p>Monthly Contribution Reminder</p>
+        </div>
+        
+        <!-- Body -->
+        <div style="padding: 40px;">
+            <p>Dear ${memberName},</p>
+            
+            <div class="reminder-banner">
+                <h2 style="margin: 0; font-size: 24px; color: #856404;">📅 Monthly Contribution Due</h2>
+                <p style="margin: 10px 0 0 0; color: #856404;">
+                    Please complete your contribution for ${currentMonth} ${currentYear}
+                </p>
+            </div>
+            
+            <!-- Contribution Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Paid This Month</div>
+                    <div class="stat-value">TSh ${Number(currentMonthTotal).toLocaleString()}</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-label">Remaining Balance</div>
+                    <div class="stat-value" style="color: #dc3545;">TSh ${Number(remainingAmount).toLocaleString()}</div>
+                </div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Progress: ${Math.round((currentMonthTotal / requiredAmount) * 100)}%</span>
+                    <span>Target: TSh ${Number(requiredAmount).toLocaleString()}</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: ${(currentMonthTotal / requiredAmount) * 100}%;"></div>
+                </div>
+            </div>
+            
+            <!-- Due Date Notice -->
+            <div class="due-date-notice">
+                <h3 style="margin: 0 0 10px 0; color: #721c24;">⚠️ Important Notice</h3>
+                <p style="margin: 0; color: #721c24;">
+                    <strong>Monthly contributions are due by the end of each month.</strong><br>
+                    Late payments may affect your benefits and services.
+                </p>
+            </div>
+            
+            <!-- Payment Options -->
+            <div class="payment-options">
+                <h3 style="margin-top: 0; color: #2c3e50;">💳 Payment Methods</h3>
+                
+                <div class="payment-method">
+                    <div class="payment-icon">📱</div>
+                    <div>
+                        <strong>Azam Lipia</strong><br>
+                        <span>Use your registered phone number</span>
+                    </div>
+                </div>
+                
+                <div class="payment-method">
+                    <div class="payment-icon">🏦</div>
+                    <div>
+                        <strong>Bank Transfer</strong><br>
+                        <span>Contact support for bank details</span>
+                    </div>
+                </div>
+                
+                <div class="payment-method">
+                    <div class="payment-icon">👥</div>
+                    <div>
+                        <strong>Office Payment</strong><br>
+                        <span>Visit our office during working hours</span>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin: 20px 0;">
+                    <a href="${process.env.BASE_URL || 'https://familyfund.onrender.com'}/payments" 
+                       class="btn-primary">
+                       💰 Make Payment Now
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Important Dates -->
+            <div class="important-dates">
+                <h3 style="margin-top: 0; color: #2c3e50;">📅 Important Dates</h3>
+                <div class="date-item">
+                    <span>Current Month:</span>
+                    <span><strong>${currentMonth} ${currentYear}</strong></span>
+                </div>
+                <div class="date-item">
+                    <span>Monthly Target:</span>
+                    <span><strong>TSh ${Number(requiredAmount).toLocaleString()}</strong></span>
+                </div>
+                <div class="date-item">
+                    <span>Due Date:</span>
+                    <span><strong>End of ${currentMonth}</strong></span>
+                </div>
+                <div class="date-item">
+                    <span>Today's Date:</span>
+                    <span><strong>${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</strong></span>
+                </div>
+            </div>
+            
+            <!-- Support Contact -->
+            <div class="contact-support">
+                <h3 style="margin-top: 0; color: #2c3e50;">📞 Need Assistance?</h3>
+                <p>If you have any questions about your contribution:</p>
+                
+                <div class="support-item">
+                    <span style="font-weight: 600;">📧 Email:</span>
+                    <span>itzfamilyfund@mail.com</span>
+                </div>
+                <div class="support-item">
+                    <span style="font-weight: 600;">💬 WhatsApp:</span>
+                    <span>+255 782 702 502</span>
+                </div>
+                <div class="support-item">
+                    <span style="font-weight: 600;">📞 Phone:</span>
+                    <span>+255 763 724 710</span>
+                </div>
+                
+                <p style="margin: 15px 0 0 0; font-size: 14px; color: #666;">
+                    Please mention your Member ID (<strong>${memberId}</strong>) when contacting support.
+                </p>
+            </div>
+            
+            <!-- Automated Notice -->
+            <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 6px; text-align: center;">
+                <p style="margin: 0; color: #666; font-size: 12px;">
+                    🔄 This is an automated monthly reminder. You'll receive updates on the 20th, 24th, 28th, and 30th until your contribution is complete.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+    `
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Monthly contribution reminder sent to ${memberName} (${email})`);
+    console.log(`📊 Current contribution: TSh ${currentMonthTotal}, Remaining: TSh ${remainingAmount}`);
+    return info;
+  } catch (error) {
+    console.error(`❌ Error sending monthly contribution reminder:`, error);
+    throw new Error('Failed to send contribution reminder email');
+  }
+};
+
 // Module Exports
 module.exports = { 
   sendResetEmail, 
@@ -1666,6 +2040,6 @@ module.exports = {
   sendMemberUpdateEmail,
   sendMemberDeletionEmail,
   sendSupportNotificationEmail,
-  sendSupportResponseEmail
+  sendSupportResponseEmail,
+  sendMonthlyContributionReminder
 };
-

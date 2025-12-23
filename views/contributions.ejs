@@ -74,6 +74,61 @@
 .filter-toggle.collapsed .icon {
   transform: rotate(-90deg);
 }
+
+        .reminder-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .reminder-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(255, 152, 0, 0.4);
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .reminder-btn:active {
+            transform: translateY(0);
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
 </style>
 
 </head>
@@ -90,6 +145,13 @@
     <span class="icon">▼</span>
     <span>Show Filters</span>
   </div>
+
+      <!-- Floating Reminder Button -->
+    <a href="/contributions/reminders/status" class="reminder-btn">
+        📅 Reminders
+        <span class="notification-badge" id="reminderCount">!</span>
+    </a>
+
 
   <!-- Filter Form Container -->
   <div class="collapse" id="filterFormContainer">
@@ -185,6 +247,11 @@
     ].filter(Boolean).join('&') %>" class="btn btn-success">Download Contributions PDF</a>
     <button onclick="exportTableToCSV('contributions.csv')" class="btn btn-secondary">Export CSV</button>
   </div>
+
+   <!--  Reminder Status Button -->
+    <a href="/contributions/reminders/status" class="btn btn-warning">
+        <i class="bi bi-bell-fill"></i> Reminder Status
+    </a>
 
   <!-- Chart -->
   <canvas id="yearChart" class="d-block mx-auto mb-4" style="max-width:900px;"></canvas>

@@ -1,15 +1,15 @@
 
-
 const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const multer = require('multer');
 const { parse } = require('csv-parse');
 const contributionModel = require('../models/contributionModel');
-const { requireRole } = require('../middleware/authMiddleware');
+const { requireRole, allowRoles } = require('../middleware/authMiddleware');
 const upload = multer({ dest: 'uploads/' });
 const PDFDocument = require('pdfkit');
 const path = require('path');
+const ReminderService = require('../services/reminderService');
 
 // ----------------------------------------
 // Shared constants/utilities
@@ -763,6 +763,108 @@ router.get('/download/transactions/pdf', async (req, res) => {
     console.error('Error generating transactions PDF:', err);
     req.flash('error', 'Failed to generate PDF.');
     res.redirect('/contributions/transactions');
+  }
+});
+
+// ============================================
+// REMINDER ROUTES
+// ============================================
+
+// Send reminders manually (force send)
+router.post('/reminders/send-now', async (req, res) => {
+  try {
+    console.log('🔧 Manually triggering reminders (FORCED)...');
+    // Pass true to force send regardless of day
+    const result = await ReminderService.sendMonthlyReminders(true);
+    
+    res.json({
+      success: true,
+      message: 'Reminders sent successfully',
+      result
+    });
+  } catch (error) {
+    console.error('Send error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// update GET version
+router.get('/reminders/send-now', async (req, res) => {
+  try {
+    console.log('🔧 Manually triggering reminders via GET (FORCED)...');
+    const result = await ReminderService.sendMonthlyReminders(true);
+    
+    res.json({
+      success: true,
+      message: 'Reminders sent successfully',
+      result
+    });
+  } catch (error) {
+    console.error('Send error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+
+
+// Status page
+router.get('/reminders/status', async (req, res) => {
+  try {
+    const members = await ReminderService.getActiveMembers();
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1;
+    const currentYear = today.getFullYear();
+    const requiredAmount = 20000;
+    
+    const memberStatuses = [];
+    
+    // Check first 15 members for performance
+    const membersToCheck = members.slice(0, 15);
+    
+    for (const member of membersToCheck) {
+      const currentMonthTotal = await ReminderService.getCurrentMonthContribution(member.member_id);
+      const remainingAmount = Math.max(0, requiredAmount - currentMonthTotal);
+      const needsReminder = currentMonthTotal < requiredAmount;
+      
+      memberStatuses.push({
+        id: member.member_id,
+        name: `${member.first_name} ${member.sur_name}`,
+        email: member.email,
+        currentContribution: currentMonthTotal,
+        requiredAmount,
+        remainingAmount,
+        needsReminder,
+        percentage: Math.round((currentMonthTotal / requiredAmount) * 100)
+      });
+    }
+    
+    // Count how many need reminders
+    const needReminderCount = membersToCheck.filter(m => {
+      const total = memberStatuses.find(ms => ms.id === m.member_id)?.currentContribution || 0;
+      return total < requiredAmount;
+    }).length;
+    
+    res.render('reminder-status', {
+      user: req.session.user,
+      members: memberStatuses,
+      totalMembers: members.length,
+      checkedMembers: membersToCheck.length,
+      needReminderCount: needReminderCount,
+      currentMonth: today.toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+      today: today.toLocaleDateString(),
+      isReminderDay: ReminderService.isReminderDay(),
+      now: new Date().toLocaleTimeString()
+    });
+  } catch (error) {
+    console.error('Status error:', error);
+    req.flash('error', 'Error loading reminder status: ' + error.message);
+    res.redirect('/contributions');
   }
 });
 

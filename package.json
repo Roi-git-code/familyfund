@@ -40,6 +40,7 @@
     "googleapis": "^166.0.0",
     "memorystore": "^1.6.7",
     "multer": "^2.0.2",
+    "node-cron": "^4.2.1",
     "nodemailer": "^7.0.10",
     "pdfkit": "^0.17.1",
     "pg": "^8.16.3",
