@@ -1,4 +1,5 @@
 
+
 // utils/mail.js
 const nodemailer = require('nodemailer');
 
@@ -1095,18 +1096,24 @@ const sendMemberDeletionEmail = async (email, memberData) => {
 };
 
 
-// Send Support Notification Email to Admin
+// Send Support Notification Email to Officers
 const sendSupportNotificationEmail = async (supportData) => {
   const { 
     messageId, 
     name, 
-    email, 
+    email: userEmail, 
     subject, 
-    urgency, 
+    urgency = 'medium', 
     message, 
-    createdAt 
+    createdAt,
+    toEmail,
+    memberId,
+    userId
   } = supportData;
 
+  // Get recipient name from email
+  const recipientName = toEmail ? toEmail.split('@')[0] : 'Officer';
+  
   const urgencyColors = {
     critical: '#dc3545',
     high: '#fd7e14', 
@@ -1124,10 +1131,25 @@ const sendSupportNotificationEmail = async (supportData) => {
   const urgencyColor = urgencyColors[urgency] || '#6c757d';
   const urgencyLabel = urgencyLabels[urgency] || 'STANDARD';
 
+  // Determine response time based on urgency
+  let responseTime = '2-4 hours';
+  let responseColor = '#28a745';
+  
+  if (urgency === 'critical') {
+    responseTime = '1 hour or less';
+    responseColor = '#dc3545';
+  } else if (urgency === 'high') {
+    responseTime = '1-2 hours';
+    responseColor = '#fd7e14';
+  } else if (urgency === 'low') {
+    responseTime = '24 hours';
+    responseColor = '#6c757d';
+  }
+
   const mailOptions = {
-    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
-    to: process.env.ADMIN_EMAIL || 'itzfamilyfund@gmail.com',
-    subject: `📧 New Support Message: ${subject}`,
+    from: process.env.SMTP_FROM || `FamilyFund Support <${process.env.SUPPORT_EMAIL || 'itzfamilyfund@gmail.com'}>`,
+    to: toEmail || process.env.ADMIN_EMAIL || 'itzfamilyfund@gmail.com',
+    subject: `📧 [${urgencyLabel}] Support Request: ${subject} - Ticket #${messageId}`,
     html: `
 <!DOCTYPE html>
 <html lang="en">
@@ -1150,7 +1172,7 @@ const sendSupportNotificationEmail = async (supportData) => {
         }
         
         .email-container { 
-            max-width: 600px; 
+            max-width: 700px; 
             margin: 0 auto; 
             background: #ffffff; 
             border-radius: 12px; 
@@ -1176,28 +1198,71 @@ const sendSupportNotificationEmail = async (supportData) => {
             opacity: 0.9;
         }
         
+        .recipient-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
         .email-body { 
             padding: 40px; 
         }
         
-        .urgency-badge {
-            display: inline-block;
+        .urgency-banner {
             background: ${urgencyColor};
             color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .ticket-info {
+            display: flex;
+            justify-content: space-between;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
             font-size: 14px;
-            margin-bottom: 20px;
+        }
+        
+        .ticket-info div {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .ticket-info .label {
+            font-weight: 600;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        
+        .ticket-info .value {
+            font-size: 16px;
+            color: #2c3e50;
+        }
+        
+        .user-details {
+            background: #e8f4fd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .user-details h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
         }
         
         .details-table { 
             width: 100%; 
             border-collapse: collapse; 
             margin: 20px 0; 
-            background: #f8f9fa;
-            border-radius: 8px;
-            overflow: hidden;
         }
         
         .details-table td { 
@@ -1209,16 +1274,31 @@ const sendSupportNotificationEmail = async (supportData) => {
             font-weight: 600; 
             color: #2c3e50; 
             width: 30%; 
-            background: #e9ecef;
+            background: #f8f9fa;
         }
         
         .message-box { 
             background: white; 
-            padding: 20px; 
+            padding: 25px; 
             border-left: 4px solid #3498db; 
-            margin: 20px 0; 
+            margin: 25px 0; 
             border-radius: 0 8px 8px 0;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .message-content {
+            white-space: pre-wrap;
+            line-height: 1.8;
+            color: #495057;
+            font-size: 15px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin: 30px 0;
+            justify-content: center;
+            flex-wrap: wrap;
         }
         
         .action-button {
@@ -1226,13 +1306,13 @@ const sendSupportNotificationEmail = async (supportData) => {
             background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
             text-decoration: none;
-            padding: 12px 24px;
+            padding: 14px 28px;
             border-radius: 6px;
             font-weight: 600;
-            font-size: 14px;
-            margin: 16px 0;
+            font-size: 15px;
             text-align: center;
             transition: all 0.3s ease;
+            min-width: 180px;
         }
         
         .action-button:hover {
@@ -1241,9 +1321,44 @@ const sendSupportNotificationEmail = async (supportData) => {
             box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
         }
         
+        .action-button.resolve {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+        
+        .action-button.resolve:hover {
+            background: linear-gradient(135deg, #20c997, #198754);
+        }
+        
+        .response-time {
+            background: ${responseColor}15;
+            border: 2px solid ${responseColor};
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .response-time h3 {
+            color: ${responseColor};
+            margin: 0 0 10px 0;
+        }
+        
+        .assignment-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        
+        .assignment-info h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        
         .security-notice { 
-            background: #fff3cd; 
-            border: 1px solid #ffeaa7; 
+            background: #f8d7da; 
+            border: 1px solid #f5c6cb; 
             border-radius: 6px; 
             padding: 16px; 
             margin: 20px 0; 
@@ -1252,24 +1367,19 @@ const sendSupportNotificationEmail = async (supportData) => {
         
         .no-reply-notice { 
             background: #e9ecef; 
-            padding: 12px; 
+            padding: 15px; 
             border-radius: 4px; 
             text-align: center; 
-            font-size: 12px; 
+            font-size: 13px; 
             color: #666; 
-            margin-top: 20px; 
-        }
-        
-        .message-content {
-            white-space: pre-wrap;
-            line-height: 1.8;
-            color: #495057;
+            margin-top: 30px; 
         }
         
         .timestamp {
             color: #6c757d;
-            font-size: 12px;
+            font-size: 13px;
             margin-top: 8px;
+            text-align: right;
         }
         
         @media (max-width: 600px) {
@@ -1285,27 +1395,34 @@ const sendSupportNotificationEmail = async (supportData) => {
                 font-size: 24px;
             }
             
+            .ticket-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .action-button {
+                width: 100%;
+            }
+            
             .details-table td {
                 padding: 10px 12px;
                 font-size: 14px;
+                display: block;
+                width: 100%;
             }
             
-            .message-box {
-                padding: 16px;
-            }
-        }
-        
-        @media (max-width: 400px) {
-            .email-body {
-                padding: 16px;
+            .details-table td:first-child {
+                background: #f8f9fa;
+                border-bottom: none;
+                padding-bottom: 5px;
             }
             
-            .details-table {
-                font-size: 13px;
-            }
-            
-            .details-table td {
-                padding: 8px 10px;
+            .details-table td:last-child {
+                padding-top: 5px;
             }
         }
     </style>
@@ -1315,45 +1432,66 @@ const sendSupportNotificationEmail = async (supportData) => {
         <!-- Header -->
         <div class="email-header">
             <h1>Family Fund Management System</h1>
-            <p>New Support Message Received</p>
+            <p>New Support Message Requires Attention</p>
+            <div class="recipient-info">
+                Assigned to: ${recipientName}
+            </div>
         </div>
         
         <!-- Body -->
         <div class="email-body">
-            <div class="urgency-badge">
-                ${urgencyLabel} PRIORITY
+            <div class="urgency-banner">
+                <h2 style="margin: 0; font-size: 24px;">${urgencyLabel} PRIORITY</h2>
+                <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">
+                    ${subject}
+                </p>
             </div>
             
-            <h2 style="color: #2c3e50; margin-bottom: 20px;">New Support Message Details</h2>
+            <!-- Ticket Information -->
+            <div class="ticket-info">
+                <div>
+                    <div class="label">Ticket ID</div>
+                    <div class="value"><strong>#${messageId}</strong></div>
+                </div>
+                <div>
+                    <div class="label">Category</div>
+                    <div class="value">${subject}</div>
+                </div>
+                <div>
+                    <div class="label">Submitted</div>
+                    <div class="value">${new Date(createdAt).toLocaleString()}</div>
+                </div>
+            </div>
             
-            <table class="details-table">
-                <tr>
-                    <td>Message ID:</td>
-                    <td><strong>#${messageId}</strong></td>
-                </tr>
-                <tr>
-                    <td>From:</td>
-                    <td>${name} (${email})</td>
-                </tr>
-                <tr>
-                    <td>Subject:</td>
-                    <td>${subject}</td>
-                </tr>
-                <tr>
-                    <td>Urgency:</td>
-                    <td>
-                        <span style="color: ${urgencyColor}; font-weight: 600;">
-                            ${urgencyLabel}
-                        </span>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Submitted:</td>
-                    <td>${new Date(createdAt).toLocaleString()}</td>
-                </tr>
-            </table>
+            <!-- User Details -->
+            <div class="user-details">
+                <h3>👤 User Information</h3>
+                <table class="details-table">
+                    <tr>
+                        <td>Name:</td>
+                        <td>${name}</td>
+                    </tr>
+                    <tr>
+                        <td>Email:</td>
+                        <td>${userEmail}</td>
+                    </tr>
+                    ${memberId ? `
+                    <tr>
+                        <td>Member ID:</td>
+                        <td>${memberId}</td>
+                    </tr>
+                    ` : ''}
+                    ${userId ? `
+                    <tr>
+                        <td>User ID:</td>
+                        <td>${userId}</td>
+                    </tr>
+                    ` : ''}
+                </table>
+            </div>
             
-            <h3 style="color: #2c3e50; margin: 24px 0 12px 0;">Message Content:</h3>
+            <!-- Message Content -->
+            <h3 style="color: #2c3e50; margin: 24px 0 12px 0;">📝 Message Content:</h3>
             <div class="message-box">
                 <div class="message-content">${message.replace(/\n/g, '<br>')}</div>
                 <div class="timestamp">
@@ -1361,23 +1499,50 @@ const sendSupportNotificationEmail = async (supportData) => {
                 </div>
             </div>
             
-            <div style="text-align: center; margin: 30px 0;">
+            <!-- Response Time -->
+            <div class="response-time">
+                <h3>⏰ Response Time Target</h3>
+                <p style="font-size: 18px; font-weight: 600; margin: 0;">
+                    Please respond within <strong style="color: ${responseColor};">${responseTime}</strong>
+                </p>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
                 <a href="${process.env.BASE_URL || 'http://localhost:3000'}/admin/support/${messageId}" 
                    class="action-button">
-                   📋 View Message in Admin Panel
+                   📋 View & Respond
+                </a>
+                
+                <a href="${process.env.BASE_URL || 'http://localhost:3000'}/admin/support/${messageId}?action=resolve" 
+                   class="action-button resolve">
+                   ✅ Mark as Resolved
                 </a>
             </div>
             
+            <!-- Assignment Info -->
+            <div class="assignment-info">
+                <h3>🎯 Why You Received This Notification</h3>
+                <p>You are receiving this notification because:</p>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>You have the appropriate role to handle <strong>${subject}</strong> requests</li>
+                    <li>Based on the subject category, you are one of the designated officers</li>
+                    <li>This is a <strong>${urgency}</strong> priority request</li>
+                </ul>
+            </div>
+
+            <!-- Security Notice -->
             <div class="security-notice">
-                <strong>🔒 Support Guidelines:</strong><br>
-                • Respond within 2-4 hours for standard priority<br>
-                • Critical issues require immediate attention<br>
-                • Update message status as you work on it<br>
-                • Keep the user informed of progress
+                <strong>🔒 Security & Privacy Guidelines:</strong><br>
+                • Always verify user identity before sharing sensitive information<br>
+                • Never share login credentials or personal data via email<br>
+                • Use the admin panel for all official communications<br>
+                • Document all interactions in the support ticket
             </div>
 
             <div class="no-reply-notice">
-                ⚠️ This is an automated notification. Please do not reply to this email.
+                ⚠️ This is an automated notification. Please do not reply to this email.<br>
+                Use the admin panel to respond to this support request.
             </div>
         </div>
     </div>
@@ -1388,12 +1553,13 @@ const sendSupportNotificationEmail = async (supportData) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Support notification email sent for message #${messageId}`);
+    console.log(`✅ Support notification email sent to: ${toEmail} for ticket #${messageId}`);
     console.log(`📧 Message ID:`, info.messageId);
     return info;
   } catch (error) {
-    console.error(`❌ Error sending support notification email:`, error);
-    throw new Error('Failed to send support notification email');
+    console.error(`❌ Error sending support notification email to ${toEmail}:`, error.message);
+    console.error('Error details:', error);
+    throw new Error(`Failed to send support notification email: ${error.message}`);
   }
 };
 
@@ -1405,28 +1571,33 @@ const sendSupportResponseEmail = async (userEmail, supportData) => {
     adminName,
     response,
     status,
-    responseDate 
+    responseDate,
+    userMessage
   } = supportData;
 
   const statusColors = {
-    in_progress: '#17a2b8',
+    new: '#17a2b8',
+    in_progress: '#007bff',
     resolved: '#28a745',
-    closed: '#6c757d'
+    closed: '#6c757d',
+    cancelled: '#dc3545'
   };
 
   const statusLabels = {
+    new: 'New',
     in_progress: 'In Progress',
     resolved: 'Resolved', 
-    closed: 'Closed'
+    closed: 'Closed',
+    cancelled: 'Cancelled'
   };
 
   const statusColor = statusColors[status] || '#6c757d';
   const statusLabel = statusLabels[status] || 'Updated';
 
   const mailOptions = {
-    from: process.env.SMTP_FROM || 'FamilyFund Support <itzfamilyfund@gmail.com>',
+    from: process.env.SMTP_FROM || `FamilyFund Support <${process.env.SUPPORT_EMAIL || 'itzfamilyfund@gmail.com'}>`,
     to: userEmail,
-    subject: `📋 Update on Your Support Request: ${subject}`,
+    subject: `📋 Update on Your Support Request: ${subject} - Ticket #${messageId}`,
     html: `
 <!DOCTYPE html>
 <html lang="en">
@@ -1449,7 +1620,7 @@ const sendSupportResponseEmail = async (userEmail, supportData) => {
         }
         
         .email-container { 
-            max-width: 600px; 
+            max-width: 650px; 
             margin: 0 auto; 
             background: #ffffff; 
             border-radius: 12px; 
@@ -1477,38 +1648,61 @@ const sendSupportResponseEmail = async (userEmail, supportData) => {
         .status-banner {
             background: ${statusColor};
             color: white;
-            padding: 20px;
+            padding: 25px;
             text-align: center;
             margin: 20px 0;
             border-radius: 8px;
         }
         
-        .details-table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin: 20px 0; 
+        .ticket-summary {
             background: #f8f9fa;
             border-radius: 8px;
-            overflow: hidden;
+            padding: 20px;
+            margin: 25px 0;
         }
         
-        .details-table td { 
-            padding: 12px 16px; 
-            border-bottom: 1px solid #dee2e6; 
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
         }
         
-        .details-table td:first-child { 
-            font-weight: 600; 
-            color: #2c3e50; 
-            width: 30%; 
-            background: #e9ecef;
+        .summary-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .summary-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        
+        .summary-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .original-message {
+            background: #e8f4fd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            border-left: 4px solid #3498db;
         }
         
         .response-box { 
             background: white; 
-            padding: 20px; 
+            padding: 25px; 
             border-left: 4px solid ${statusColor}; 
-            margin: 20px 0; 
+            margin: 25px 0; 
             border-radius: 0 8px 8px 0;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
@@ -1517,30 +1711,83 @@ const sendSupportResponseEmail = async (userEmail, supportData) => {
             white-space: pre-wrap;
             line-height: 1.8;
             color: #495057;
+            font-size: 15px;
+        }
+        
+        .next-steps {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
         }
         
         .support-contact { 
             background: #e8f4fd; 
             border-radius: 8px; 
-            padding: 20px; 
-            margin: 20px 0; 
+            padding: 25px; 
+            margin: 25px 0; 
+        }
+        
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
         }
         
         .contact-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 8px 0;
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .contact-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            display: block;
         }
         
         .no-reply-notice { 
             background: #e9ecef; 
-            padding: 12px; 
+            padding: 15px; 
             border-radius: 4px; 
             text-align: center; 
-            font-size: 12px; 
+            font-size: 13px; 
             color: #666; 
-            margin-top: 20px; 
+            margin-top: 30px; 
+        }
+        
+        .timestamp {
+            color: #6c757d;
+            font-size: 13px;
+            margin-top: 10px;
+            text-align: right;
+        }
+        
+        .responder-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .responder-avatar {
+            width: 50px;
+            height: 50px;
+            background: ${statusColor};
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
         }
         
         @media (max-width: 600px) {
@@ -1556,12 +1803,19 @@ const sendSupportResponseEmail = async (userEmail, supportData) => {
                 font-size: 24px;
             }
             
-            .details-table td {
-                padding: 10px 12px;
-                font-size: 14px;
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .contact-grid {
+                grid-template-columns: 1fr;
             }
             
             .response-box {
+                padding: 16px;
+            }
+            
+            .original-message {
                 padding: 16px;
             }
         }
@@ -1578,65 +1832,124 @@ const sendSupportResponseEmail = async (userEmail, supportData) => {
         <!-- Body -->
         <div class="email-body">
             <div class="status-banner">
-                <h2 style="margin: 0; font-size: 24px;">📋 ${statusLabel}</h2>
-                <p style="margin: 5px 0 0 0; opacity: 0.9;">Your support request has been updated</p>
+                <h2 style="margin: 0; font-size: 24px;">${statusLabel}</h2>
+                <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">
+                    Your support request has been updated
+                </p>
             </div>
             
-            <table class="details-table">
-                <tr>
-                    <td>Request ID:</td>
-                    <td><strong>#${messageId}</strong></td>
-                </tr>
-                <tr>
-                    <td>Subject:</td>
-                    <td>${subject}</td>
-                </tr>
-                <tr>
-                    <td>Status:</td>
-                    <td>
-                        <span style="color: ${statusColor}; font-weight: 600;">
-                            ${statusLabel}
-                        </span>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Responded By:</td>
-                    <td>${adminName}</td>
-                </tr>
-                <tr>
-                    <td>Response Date:</td>
-                    <td>${new Date(responseDate).toLocaleString()}</td>
-                </tr>
-            </table>
+            <!-- Ticket Summary -->
+            <div class="ticket-summary">
+                <h3 style="margin-top: 0; color: #2c3e50;">📋 Ticket Summary</h3>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="summary-label">Ticket ID</div>
+                        <div class="summary-value">#${messageId}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Subject</div>
+                        <div class="summary-value">${subject}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Status</div>
+                        <div class="summary-value" style="color: ${statusColor};">${statusLabel}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Updated</div>
+                        <div class="summary-value">${new Date(responseDate).toLocaleDateString()}</div>
+                    </div>
+                </div>
+            </div>
             
-            <h3 style="color: #2c3e50; margin: 24px 0 12px 0;">Support Response:</h3>
+            <!-- Responder Info -->
+            <div class="responder-info">
+                <div class="responder-avatar">
+                    ${adminName.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                    <div style="font-weight: 600; color: #2c3e50;">${adminName}</div>
+                    <div style="color: #6c757d; font-size: 14px;">FamilyFund Support Team</div>
+                    <div style="color: #6c757d; font-size: 12px; margin-top: 5px;">
+                        Responded on ${new Date(responseDate).toLocaleString()}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Original Message (if provided) -->
+            ${userMessage ? `
+            <div class="original-message">
+                <h4 style="margin-top: 0; color: #2c3e50; margin-bottom: 10px;">📝 Your Original Message:</h4>
+                <p style="margin: 0; color: #495057; font-style: italic;">
+                    "${userMessage.length > 150 ? userMessage.substring(0, 150) + '...' : userMessage}"
+                </p>
+            </div>
+            ` : ''}
+            
+            <!-- Support Response -->
+            <h3 style="color: #2c3e50; margin: 24px 0 12px 0;">📨 Support Response:</h3>
             <div class="response-box">
                 <div class="response-content">${response.replace(/\n/g, '<br>')}</div>
+                <div class="timestamp">
+                    Response sent: ${new Date(responseDate).toLocaleString()}
+                </div>
             </div>
 
+            <!-- Next Steps -->
+            ${status === 'resolved' ? `
+            <div class="next-steps">
+                <h4 style="margin-top: 0; color: #155724;">✅ Next Steps:</h4>
+                <p style="margin: 10px 0 0 0; color: #155724;">
+                    Your issue has been marked as resolved. If you need further assistance, 
+                    please reply to this ticket within 7 days.
+                </p>
+            </div>
+            ` : ''}
+            
+            ${status === 'in_progress' ? `
+            <div class="next-steps">
+                <h4 style="margin-top: 0; color: #004085;">🔄 Next Steps:</h4>
+                <p style="margin: 10px 0 0 0; color: #004085;">
+                    Our team is actively working on your request. We'll provide another 
+                    update within 24 hours or sooner.
+                </p>
+            </div>
+            ` : ''}
+
+            <!-- Support Contact -->
             <div class="support-contact">
-                <h4 style="margin-top: 0; color: #2c3e50;">📞 Need Further Assistance?</h4>
+                <h3 style="margin-top: 0; color: #2c3e50;">📞 Need Further Assistance?</h3>
+                <p>If you have additional questions or need clarification:</p>
                 
-                <div class="contact-item">
-                    <span style="font-weight: 600;">📧 Email:</span>
-                    <span>itzfamilyfund@mail.com</span>
-                </div>
-                <div class="contact-item">
-                    <span style="font-weight: 600;">💬 WhatsApp:</span>
-                    <span>+255 782 702 502</span>
-                </div>
-                <div class="contact-item">
-                    <span style="font-weight: 600;">📞 Phone:</span>
-                    <span>+255 763 724 710</span>
+                <div class="contact-grid">
+                    <div class="contact-item">
+                        <div class="contact-icon">📧</div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 5px;">Email Support</div>
+                            <div style="font-size: 14px; color: #6c757d;">
+                                ${process.env.SUPPORT_EMAIL || 'itzfamilyfund@gmail.com'}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-icon">💬</div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 5px;">WhatsApp</div>
+                            <div style="font-size: 14px; color: #6c757d;">
+                                +255 782 702 502
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
-                <p style="margin: 15px 0 0 0; font-size: 14px; color: #666;">
-                    Please mention your Request ID (<strong>#${messageId}</strong>) when contacting support.
+                <p style="margin: 20px 0 0 0; font-size: 14px; color: #666; text-align: center;">
+                    Please mention your Ticket ID (<strong>#${messageId}</strong>) when contacting support.
                 </p>
             </div>
 
             <div class="no-reply-notice">
-                ⚠️ This is an automated notification. Please do not reply to this email.
+                ⚠️ This is an automated notification. Please do not reply to this email.<br>
+                To respond to this update, please use the support portal or contact details above.
             </div>
         </div>
     </div>
@@ -1647,12 +1960,13 @@ const sendSupportResponseEmail = async (userEmail, supportData) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Support response email sent to:`, userEmail);
+    console.log(`✅ Support response email sent to: ${userEmail} for ticket #${messageId}`);
     console.log(`📧 Message ID:`, info.messageId);
     return info;
   } catch (error) {
-    console.error(`❌ Error sending support response email:`, error);
-    throw new Error('Failed to send support response email');
+    console.error(`❌ Error sending support response email to ${userEmail}:`, error.message);
+    console.error('Error details:', error);
+    throw new Error(`Failed to send support response email: ${error.message}`);
   }
 };
 
@@ -2043,3 +2357,5 @@ module.exports = {
   sendSupportResponseEmail,
   sendMonthlyContributionReminder
 };
+
+

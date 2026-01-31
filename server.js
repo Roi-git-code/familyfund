@@ -64,6 +64,9 @@ app.use((req, res, next) => {
 // ----------------- Routes -----------------
 app.get('/', (req, res) => res.render('home', { user: req.session.user }));
 
+// FIX: Add supportRoutes here BEFORE routes that require requireVerifiedEmail
+app.use(supportRoutes);
+
 app.use(staticRoutes);
 app.use('/admin', adminRoutes);
 app.use(fundSummaryRoutes);
@@ -73,23 +76,13 @@ app.use('/', authRoutes);
 //app.use('/', userRoutes);
 app.use('/', fundRoutes);
 app.use('/payments', paymentRoutes);
-//app.use('/member', requireAuth, allowRoles('chairman','admin'), memberRoutes);
-//app.use('/contributions', requireAuth, allowRoles('chairman', 'chief_signatory', 'assistant_signatory'), contributionRoutes);
 
 // Protected routes with email verification
 app.use('/member', requireAuth, requireVerifiedEmail, allowRoles('chairman','admin'), memberRoutes);
 app.use('/contributions', requireAuth, requireVerifiedEmail, allowRoles('chairman', 'chief_signatory', 'assistant_signatory'), contributionRoutes);
 app.use('/', requireAuth, requireVerifiedEmail, userRoutes);
-app.use('/', requireVerifiedEmail,  supportRoutes);
 app.use('/roi', roiRoutes);
 app.use('/refunds', refundRoutes);
-
-
-// Add this to your server.js after all routes are registered, before the 404 handler
-app.use((req, res, next) => {
-  console.log(`📡 Route accessed: ${req.method} ${req.url}`);
-  next();
-});
 
 // 404 fallback
 app.use((req, res) => res.status(404).send('Page Not Found'));
@@ -105,7 +98,6 @@ setInterval(() => {
   }
 }, 60 * 60 * 1000);
 
-// Start reminder job AFTER all routes are set up
 // Start server
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);

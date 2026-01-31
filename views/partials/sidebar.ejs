@@ -152,6 +152,15 @@
     <% } %>
   <% } %>
 
+<% if (['chairman', 'chief_signatory', 'assistant_signatory', 'admin'].includes(user.role)) { %>
+  <li class="nav-item">
+    <a class="nav-link  href="/admin/support">
+      <i class="fas fa-headset me-2"></i>
+      Support Messages
+    </a>
+  </li>
+<% } %>
+
   <!-- Password Management (All Users) -->
   <div class="sidebar-group">
     <div class="sidebar-group-header">

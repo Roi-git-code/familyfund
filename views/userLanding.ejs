@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -469,55 +470,79 @@
             </div>
           <% } %>
 
-          <!-- Support Messages Overview Card (For authorized roles only) -->
-          <% if (['chairman', 'chief_signatory', 'assistant_signatory', 'admin'].includes(user.role)) { %>
-            <div class="card mb-4 shadow-sm">
-              <div class="card-header bg-info text-white">
-                <h5 class="card-title mb-0">
-                  <i class="fas fa-headset me-2"></i>Support Messages Overview
-                </h5>
-              </div>
-              <div class="card-body">
-                <p class="card-text mb-3">
-                  <i class="fas fa-info-circle me-2"></i>
-                  Overview of all support messages from users
-                </p>
-                
-                <div class="row text-center">
-                  <div class="col-6 col-md-3 p-3">
-                    <div class="border rounded p-2 bg-info bg-opacity-10">
-                      <h4 class="mb-0 text-info"><%= supportStats.new_messages || 0 %></h4>
-                      <small class="text-muted">New</small>
-                    </div>
-                  </div>
-                  <div class="col-6 col-md-3 p-3">
-                    <div class="border rounded p-2 bg-warning bg-opacity-10">
-                      <h4 class="mb-0 text-warning"><%= supportStats.in_progress_messages || 0 %></h4>
-                      <small class="text-muted">In Progress</small>
-                    </div>
-                  </div>
-                  <div class="col-6 col-md-3 p-3">
-                    <div class="border rounded p-2 bg-success bg-opacity-10">
-                      <h4 class="mb-0 text-success"><%= supportStats.resolved_messages || 0 %></h4>
-                      <small class="text-muted">Resolved</small>
-                    </div>
-                  </div>
-                  <div class="col-6 col-md-3 p-3">
-                    <div class="border rounded p-2 bg-secondary bg-opacity-10">
-                      <h4 class="mb-0 text-secondary"><%= (supportStats.total_messages || 0) - ((supportStats.new_messages || 0) + (supportStats.in_progress_messages || 0) + (supportStats.resolved_messages || 0)) %></h4>
-                      <small class="text-muted">Closed</small>
-                    </div>
-                  </div>
-                </div>
-                <div class="text-center mt-3">
-                  <a href="/admin/support" class="btn btn-outline-info">
-                    <i class="fas fa-cog me-2"></i>Manage Support Messages
-                  </a>
-                </div>
-              </div>
-            </div>
-          <% } %>
-
+   <!-- Support Messages Overview Card (For authorized roles only) -->
+<% if (['chairman', 'chief_signatory', 'assistant_signatory', 'admin'].includes(user.role)) { %>
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-info text-white">
+      <h5 class="card-title mb-0">
+        <i class="fas fa-headset me-2"></i>Support Messages Overview
+      </h5>
+    </div>
+    <div class="card-body">
+      <p class="card-text mb-3">
+        <i class="fas fa-info-circle me-2"></i>
+        Overview of all support messages from users
+      </p>
+      
+      <div class="row text-center">
+        <div class="col-6 col-md-3 p-3">
+          <div class="border rounded p-2 bg-info bg-opacity-10">
+            <h4 class="mb-0 text-info"><%= supportStats.new_messages || 0 %></h4>
+            <small class="text-muted">New</small>
+          </div>
+        </div>
+        <div class="col-6 col-md-3 p-3">
+          <div class="border rounded p-2 bg-warning bg-opacity-10">
+            <h4 class="mb-0 text-warning"><%= supportStats.in_progress_messages || 0 %></h4>
+            <small class="text-muted">In Progress</small>
+          </div>
+        </div>
+        <div class="col-6 col-md-3 p-3">
+          <div class="border rounded p-2 bg-success bg-opacity-10">
+            <h4 class="mb-0 text-success"><%= supportStats.resolved_messages || 0 %></h4>
+            <small class="text-muted">Resolved</small>
+          </div>
+        </div>
+        <div class="col-6 col-md-3 p-3">
+          <div class="border rounded p-2 bg-secondary bg-opacity-10">
+            <h4 class="mb-0 text-secondary">
+              <% 
+                // Use the actual closed count from database, not calculated
+                const closedCount = supportStats.closed_messages || 0;
+              %>
+              <%= closedCount %>
+            </h4>
+            <small class="text-muted">Closed</small>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Optional: Show total and breakdown -->
+      <div class="mt-3 pt-3 border-top">
+        <div class="row">
+          <div class="col-md-6">
+            <small class="text-muted d-block">Total Messages: <strong><%= supportStats.total_messages || 0 %></strong></small>
+          </div>
+          <div class="col-md-6 text-end">
+            <small class="text-muted">
+              <i class="fas fa-clock me-1"></i>
+              Last 7 days: <strong><%= supportStats.last_7_days || 0 %></strong>
+            </small>
+          </div>
+        </div>
+      </div>
+      
+      <div class="text-center mt-3">
+        <a href="/admin/support" class="btn btn-outline-info">
+          <i class="fas fa-cog me-2"></i>Manage Support Messages
+        </a>
+      </div>
+    </div>
+  </div>
+<% } %>
+  
+            
+            
           <!-- Password Modal -->
           <%- include('partials/change_password_modal') %>
 

@@ -1,5 +1,4 @@
 
-
 const express = require('express');
 const router = express.Router();
 const app = express();
@@ -16,6 +15,7 @@ const fundRequestModel = require('../models/fundRequestModel');
 const notificationModel = require('../models/notificationModel');
 const userRequestModel = require('../models/userRequestModel');
 const sendNotification = require('../utils/notification'); // helper to notify users (email or UI)
+const supportModel = require('../models/supportModel');
 
 // Dashboard
 router.get('/dashboard', requireAuth, async (req, res) => {
@@ -78,24 +78,34 @@ router.get('/dashboard', requireAuth, async (req, res) => {
       rejectedCount = counts.rejected_count + counts.cancelled_count; // Rejected + Cancelled
     }
 
-    // Get support statistics for authorized roles
-    let supportStats = {
-      total_messages: 0,
-      new_messages: 0,
-      in_progress_messages: 0,
-      resolved_messages: 0
-    };
+// Get support statistics for authorized roles
+let supportStats = {
+  total_messages: 0,
+  new_messages: 0,
+  in_progress_messages: 0,
+  resolved_messages: 0,
+  closed_messages: 0,
+  critical_messages: 0,
+  high_messages: 0,
+  last_7_days: 0
+};
 
-    if (['chairman', 'chief_signatory', 'assistant_signatory', 'admin'].includes(role)) {
-      try {
-        // Import support model
-        const supportModel = require('../models/supportModel');
-        supportStats = await supportModel.getSupportStatistics();
-      } catch (error) {
-        console.error('Error loading support statistics:', error);
-        // Continue without support stats if there's an error
-      }
-    }
+if (['chairman', 'chief_signatory', 'assistant_signatory', 'admin'].includes(role)) {
+  try {
+    
+    supportStats = await supportModel.getSupportStatistics();
+    
+    // Debug logging
+    console.log('📊 Support Statistics loaded:', supportStats);
+    console.log(`📝 Status breakdown: New=${supportStats.new_messages}, In Progress=${supportStats.in_progress_messages}, Resolved=${supportStats.resolved_messages}, Closed=${supportStats.closed_messages}`);
+    console.log(`📊 Total from stats: ${supportStats.total_messages}`);
+    
+  } catch (error) {
+    console.error('Error loading support statistics:', error);
+    // Continue without support stats if there's an error
+  }
+}
+    
 
     // Calculate member-specific request counts for the stats cards
     const memberPendingProfileRequests = memberProfileRequests.filter(req => 
