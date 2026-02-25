@@ -1,5 +1,4 @@
 
-
 // models/supportModel.js
 const pool = require('../db');
 const { sendSupportNotificationEmail, sendSupportResponseEmail } = require('../utils/mail');
