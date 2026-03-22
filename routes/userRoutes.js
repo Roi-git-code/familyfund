@@ -999,6 +999,18 @@ router.get('/my-contributions/pdf', requireAuth, async (req, res) => {
   }
 });
 
+// Constitution page
+router.get('/constitution', async (req, res) => {
+  try {
+    res.render('constitution', { user: req.session.user });
+  } catch (err) {
+    console.error('Error loading constitution:', err);
+    req.flash('error', 'Unable to load constitution.');
+    res.redirect('/dashboard');
+  }
+});
+
+
 module.exports = router;
 
 
