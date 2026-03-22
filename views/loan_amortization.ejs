@@ -79,15 +79,15 @@
         <div class="row g-3 mb-4">
           <div class="col-md-3">
             <label class="form-label">Loan Amount (TSh)</label>
-            <input type="number" id="loanAmount" class="form-control" value="500000">
+            <input type="number" id="loanAmount" class="form-control" placeholder="e.g., 500000" step="1000">
           </div>
           <div class="col-md-3">
             <label class="form-label">Interest Rate (%)</label>
-            <input type="number" id="interestRate" class="form-control" value="10" step="0.1">
+            <input type="number" id="interestRate" class="form-control" placeholder="e.g., 10" step="0.1">
           </div>
           <div class="col-md-3">
             <label class="form-label">Tenure (Months)</label>
-            <input type="number" id="tenure" class="form-control" value="12">
+            <input type="number" id="tenure" class="form-control" placeholder="e.g., 12" step="1">
           </div>
           <div class="col-md-3">
             <label class="form-label">Interest Type</label>
@@ -115,7 +115,9 @@
                 <th>Remaining Balance</th>
               </tr>
             </thead>
-            <tbody id="amortizationTable"></tbody>
+            <tbody id="amortizationTable">
+              <tr><td colspan="5" class="text-center text-muted">Enter values and click Calculate</td></tr>
+            </tbody>
           </table>
         </div>
       </div>
@@ -139,8 +141,17 @@
       const n = parseInt(document.getElementById('tenure').value);
       const type = document.getElementById('interestType').value;
 
-      if (isNaN(P) || isNaN(annualRate) || isNaN(n) || P <= 0 || annualRate < 0 || n <= 0) {
-        alert('Please enter valid positive numbers for all fields.');
+      // Validate inputs
+      if (isNaN(P) || P <= 0) {
+        alert('Please enter a valid positive loan amount.');
+        return;
+      }
+      if (isNaN(annualRate) || annualRate < 0) {
+        alert('Please enter a valid interest rate (0 or greater).');
+        return;
+      }
+      if (isNaN(n) || n <= 0) {
+        alert('Please enter a valid positive number of months.');
         return;
       }
 
@@ -166,13 +177,13 @@
           totalInterest += interest;
 
           tableRows += `
-            <tr>
-              <td>${i}</td>
-              <td>${monthlyPayment.toFixed(2)}</td>
-              <td>${interest.toFixed(2)}</td>
-              <td>${principal.toFixed(2)}</td>
-              <td>${balance > 0 ? balance.toFixed(2) : '0.00'}</td>
-            </tr>
+             <tr>
+               <td>${i}</td>
+               <td>${monthlyPayment.toFixed(2)}</td>
+               <td>${interest.toFixed(2)}</td>
+               <td>${principal.toFixed(2)}</td>
+               <td>${balance > 0 ? balance.toFixed(2) : '0.00'}</td>
+             </tr>
           `;
         }
       } else {
@@ -187,13 +198,13 @@
           balance -= principalMonthly;
 
           tableRows += `
-            <tr>
-              <td>${i}</td>
-              <td>${monthlyPayment.toFixed(2)}</td>
-              <td>${interestMonthly.toFixed(2)}</td>
-              <td>${principalMonthly.toFixed(2)}</td>
-              <td>${balance > 0 ? balance.toFixed(2) : '0.00'}</td>
-            </tr>
+             <tr>
+               <td>${i}</td>
+               <td>${monthlyPayment.toFixed(2)}</td>
+               <td>${interestMonthly.toFixed(2)}</td>
+               <td>${principalMonthly.toFixed(2)}</td>
+               <td>${balance > 0 ? balance.toFixed(2) : '0.00'}</td>
+             </tr>
           `;
         }
         totalInterest = totalInterestFlat;
@@ -218,9 +229,10 @@
       `;
     }
 
-    // Auto-calculate on page load
+    // Ensure table is empty on load
     document.addEventListener('DOMContentLoaded', function() {
-      calculateAmortization();
+      document.getElementById('amortizationTable').innerHTML = '<tr><td colspan="5" class="text-center text-muted">Enter values and click Calculate</td></tr>';
+      document.getElementById('summary').innerHTML = '';
     });
   </script>
 </body>
