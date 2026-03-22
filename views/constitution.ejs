@@ -5,15 +5,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FamilyFund Constitution</title>
-    <!-- Additional CSS for constitution page -->
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* All the constitution-specific styles go here (the ones from the standalone file) */
         :root {
             --primary-color: #3498db;
             --secondary-color: #2c3e50;
             --accent-color: #667eea;
             --light-bg: #f8f9fa;
             --dark-text: #212529;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-text);
+            background-color: #f5f7fa;
         }
         
         .constitution-header {
@@ -283,112 +295,105 @@
             color: white;
         }
     </style>
-    <!-- Additional scripts for PDF generation and HTML2Canvas -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
-<body class="financial-statement-page">
-    <%- include('partials/header') %>
-    <%- include('partials/sidebar', { user: user }) %>
-    <%- include('partials/change_password_modal', { user: user }) %>
-
-    <div class="main-content">
-        <%- include('partials/flash') %>
-        <!-- Scroll Progress Bar (moved inside main-content) -->
-        <div class="scroll-progress" id="scrollProgress"></div>
-        <div class="container-fluid py-4">
-            <div class="row">
-                <!-- Main Content Column -->
-                <div class="col-lg-9">
-                    <!-- Header -->
-                    <div class="constitution-header">
-                        <div class="header-content">
-                            <div class="row align-items-center">
-                                <div class="col-md-2 text-center mb-4 mb-md-0">
-                                    <i class="fas fa-balance-scale fa-5x opacity-90"></i>
+<body>
+    <!-- Scroll Progress Bar -->
+    <div class="scroll-progress" id="scrollProgress"></div>
+    
+    <!-- Back to Top Button -->
+    <a href="#" class="back-to-top" id="backToTop">
+        <i class="fas fa-chevron-up"></i>
+    </a>
+    
+    <div class="container-fluid py-4">
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-lg-9">
+                <!-- Header -->
+                <div class="constitution-header">
+                    <div class="header-content">
+                        <div class="row align-items-center">
+                            <div class="col-md-2 text-center mb-4 mb-md-0">
+                                <i class="fas fa-balance-scale fa-5x opacity-90"></i>
+                            </div>
+                            <div class="col-md-10">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h1 class="display-4 fw-bold mb-3" data-lang-key="pageTitle">FamilyFund Constitution</h1>
+                                    <button id="langToggle" class="btn lang-toggle no-print">
+                                        <i class="fas fa-language me-1"></i> <span id="langToggleText">Kiswahili</span>
+                                    </button>
                                 </div>
-                                <div class="col-md-10">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <h1 class="display-4 fw-bold mb-3" data-lang-key="pageTitle">FamilyFund Constitution</h1>
-                                        <button id="langToggle" class="btn lang-toggle no-print">
-                                            <i class="fas fa-language me-1"></i> <span id="langToggleText">Kiswahili</span>
-                                        </button>
-                                    </div>
-                                    <p class="lead mb-4 opacity-90" data-lang-key="subtitle">The Official Governing Document of the Family Saving Fund</p>
-                                    <div class="d-flex flex-wrap gap-3">
-                                        <span class="badge bg-white text-dark p-2">
-                                            <i class="fas fa-calendar-alt me-2"></i>
-                                            <span data-lang-key="effectiveLabel">Effective:</span> <span data-lang-key="effectiveDate">December 22, 2025</span>
-                                        </span>
-                                        <span class="badge bg-white text-dark p-2">
-                                            <i class="fas fa-users me-2"></i>
-                                            <span data-lang-key="versionLabel">Version:</span> <span data-lang-key="version">2.0 (Revised)</span>
-                                        </span>
-                                        <span class="badge bg-white text-dark p-2">
-                                            <i class="fas fa-file-contract me-2"></i>
-                                            <span data-lang-key="docLabel">Official Document</span>
-                                        </span>
-                                    </div>
+                                <p class="lead mb-4 opacity-90" data-lang-key="subtitle">The Official Governing Document of the Family Saving Fund</p>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <span class="badge bg-white text-dark p-2">
+                                        <i class="fas fa-calendar-alt me-2"></i>
+                                        <span data-lang-key="effectiveLabel">Effective:</span> <span data-lang-key="effectiveDate">December 22, 2025</span>
+                                    </span>
+                                    <span class="badge bg-white text-dark p-2">
+                                        <i class="fas fa-users me-2"></i>
+                                        <span data-lang-key="versionLabel">Version:</span> <span data-lang-key="version">2.0 (Revised)</span>
+                                    </span>
+                                    <span class="badge bg-white text-dark p-2">
+                                        <i class="fas fa-file-contract me-2"></i>
+                                        <span data-lang-key="docLabel">Official Document</span>
+                                    </span>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Download Section -->
-                    <div class="download-section no-print">
-                        <h3 class="mb-3" data-lang-key="downloadTitle"><i class="fas fa-file-pdf me-2"></i>Download Official Constitution</h3>
-                        <p class="mb-4 opacity-90" data-lang-key="downloadDesc">Save a copy of the constitution for your records or offline reading</p>
-                        <button id="downloadPdf" class="btn btn-pdf">
-                            <i class="fas fa-download"></i> <span data-lang-key="downloadBtn">Download as PDF</span>
+                </div>
+                
+                <!-- Download Section -->
+                <div class="download-section no-print">
+                    <h3 class="mb-3" data-lang-key="downloadTitle"><i class="fas fa-file-pdf me-2"></i>Download Official Constitution</h3>
+                    <p class="mb-4 opacity-90" data-lang-key="downloadDesc">Save a copy of the constitution for your records or offline reading</p>
+                    <button id="downloadPdf" class="btn btn-pdf">
+                        <i class="fas fa-download"></i> <span data-lang-key="downloadBtn">Download as PDF</span>
+                    </button>
+                    <p class="mt-3 small opacity-75" data-lang-key="pdfNote">
+                        <i class="fas fa-info-circle me-1"></i>
+                        The PDF will include all articles and maintain proper formatting
+                    </p>
+                </div>
+                
+                <!-- Preamble -->
+                <div class="article-card">
+                    <div class="article-header" id="preambleHeader">
+                        <h3 class="mb-0">
+                            <span class="badge-article" data-lang-key="preambleBadge">Preamble</span>
+                            <span data-lang-key="preambleTitle">Declaration of Purpose</span>
+                        </h3>
+                        <button class="toggle-btn" data-bs-toggle="collapse" data-bs-target="#preambleContent">
+                            <i class="fas fa-chevron-down"></i>
                         </button>
-                        <p class="mt-3 small opacity-75" data-lang-key="pdfNote">
-                            <i class="fas fa-info-circle me-1"></i>
-                            The PDF will include all articles and maintain proper formatting
-                        </p>
                     </div>
-
-                    <!-- Preamble -->
-                    <div class="article-card">
-                        <div class="article-header" id="preambleHeader">
-                            <h3 class="mb-0">
-                                <span class="badge-article" data-lang-key="preambleBadge">Preamble</span>
-                                <span data-lang-key="preambleTitle">Declaration of Purpose</span>
-                            </h3>
-                            <button class="toggle-btn" data-bs-toggle="collapse" data-bs-target="#preambleContent">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                        </div>
-                        <div class="article-content collapse show" id="preambleContent">
-                            <p class="lead text-center mb-4" data-lang-key="preambleQuote">
-                                <i class="fas fa-quote-left text-primary me-2"></i>
-                                We, the members of the family, desiring to foster unity, mutual assistance, and financial resilience, do hereby establish this Constitution to govern the Family Saving Fund ("FamilyFund").
-                                <i class="fas fa-quote-right text-primary ms-2"></i>
-                            </p>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <div class="section-item">
-                                        <div class="section-title">
-                                            <i class="fas fa-bullseye"></i> <span data-lang-key="missionTitle">Our Mission</span>
-                                        </div>
-                                        <p data-lang-key="missionText">To create a transparent, trustworthy, and sustainable support system for managing social and financial emergencies through collective contributions and shared responsibility.</p>
+                    <div class="article-content collapse show" id="preambleContent">
+                        <p class="lead text-center mb-4" data-lang-key="preambleQuote">
+                            <i class="fas fa-quote-left text-primary me-2"></i>
+                            We, the members of the family, desiring to foster unity, mutual assistance, and financial resilience, do hereby establish this Constitution to govern the Family Saving Fund ("FamilyFund").
+                            <i class="fas fa-quote-right text-primary ms-2"></i>
+                        </p>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="section-item">
+                                    <div class="section-title">
+                                        <i class="fas fa-bullseye"></i> <span data-lang-key="missionTitle">Our Mission</span>
                                     </div>
+                                    <p data-lang-key="missionText">To create a transparent, trustworthy, and sustainable support system for managing social and financial emergencies through collective contributions and shared responsibility.</p>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="section-item">
-                                        <div class="section-title">
-                                            <i class="fas fa-handshake"></i> <span data-lang-key="visionTitle">Our Vision</span>
-                                        </div>
-                                        <p data-lang-key="visionText">To empower every family member with financial security and the assurance of collective support during challenging times.</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="section-item">
+                                    <div class="section-title">
+                                        <i class="fas fa-handshake"></i> <span data-lang-key="visionTitle">Our Vision</span>
                                     </div>
+                                    <p data-lang-key="visionText">To empower every family member with financial security and the assurance of collective support during challenging times.</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Constitution Articles (shortened for brevity, include the full articles as in the standalone version) -->
-                    <!-- For brevity in this answer, I'll include only the first few articles; you can copy the full articles from your standalone constitution HTML -->
-                    <!-- But you must paste the complete articles (1 through 8) exactly as they appear in your previous constitution HTML, including the data-lang-key attributes and the full content. -->
-                    <!-- I will provide a placeholder here – replace with the full article blocks from your standalone file. -->
+                </div>
+                
                 <!-- Constitution Articles (all with data-lang-key) -->
                 <div id="constitutionArticles">
                     <!-- Article 1 -->
@@ -488,7 +493,7 @@
                         </div>
                     </div>
                     
-                                        <!-- Article 4: Management and Governance -->
+                    <!-- Article 4: Management and Governance -->
                     <div class="article-card">
                         <div class="article-header" id="article4Header">
                             <h3 class="mb-0">
@@ -706,57 +711,54 @@
                         </div>
                     </div>
                 </div>
-                    
-
-                    <!-- Footer Note -->
-                    <div class="footer-note">
-                        <h4 class="mb-3" data-lang-key="footerTitle"><i class="fas fa-file-contract me-2"></i>Official Document Status</h4>
-                        <p class="mb-2" data-lang-key="footerAdopted">This Constitution was adopted and comes into force on <strong>December 22, 2025</strong>.</p>
-                        <p class="small text-muted mb-0" data-lang-key="footerNote">
-                            <i class="fas fa-info-circle me-1"></i>
-                            This document should be read in conjunction with the official <strong>FamilyFund Terms of Service</strong> and any operational <strong>Bylaws</strong> established by the Management Team.
-                        </p>
-                    </div>
+                
+                <!-- Footer Note -->
+                <div class="footer-note">
+                    <h4 class="mb-3" data-lang-key="footerTitle"><i class="fas fa-file-contract me-2"></i>Official Document Status</h4>
+                    <p class="mb-2" data-lang-key="footerAdopted">This Constitution was adopted and comes into force on <strong>December 22, 2025</strong>.</p>
+                    <p class="small text-muted mb-0" data-lang-key="footerNote">
+                        <i class="fas fa-info-circle me-1"></i>
+                        This document should be read in conjunction with the official <strong>FamilyFund Terms of Service</strong> and any operational <strong>Bylaws</strong> established by the Management Team.
+                    </p>
                 </div>
-
-                <!-- Navigation Sidebar (desktop) -->
-                <div class="col-lg-3 d-none d-lg-block">
-                    <div class="constitution-nav no-print">
-                        <h5 class="mb-3" data-lang-key="navTitle"><i class="fas fa-list-ol me-2"></i>Constitution Navigation</h5>
-                        <nav class="nav flex-column">
-                            <div class="nav-item"><a class="nav-link" href="#preambleHeader"><i class="fas fa-book-open"></i> <span data-lang-key="navPreamble">Preamble</span></a></div>
-                            <div class="nav-item"><a class="nav-link" href="#article1Header"><i class="fas fa-1"></i> <span data-lang-key="navArt1">Article 1: Name & Office</span></a></div>
-                            <div class="nav-item"><a class="nav-link" href="#article2Header"><i class="fas fa-2"></i> <span data-lang-key="navArt2">Article 2: Objectives</span></a></div>
-                            <div class="nav-item"><a class="nav-link" href="#article3Header"><i class="fas fa-3"></i> <span data-lang-key="navArt3">Article 3: Membership</span></a></div>
-                            <div class="nav-item"><a class="nav-link" href="#article4Header"><i class="fas fa-4"></i> <span data-lang-key="navArt4">Article 4: Management</span></a></div>
-                            <div class="nav-item"><a class="nav-link" href="#article5Header"><i class="fas fa-5"></i> <span data-lang-key="navArt5">Article 5: Free Assistance</span></a></div>
-                            <div class="nav-item"><a class="nav-link" href="#article6Header"><i class="fas fa-6"></i> <span data-lang-key="navArt6">Article 6: Loan Policies</span></a></div>
-                            <div class="nav-item"><a class="nav-link" href="#article7Header"><i class="fas fa-7"></i> <span data-lang-key="navArt7">Article 7: Meetings</span></a></div>
-                            <div class="nav-item"><a class="nav-link" href="#article8Header"><i class="fas fa-8"></i> <span data-lang-key="navArt8">Article 8: Amendments</span></a></div>
-                            <div class="nav-item mt-3">
-                                <button id="printPage" class="btn btn-outline-primary w-100">
-                                    <i class="fas fa-print me-2"></i> <span data-lang-key="printBtn">Print Constitution</span>
-                                </button>
-                            </div>
-                        </nav>
-                        <div class="mt-4 p-3 bg-light rounded">
-                            <h6 class="mb-2" data-lang-key="tipsTitle"><i class="fas fa-lightbulb me-2"></i>Quick Tips</h6>
-                            <ul class="small mb-0 ps-3">
-                                <li data-lang-key="tip1">Click on article headers to expand/collapse</li>
-                                <li data-lang-key="tip2">Use navigation for quick access</li>
-                                <li data-lang-key="tip3">Download PDF for offline reading</li>
-                                <li data-lang-key="tip4">Print for physical copies</li>
-                            </ul>
+            </div>
+            
+            <!-- Navigation Sidebar -->
+            <div class="col-lg-3 d-none d-lg-block">
+                <div class="constitution-nav no-print">
+                    <h5 class="mb-3" data-lang-key="navTitle"><i class="fas fa-list-ol me-2"></i>Constitution Navigation</h5>
+                    <nav class="nav flex-column">
+                        <div class="nav-item"><a class="nav-link" href="#preambleHeader"><i class="fas fa-book-open"></i> <span data-lang-key="navPreamble">Preamble</span></a></div>
+                        <div class="nav-item"><a class="nav-link" href="#article1Header"><i class="fas fa-1"></i> <span data-lang-key="navArt1">Article 1: Name & Office</span></a></div>
+                        <div class="nav-item"><a class="nav-link" href="#article2Header"><i class="fas fa-2"></i> <span data-lang-key="navArt2">Article 2: Objectives</span></a></div>
+                        <div class="nav-item"><a class="nav-link" href="#article3Header"><i class="fas fa-3"></i> <span data-lang-key="navArt3">Article 3: Membership</span></a></div>
+                        <div class="nav-item"><a class="nav-link" href="#article4Header"><i class="fas fa-4"></i> <span data-lang-key="navArt4">Article 4: Management</span></a></div>
+                        <div class="nav-item"><a class="nav-link" href="#article5Header"><i class="fas fa-5"></i> <span data-lang-key="navArt5">Article 5: Free Assistance</span></a></div>
+                        <div class="nav-item"><a class="nav-link" href="#article6Header"><i class="fas fa-6"></i> <span data-lang-key="navArt6">Article 6: Loan Policies</span></a></div>
+                        <div class="nav-item"><a class="nav-link" href="#article7Header"><i class="fas fa-7"></i> <span data-lang-key="navArt7">Article 7: Meetings</span></a></div>
+                        <div class="nav-item"><a class="nav-link" href="#article8Header"><i class="fas fa-8"></i> <span data-lang-key="navArt8">Article 8: Amendments</span></a></div>
+                        <div class="nav-item mt-3">
+                            <button id="printPage" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-print me-2"></i> <span data-lang-key="printBtn">Print Constitution</span>
+                            </button>
                         </div>
+                    </nav>
+                    
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6 class="mb-2" data-lang-key="tipsTitle"><i class="fas fa-lightbulb me-2"></i>Quick Tips</h6>
+                        <ul class="small mb-0 ps-3">
+                            <li data-lang-key="tip1">Click on article headers to expand/collapse</li>
+                            <li data-lang-key="tip2">Use navigation for quick access</li>
+                            <li data-lang-key="tip3">Download PDF for offline reading</li>
+                            <li data-lang-key="tip4">Print for physical copies</li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <%- include('partials/footer') %>
-
-  <!-- Bootstrap JS -->
+    
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
@@ -1069,7 +1071,5 @@
     </script>
 </body>
 </html>
-        
-        
 
 
