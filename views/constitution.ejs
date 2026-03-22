@@ -5,13 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FamilyFund Constitution</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- jsPDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Additional CSS for constitution page -->
     <style>
         :root {
             --primary-color: #3498db;
@@ -20,14 +14,7 @@
             --light-bg: #f8f9fa;
             --dark-text: #212529;
         }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: var(--dark-text);
-            background-color: #f5f7fa;
-        }
-        
+
         .constitution-header {
             background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
             color: white;
@@ -38,7 +25,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .constitution-header::before {
             content: "";
             position: absolute;
@@ -49,12 +36,12 @@
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none" opacity="0.05"><path d="M0,0 L100,0 L100,100 Z" fill="white"/></svg>');
             background-size: cover;
         }
-        
+
         .header-content {
             position: relative;
             z-index: 1;
         }
-        
+
         .article-card {
             background: white;
             border: none;
@@ -64,12 +51,12 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             overflow: hidden;
         }
-        
+
         .article-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 30px rgba(0,0,0,0.15);
         }
-        
+
         .article-header {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             padding: 1.5rem;
@@ -79,16 +66,16 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .article-header.collapsed {
             border-bottom: 3px solid #dee2e6;
         }
-        
+
         .article-content {
             padding: 2rem;
             background: white;
         }
-        
+
         .section-item {
             padding: 1rem 1.5rem;
             border-left: 4px solid var(--primary-color);
@@ -96,7 +83,7 @@
             background: var(--light-bg);
             border-radius: 0 8px 8px 0;
         }
-        
+
         .section-title {
             color: var(--secondary-color);
             font-weight: 600;
@@ -104,12 +91,12 @@
             display: flex;
             align-items: center;
         }
-        
+
         .section-title i {
             margin-right: 10px;
             color: var(--primary-color);
         }
-        
+
         .constitution-nav {
             position: sticky;
             top: 20px;
@@ -118,11 +105,11 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.08);
             padding: 1.5rem;
         }
-        
+
         .nav-item {
             margin-bottom: 0.5rem;
         }
-        
+
         .nav-link {
             color: #6c757d;
             padding: 0.75rem 1rem;
@@ -131,18 +118,18 @@
             display: flex;
             align-items: center;
         }
-        
+
         .nav-link:hover, .nav-link.active {
             color: var(--primary-color);
             background-color: rgba(52, 152, 219, 0.1);
             transform: translateX(5px);
         }
-        
+
         .nav-link i {
             width: 20px;
             margin-right: 10px;
         }
-        
+
         .badge-article {
             background: var(--primary-color);
             color: white;
@@ -151,7 +138,7 @@
             font-size: 0.85rem;
             font-weight: 600;
         }
-        
+
         .download-section {
             background: linear-gradient(135deg, var(--accent-color) 0%, #764ba2 100%);
             color: white;
@@ -160,7 +147,7 @@
             margin: 3rem 0;
             text-align: center;
         }
-        
+
         .btn-pdf {
             background: white;
             color: var(--accent-color);
@@ -174,18 +161,18 @@
             justify-content: center;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
-        
+
         .btn-pdf:hover {
             transform: translateY(-3px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.25);
             color: var(--accent-color);
         }
-        
+
         .btn-pdf i {
             margin-right: 10px;
             font-size: 1.2rem;
         }
-        
+
         .footer-note {
             background: var(--light-bg);
             border-radius: 12px;
@@ -194,23 +181,23 @@
             text-align: center;
             border-top: 3px solid var(--primary-color);
         }
-        
+
         @media print {
             .no-print, .download-section, .constitution-nav {
                 display: none !important;
             }
-            
+
             .article-card {
                 break-inside: avoid;
                 box-shadow: none;
                 border: 1px solid #dee2e6;
             }
-            
+
             .article-content {
                 display: block !important;
             }
         }
-        
+
         .scroll-progress {
             position: fixed;
             top: 0;
@@ -221,7 +208,7 @@
             z-index: 1000;
             transition: width 0.3s ease;
         }
-        
+
         .back-to-top {
             position: fixed;
             bottom: 30px;
@@ -240,16 +227,16 @@
             transition: all 0.3s ease;
             z-index: 99;
         }
-        
+
         .back-to-top.show {
             opacity: 1;
         }
-        
+
         .back-to-top:hover {
             background: #2980b9;
             transform: translateY(-3px);
         }
-        
+
         .toggle-btn {
             background: none;
             border: none;
@@ -258,28 +245,28 @@
             cursor: pointer;
             transition: transform 0.3s ease;
         }
-        
+
         .toggle-btn.collapsed {
             transform: rotate(-90deg);
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin: 1rem 0;
         }
-        
+
         table th, table td {
             border: 1px solid #dee2e6;
             padding: 0.75rem;
             text-align: left;
         }
-        
+
         table th {
             background: var(--light-bg);
             font-weight: 600;
         }
-        
+
         .lang-toggle {
             background: white;
             border: 2px solid var(--primary-color);
@@ -289,480 +276,487 @@
             font-weight: 600;
             transition: all 0.3s ease;
         }
-        
+
         .lang-toggle:hover {
             background: var(--primary-color);
             color: white;
         }
+
+        /* Horizontal scroll for tables on small screens */
+        @media (max-width: 768px) {
+            .table-responsive-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .table-responsive-wrapper table {
+                min-width: 600px; /* ensures scrolling triggers before table squishes */
+            }
+        }
     </style>
+    <!-- Additional scripts for PDF generation and HTML2Canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
-<body>
-    <!-- Scroll Progress Bar -->
-    <div class="scroll-progress" id="scrollProgress"></div>
-    
-    <!-- Back to Top Button -->
-    <a href="#" class="back-to-top" id="backToTop">
-        <i class="fas fa-chevron-up"></i>
-    </a>
-    
-    <div class="container-fluid py-4">
-        <div class="row">
-            <!-- Main Content -->
-            <div class="col-lg-9">
-                <!-- Header -->
-                <div class="constitution-header">
-                    <div class="header-content">
-                        <div class="row align-items-center">
-                            <div class="col-md-2 text-center mb-4 mb-md-0">
-                                <i class="fas fa-balance-scale fa-5x opacity-90"></i>
-                            </div>
-                            <div class="col-md-10">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h1 class="display-4 fw-bold mb-3" data-lang-key="pageTitle">FamilyFund Constitution</h1>
-                                    <button id="langToggle" class="btn lang-toggle no-print">
-                                        <i class="fas fa-language me-1"></i> <span id="langToggleText">Kiswahili</span>
-                                    </button>
+<body class="financial-statement-page">
+    <%- include('partials/header') %>
+    <%- include('partials/sidebar', { user: user }) %>
+    <%- include('partials/change_password_modal', { user: user }) %>
+
+    <div class="main-content">
+        <%- include('partials/flash') %>
+        <!-- Scroll Progress Bar (moved inside main-content) -->
+        <div class="scroll-progress" id="scrollProgress"></div>
+        <div class="container-fluid py-4">
+            <div class="row">
+                <!-- Main Content Column -->
+                <div class="col-lg-9">
+                    <!-- Header -->
+                    <div class="constitution-header">
+                        <div class="header-content">
+                            <div class="row align-items-center">
+                                <div class="col-md-2 text-center mb-4 mb-md-0">
+                                    <i class="fas fa-balance-scale fa-5x opacity-90"></i>
                                 </div>
-                                <p class="lead mb-4 opacity-90" data-lang-key="subtitle">The Official Governing Document of the Family Saving Fund</p>
-                                <div class="d-flex flex-wrap gap-3">
-                                    <span class="badge bg-white text-dark p-2">
-                                        <i class="fas fa-calendar-alt me-2"></i>
-                                        <span data-lang-key="effectiveLabel">Effective:</span> <span data-lang-key="effectiveDate">December 22, 2025</span>
-                                    </span>
-                                    <span class="badge bg-white text-dark p-2">
-                                        <i class="fas fa-users me-2"></i>
-                                        <span data-lang-key="versionLabel">Version:</span> <span data-lang-key="version">2.0 (Revised)</span>
-                                    </span>
-                                    <span class="badge bg-white text-dark p-2">
-                                        <i class="fas fa-file-contract me-2"></i>
-                                        <span data-lang-key="docLabel">Official Document</span>
-                                    </span>
+                                <div class="col-md-10">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h1 class="display-4 fw-bold mb-3" data-lang-key="pageTitle">FamilyFund Constitution</h1>
+                                        <button id="langToggle" class="btn lang-toggle no-print">
+                                            <i class="fas fa-language me-1"></i> <span id="langToggleText">Kiswahili</span>
+                                        </button>
+                                    </div>
+                                    <p class="lead mb-4 opacity-90" data-lang-key="subtitle">The Official Governing Document of the Family Saving Fund</p>
+                                    <div class="d-flex flex-wrap gap-3">
+                                        <span class="badge bg-white text-dark p-2">
+                                            <i class="fas fa-calendar-alt me-2"></i>
+                                            <span data-lang-key="effectiveLabel">Effective:</span> <span data-lang-key="effectiveDate">December 22, 2025</span>
+                                        </span>
+                                        <span class="badge bg-white text-dark p-2">
+                                            <i class="fas fa-users me-2"></i>
+                                            <span data-lang-key="versionLabel">Version:</span> <span data-lang-key="version">2.0 (Revised)</span>
+                                        </span>
+                                        <span class="badge bg-white text-dark p-2">
+                                            <i class="fas fa-file-contract me-2"></i>
+                                            <span data-lang-key="docLabel">Official Document</span>
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Download Section -->
-                <div class="download-section no-print">
-                    <h3 class="mb-3" data-lang-key="downloadTitle"><i class="fas fa-file-pdf me-2"></i>Download Official Constitution</h3>
-                    <p class="mb-4 opacity-90" data-lang-key="downloadDesc">Save a copy of the constitution for your records or offline reading</p>
-                    <button id="downloadPdf" class="btn btn-pdf">
-                        <i class="fas fa-download"></i> <span data-lang-key="downloadBtn">Download as PDF</span>
-                    </button>
-                    <p class="mt-3 small opacity-75" data-lang-key="pdfNote">
-                        <i class="fas fa-info-circle me-1"></i>
-                        The PDF will include all articles and maintain proper formatting
-                    </p>
-                </div>
-                
-                <!-- Preamble -->
-                <div class="article-card">
-                    <div class="article-header" id="preambleHeader">
-                        <h3 class="mb-0">
-                            <span class="badge-article" data-lang-key="preambleBadge">Preamble</span>
-                            <span data-lang-key="preambleTitle">Declaration of Purpose</span>
-                        </h3>
-                        <button class="toggle-btn" data-bs-toggle="collapse" data-bs-target="#preambleContent">
-                            <i class="fas fa-chevron-down"></i>
+
+                    <!-- Download Section -->
+                    <div class="download-section no-print">
+                        <h3 class="mb-3" data-lang-key="downloadTitle"><i class="fas fa-file-pdf me-2"></i>Download Official Constitution</h3>
+                        <p class="mb-4 opacity-90" data-lang-key="downloadDesc">Save a copy of the constitution for your records or offline reading</p>
+                        <button id="downloadPdf" class="btn btn-pdf">
+                            <i class="fas fa-download"></i> <span data-lang-key="downloadBtn">Download as PDF</span>
                         </button>
-                    </div>
-                    <div class="article-content collapse show" id="preambleContent">
-                        <p class="lead text-center mb-4" data-lang-key="preambleQuote">
-                            <i class="fas fa-quote-left text-primary me-2"></i>
-                            We, the members of the family, desiring to foster unity, mutual assistance, and financial resilience, do hereby establish this Constitution to govern the Family Saving Fund ("FamilyFund").
-                            <i class="fas fa-quote-right text-primary ms-2"></i>
+                        <p class="mt-3 small opacity-75" data-lang-key="pdfNote">
+                            <i class="fas fa-info-circle me-1"></i>
+                            The PDF will include all articles and maintain proper formatting
                         </p>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <div class="section-item">
-                                    <div class="section-title">
-                                        <i class="fas fa-bullseye"></i> <span data-lang-key="missionTitle">Our Mission</span>
+                    </div>
+
+                    <!-- Preamble -->
+                    <div class="article-card">
+                        <div class="article-header" id="preambleHeader">
+                            <h3 class="mb-0">
+                                <span class="badge-article" data-lang-key="preambleBadge">Preamble</span>
+                                <span data-lang-key="preambleTitle">Declaration of Purpose</span>
+                            </h3>
+                            <button class="toggle-btn" data-bs-toggle="collapse" data-bs-target="#preambleContent">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                        <div class="article-content collapse show" id="preambleContent">
+                            <p class="lead text-center mb-4" data-lang-key="preambleQuote">
+                                <i class="fas fa-quote-left text-primary me-2"></i>
+                                We, the members of the family, desiring to foster unity, mutual assistance, and financial resilience, do hereby establish this Constitution to govern the Family Saving Fund ("FamilyFund").
+                                <i class="fas fa-quote-right text-primary ms-2"></i>
+                            </p>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="section-item">
+                                        <div class="section-title">
+                                            <i class="fas fa-bullseye"></i> <span data-lang-key="missionTitle">Our Mission</span>
+                                        </div>
+                                        <p data-lang-key="missionText">To create a transparent, trustworthy, and sustainable support system for managing social and financial emergencies through collective contributions and shared responsibility.</p>
                                     </div>
-                                    <p data-lang-key="missionText">To create a transparent, trustworthy, and sustainable support system for managing social and financial emergencies through collective contributions and shared responsibility.</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="section-item">
+                                        <div class="section-title">
+                                            <i class="fas fa-handshake"></i> <span data-lang-key="visionTitle">Our Vision</span>
+                                        </div>
+                                        <p data-lang-key="visionText">To empower every family member with financial security and the assurance of collective support during challenging times.</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-3">
+                        </div>
+                    </div>
+
+                    <!-- Constitution Articles -->
+                    <div id="constitutionArticles">
+                        <!-- Article 1 -->
+                        <div class="article-card">
+                            <div class="article-header" id="article1Header">
+                                <h3 class="mb-0">
+                                    <span class="badge-article" data-lang-key="art1Badge">Article 1</span>
+                                    <span data-lang-key="art1Title">Name, Office, and Duration</span>
+                                </h3>
+                                <button class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#article1Content">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="article-content collapse" id="article1Content">
                                 <div class="section-item">
-                                    <div class="section-title">
-                                        <i class="fas fa-handshake"></i> <span data-lang-key="visionTitle">Our Vision</span>
+                                    <div class="section-title"><i class="fas fa-signature"></i> <span data-lang-key="art1_1_title">1.1 Name</span></div>
+                                    <p data-lang-key="art1_1_text">The organization shall be known as the "Family Saving Fund," operating under the brand and management system name <strong>"FamilyFund."</strong></p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-laptop-house"></i> <span data-lang-key="art1_2_title">1.2 Official Systems</span></div>
+                                    <ul data-lang-key="art1_2_text">
+                                        <li><strong>FamilyFund Management System</strong>: The primary digital platform for managing all member activities, contributions, fund requests, and administration.</li>
+                                        <li><strong>OMA (Online Membership Application System)</strong>: A dedicated subsystem for processing new membership applications.</li>
+                                    </ul>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-envelope"></i> <span data-lang-key="art1_3_title">1.3 Official Contact</span></div>
+                                    <p data-lang-key="art1_3_text">Primary correspondence shall be directed to <a href="mailto:itzfamilyfund@gmail.com">itzfamilyfund@gmail.com</a>.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-infinity"></i> <span data-lang-key="art1_4_title">1.4 Duration</span></div>
+                                    <p data-lang-key="art1_4_text">The Fund shall operate for an indefinite period, subject to dissolution procedures outlined in this Constitution.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Article 2 -->
+                        <div class="article-card">
+                            <div class="article-header" id="article2Header">
+                                <h3 class="mb-0">
+                                    <span class="badge-article" data-lang-key="art2Badge">Article 2</span>
+                                    <span data-lang-key="art2Title">Objectives and Purpose</span>
+                                </h3>
+                                <button class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#article2Content">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="article-content collapse" id="article2Content">
+                                <p data-lang-key="art2_intro">The core objectives of FamilyFund are:</p>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-shield-alt"></i> <span data-lang-key="art2_1_title">2.1 Financial Safety Net</span></div>
+                                    <p data-lang-key="art2_1_text">To provide a reliable financial safety net for members during verified social and financial emergencies.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-piggy-bank"></i> <span data-lang-key="art2_2_title">2.2 Savings Culture</span></div>
+                                    <p data-lang-key="art2_2_text">To promote a culture of regular savings, financial discipline, and collective responsibility within the family.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-transparency"></i> <span data-lang-key="art2_3_title">2.3 Transparent System</span></div>
+                                    <p data-lang-key="art2_3_text">To establish a transparent, fair, and efficient system for fund contribution, management, and disbursement through the FamilyFund Management System.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-user-plus"></i> <span data-lang-key="art2_4_title">2.4 Streamlined Onboarding</span></div>
+                                    <p data-lang-key="art2_4_text">To facilitate a streamlined and accessible membership onboarding process via the OMA subsystem.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Article 3 -->
+                        <div class="article-card">
+                            <div class="article-header" id="article3Header">
+                                <h3 class="mb-0">
+                                    <span class="badge-article" data-lang-key="art3Badge">Article 3</span>
+                                    <span data-lang-key="art3Title">Membership</span>
+                                </h3>
+                                <button class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#article3Content">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="article-content collapse" id="article3Content">
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-user-check"></i> <span data-lang-key="art3_1_title">3.1 Eligibility and Application</span></div>
+                                    <p data-lang-key="art3_1_text">Any verified adult family member (18 years and above) is eligible. Prospective members must complete and submit an application through the <strong>Online Membership Application System (OMA)</strong>. Final approval is granted by the Management Team upon review.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-gavel"></i> <span data-lang-key="art3_2_title">3.2 Rights of Members</span></div>
+                                    <p data-lang-key="art3_2_text">Every member in good standing has the right to access the FamilyFund Management System, participate in decision-making, submit fund requests, access transparent records, and receive fair consideration.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-tasks"></i> <span data-lang-key="art3_3_title">3.3 Responsibilities of Members</span></div>
+                                    <p data-lang-key="art3_3_text">Every member is obligated to make timely contributions, use funds honestly, maintain system security, cooperate with management, and act in the Fund's best interest.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-user-slash"></i> <span data-lang-key="art3_4_title">3.4 Membership Status & Termination</span></div>
+                                    <p data-lang-key="art3_4_text">Members can be in Good Standing, Suspended, or Terminated based on compliance with rules and contribution history. Termination requires a majority vote of the management for gross misconduct or fraud.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Article 4 -->
+                        <div class="article-card">
+                            <div class="article-header" id="article4Header">
+                                <h3 class="mb-0">
+                                    <span class="badge-article" data-lang-key="art4Badge">Article 4</span>
+                                    <span data-lang-key="art4Title">Management and Governance</span>
+                                </h3>
+                                <button class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#article4Content">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="article-content collapse" id="article4Content">
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-users-cog"></i> <span data-lang-key="art4_1_title">4.1 Management Team</span></div>
+                                    <p data-lang-key="art4_1_text">The Fund shall be managed by a team consisting of a Chairman, Chief Signatory, and Assistant Signatory, appointed by the members. Their roles and responsibilities are defined in the operational bylaws.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-chalkboard-teacher"></i> <span data-lang-key="art4_2_title">4.2 Decision-Making</span></div>
+                                    <p data-lang-key="art4_2_text">Major decisions (e.g., amendments, dissolution, large disbursements) require a two-thirds majority vote of all members. Routine operational decisions are made by the management team.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-chart-line"></i> <span data-lang-key="art4_3_title">4.3 Reporting</span></div>
+                                    <p data-lang-key="art4_3_text">The management team must provide quarterly financial reports to all members via the FamilyFund Management System, showing contributions, expenditures, and current balance.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Article 5 -->
+                        <div class="article-card">
+                            <div class="article-header" id="article5Header">
+                                <h3 class="mb-0">
+                                    <span class="badge-article" data-lang-key="art5Badge">Article 5</span>
+                                    <span data-lang-key="art5Title">Free Financial Assistance (Emergency Support)</span>
+                                </h3>
+                                <button class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#article5Content">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="article-content collapse" id="article5Content">
+                                <p data-lang-key="art5_intro">This article defines the emergencies for which a member may receive financial assistance without repayment obligations, the amounts, and processing timelines.</p>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-ambulance"></i> <span data-lang-key="art5_1_title">5.1 Eligible Emergencies</span></div>
+                                    <ul data-lang-key="art5_1_text">
+                                        <li><strong>Serious Disease/Hospitalization:</strong> Medical condition requiring inpatient treatment or major surgery, confirmed by a medical certificate from a recognized health facility.</li>
+                                        <li><strong>Accident:</strong> Physical injury resulting from unforeseen events (road traffic accident, fall, fire, etc.) requiring medical attention; excludes self-inflicted harm or injuries from criminal activity.</li>
+                                        <li><strong>Funeral Costs:</strong> Death of a member, spouse, child, or parent of a member. Assistance covers burial expenses.</li>
+                                        <li><strong>Natural Disaster:</strong> Loss or damage to member's primary residence due to flood, fire, earthquake, or other natural calamities, verified by local authorities.</li>
+                                    </ul>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-chart-simple"></i> <span data-lang-key="art5_2_title">5.2 Assistance Amounts and Limits</span></div>
+                                    <p data-lang-key="art5_2_note">The following caps apply per incident (subject to available fund balance):</p>
+                                    <div class="table-responsive-wrapper">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr><th data-lang-key="emergencyType">Emergency Type</th><th data-lang-key="maxAmount">Maximum Assistance</th><th data-lang-key="notes">Notes</th></tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr><td data-lang-key="emergency1">Serious Disease/Hospitalization</td><td>TSh 500,000</td><td data-lang-key="emergency1_note">Per member per year; requires medical verification</td></tr>
+                                                <tr><td data-lang-key="emergency2">Accident</td><td>TSh 300,000</td><td data-lang-key="emergency2_note">Per incident; requires police or medical report</td></tr>
+                                                <tr><td data-lang-key="emergency3">Funeral Costs</td><td>TSh 200,000</td><td data-lang-key="emergency3_note">Per deceased; priority to immediate family of deceased member</td></tr>
+                                                <tr><td data-lang-key="emergency4">Natural Disaster</td><td>TSh 400,000</td><td data-lang-key="emergency4_note">Per event; requires official confirmation</td></tr>
+                                            </tbody>
+                                        </table>
                                     </div>
-                                    <p data-lang-key="visionText">To empower every family member with financial security and the assurance of collective support during challenging times.</p>
+                                    <p class="small text-muted mt-2" data-lang-key="amountNote">* Amounts may be adjusted by a two-thirds member vote based on fund growth.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-clock"></i> <span data-lang-key="art5_3_title">5.3 Processing Timeline</span></div>
+                                    <p data-lang-key="art5_3_text">Once a request is submitted with all required documentation, the management team must decide and disburse within <strong>48 hours</strong> for urgent cases, or <strong>7 days</strong> for non-urgent.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-file-alt"></i> <span data-lang-key="art5_4_title">5.4 Documentation and Verification</span></div>
+                                    <p data-lang-key="art5_4_text">All requests must be accompanied by evidence (medical certificate, police report, death certificate, etc.) and must be witnessed by at least one other member. False claims will lead to immediate termination of membership and recovery of funds.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Article 6 (Loan Policies with 12% and 13%) -->
+                        <div class="article-card">
+                            <div class="article-header" id="article6Header">
+                                <h3 class="mb-0">
+                                    <span class="badge-article" data-lang-key="art6Badge">Article 6</span>
+                                    <span data-lang-key="art6Title">Loan Policies</span>
+                                </h3>
+                                <button class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#article6Content">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="article-content collapse" id="article6Content">
+                                <p data-lang-key="art6_intro">This article establishes the framework for loans, distinguishing between service loans and investment loans, with specific terms, annual interest rates (reducing balance), eligibility, and application processes.</p>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-hand-holding-usd"></i> <span data-lang-key="art6_1_title">6.1 Loan Categories</span></div>
+                                    <ul data-lang-key="art6_1_text">
+                                        <li><strong>Service Loans:</strong> For personal needs such as education fees, medical expenses (not covered under free assistance), home repairs, or other essential services. Must be supported by evidence.</li>
+                                        <li><strong>Investment Loans:</strong> For business or income-generating projects. Requires submission of a project proposal and business plan.</li>
+                                    </ul>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-chart-line"></i> <span data-lang-key="art6_2_title">6.2 Interest Rates and Terms</span></div>
+                                    <div class="table-responsive-wrapper">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th data-lang-key="loanType">Loan Type</th>
+                                                    <th data-lang-key="interestRate">Annual Interest Rate (Reducing Balance)</th>
+                                                    <th data-lang-key="maxAmount">Maximum Amount</th>
+                                                    <th data-lang-key="repaymentPeriod">Repayment Period</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td data-lang-key="serviceLoan">Service Loan</td>
+                                                    <td data-lang-key="serviceRate">12%</td>
+                                                    <td>TSh 500,000</td>
+                                                    <td data-lang-key="servicePeriod">Up to 12 months</td>
+                                                </tr>
+                                                <tr>
+                                                    <td data-lang-key="investmentLoan">Investment Loan</td>
+                                                    <td data-lang-key="investmentRate">13%</td>
+                                                    <td>TSh 2,000,000</td>
+                                                    <td data-lang-key="investmentPeriod">Up to 24 months</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <p class="small text-muted" data-lang-key="rateNote">* Interest rates may be reviewed annually.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-clipboard-list"></i> <span data-lang-key="art6_3_title">6.3 Eligibility and Application</span></div>
+                                    <ul data-lang-key="art6_3_text">
+                                        <li>Must be a member in good standing for at least 6 months.</li>
+                                        <li>No outstanding loan or default in the previous 12 months.</li>
+                                        <li>Service loans require a witness (another member) to verify the purpose.</li>
+                                        <li>Investment loans require a detailed project proposal and at least two witnesses.</li>
+                                        <li>Applications are submitted through the FamilyFund Management System.</li>
+                                    </ul>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-search"></i> <span data-lang-key="art6_4_title">6.4 Project Proposal Analysis</span></div>
+                                    <p data-lang-key="art6_4_text">For investment loans, the management team will critically analyze the proposal for viability, expected returns, and risk. Approval requires a majority vote of the management. The applicant may be invited to present the proposal in a meeting.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-calendar-week"></i> <span data-lang-key="art6_5_title">6.5 Processing Time</span></div>
+                                    <p data-lang-key="art6_5_text">Service loan decisions within 48 hours of complete submission; investment loans within 7 days.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-exchange-alt"></i> <span data-lang-key="art6_6_title">6.6 Repayment and Default</span></div>
+                                    <ul data-lang-key="art6_6_text">
+                                        <li>Repayments are made via the system, with automatic deductions from contributions or bank transfer.</li>
+                                        <li>Late payment penalty: 5% of monthly installment after 7 days grace period.</li>
+                                        <li>Default for more than 3 months leads to membership suspension and referral to the management for recovery action.</li>
+                                    </ul>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-balance-scale"></i> <span data-lang-key="art6_7_title">6.7 Fairness and Anti‑favoritism</span></div>
+                                    <p data-lang-key="art6_7_text">All loan applications are reviewed using a standardized scoring matrix that considers member contribution history, reason, and risk. No management member may influence the decision for their own benefit or for a relative.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Article 7 -->
+                        <div class="article-card">
+                            <div class="article-header" id="article7Header">
+                                <h3 class="mb-0">
+                                    <span class="badge-article" data-lang-key="art7Badge">Article 7</span>
+                                    <span data-lang-key="art7Title">Meetings and Communication</span>
+                                </h3>
+                                <button class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#article7Content">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="article-content collapse" id="article7Content">
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-calendar-alt"></i> <span data-lang-key="art7_1_title">7.1 Annual General Meeting (AGM)</span></div>
+                                    <p data-lang-key="art7_1_text">An AGM shall be held every December to review financial performance, approve reports, and discuss amendments. Notice must be given 14 days in advance.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-video"></i> <span data-lang-key="art7_2_title">7.2 Special Meetings</span></div>
+                                    <p data-lang-key="art7_2_text">Extraordinary meetings may be called by the management or by petition of at least 1/3 of members. Decisions require a simple majority unless stated otherwise.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-comments"></i> <span data-lang-key="art7_3_title">7.3 Communication</span></div>
+                                    <p data-lang-key="art7_3_text">All official communication shall be through the FamilyFund Management System, email, or a designated WhatsApp group. Meeting minutes and decisions will be published within 7 days.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Article 8 -->
+                        <div class="article-card">
+                            <div class="article-header" id="article8Header">
+                                <h3 class="mb-0">
+                                    <span class="badge-article" data-lang-key="art8Badge">Article 8</span>
+                                    <span data-lang-key="art8Title">Amendments and Dissolution</span>
+                                </h3>
+                                <button class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#article8Content">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="article-content collapse" id="article8Content">
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-edit"></i> <span data-lang-key="art8_1_title">8.1 Amendments</span></div>
+                                    <p data-lang-key="art8_1_text">This Constitution may be amended by a two-thirds majority vote of all members present at a properly convened meeting, provided the proposed amendment has been circulated at least 14 days in advance.</p>
+                                </div>
+                                <div class="section-item">
+                                    <div class="section-title"><i class="fas fa-handcuffs"></i> <span data-lang-key="art8_2_title">8.2 Dissolution</span></div>
+                                    <p data-lang-key="art8_2_text">The Fund may be dissolved by a unanimous vote of all members. Upon dissolution, all assets shall be distributed to members in proportion to their total contributions after settling any outstanding liabilities.</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Constitution Articles (all with data-lang-key) -->
-                <div id="constitutionArticles">
-                    <!-- Article 1 -->
-                    <div class="article-card">
-                        <div class="article-header" id="article1Header">
-                            <h3 class="mb-0">
-                                <span class="badge-article" data-lang-key="art1Badge">Article 1</span>
-                                <span data-lang-key="art1Title">Name, Office, and Duration</span>
-                            </h3>
-                            <button class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#article1Content">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                        </div>
-                        <div class="article-content collapse" id="article1Content">
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-signature"></i> <span data-lang-key="art1_1_title">1.1 Name</span></div>
-                                <p data-lang-key="art1_1_text">The organization shall be known as the "Family Saving Fund," operating under the brand and management system name <strong>"FamilyFund."</strong></p>
-                            </div>
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-laptop-house"></i> <span data-lang-key="art1_2_title">1.2 Official Systems</span></div>
-                                <ul data-lang-key="art1_2_text">
-                                    <li><strong>FamilyFund Management System</strong>: The primary digital platform for managing all member activities, contributions, fund requests, and administration.</li>
-                                    <li><strong>OMA (Online Membership Application System)</strong>: A dedicated subsystem for processing new membership applications.</li>
-                                </ul>
-                            </div>
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-envelope"></i> <span data-lang-key="art1_3_title">1.3 Official Contact</span></div>
-                                <p data-lang-key="art1_3_text">Primary correspondence shall be directed to <a href="mailto:itzfamilyfund@gmail.com">itzfamilyfund@gmail.com</a>.</p>
-                            </div>
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-infinity"></i> <span data-lang-key="art1_4_title">1.4 Duration</span></div>
-                                <p data-lang-key="art1_4_text">The Fund shall operate for an indefinite period, subject to dissolution procedures outlined in this Constitution.</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Article 2 -->
-                    <div class="article-card">
-                        <div class="article-header" id="article2Header">
-                            <h3 class="mb-0">
-                                <span class="badge-article" data-lang-key="art2Badge">Article 2</span>
-                                <span data-lang-key="art2Title">Objectives and Purpose</span>
-                            </h3>
-                            <button class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#article2Content">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                        </div>
-                        <div class="article-content collapse" id="article2Content">
-                            <p data-lang-key="art2_intro">The core objectives of FamilyFund are:</p>
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-shield-alt"></i> <span data-lang-key="art2_1_title">2.1 Financial Safety Net</span></div>
-                                <p data-lang-key="art2_1_text">To provide a reliable financial safety net for members during verified social and financial emergencies.</p>
-                            </div>
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-piggy-bank"></i> <span data-lang-key="art2_2_title">2.2 Savings Culture</span></div>
-                                <p data-lang-key="art2_2_text">To promote a culture of regular savings, financial discipline, and collective responsibility within the family.</p>
-                            </div>
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-transparency"></i> <span data-lang-key="art2_3_title">2.3 Transparent System</span></div>
-                                <p data-lang-key="art2_3_text">To establish a transparent, fair, and efficient system for fund contribution, management, and disbursement through the FamilyFund Management System.</p>
-                            </div>
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-user-plus"></i> <span data-lang-key="art2_4_title">2.4 Streamlined Onboarding</span></div>
-                                <p data-lang-key="art2_4_text">To facilitate a streamlined and accessible membership onboarding process via the OMA subsystem.</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Article 3 -->
-                    <div class="article-card">
-                        <div class="article-header" id="article3Header">
-                            <h3 class="mb-0">
-                                <span class="badge-article" data-lang-key="art3Badge">Article 3</span>
-                                <span data-lang-key="art3Title">Membership</span>
-                            </h3>
-                            <button class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#article3Content">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                        </div>
-                        <div class="article-content collapse" id="article3Content">
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-user-check"></i> <span data-lang-key="art3_1_title">3.1 Eligibility and Application</span></div>
-                                <p data-lang-key="art3_1_text">Any verified adult family member (18 years and above) is eligible. Prospective members must complete and submit an application through the <strong>Online Membership Application System (OMA)</strong>. Final approval is granted by the Management Team upon review.</p>
-                            </div>
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-gavel"></i> <span data-lang-key="art3_2_title">3.2 Rights of Members</span></div>
-                                <p data-lang-key="art3_2_text">Every member in good standing has the right to access the FamilyFund Management System, participate in decision-making, submit fund requests, access transparent records, and receive fair consideration.</p>
-                            </div>
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-tasks"></i> <span data-lang-key="art3_3_title">3.3 Responsibilities of Members</span></div>
-                                <p data-lang-key="art3_3_text">Every member is obligated to make timely contributions, use funds honestly, maintain system security, cooperate with management, and act in the Fund's best interest.</p>
-                            </div>
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-user-slash"></i> <span data-lang-key="art3_4_title">3.4 Membership Status & Termination</span></div>
-                                <p data-lang-key="art3_4_text">Members can be in Good Standing, Suspended, or Terminated based on compliance with rules and contribution history. Termination requires a majority vote of the management for gross misconduct or fraud.</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Article 4: Management and Governance -->
-                    <div class="article-card">
-                        <div class="article-header" id="article4Header">
-                            <h3 class="mb-0">
-                                <span class="badge-article" data-lang-key="art4Badge">Article 4</span>
-                                <span data-lang-key="art4Title">Management and Governance</span>
-                            </h3>
-                            <button class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#article4Content">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                        </div>
-                        <div class="article-content collapse" id="article4Content">
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-users-cog"></i> <span data-lang-key="art4_1_title">4.1 Management Team</span></div>
-                                <p data-lang-key="art4_1_text">The Fund shall be managed by a team consisting of a Chairman, Chief Signatory, and Assistant Signatory, appointed by the members. Their roles and responsibilities are defined in the operational bylaws.</p>
-                            </div>
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-chalkboard-teacher"></i> <span data-lang-key="art4_2_title">4.2 Decision-Making</span></div>
-                                <p data-lang-key="art4_2_text">Major decisions (e.g., amendments, dissolution, large disbursements) require a two-thirds majority vote of all members. Routine operational decisions are made by the management team.</p>
-                            </div>
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-chart-line"></i> <span data-lang-key="art4_3_title">4.3 Reporting</span></div>
-                                <p data-lang-key="art4_3_text">The management team must provide quarterly financial reports to all members via the FamilyFund Management System, showing contributions, expenditures, and current balance.</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Article 5: Free Financial Assistance -->
-                    <div class="article-card">
-                        <div class="article-header" id="article5Header">
-                            <h3 class="mb-0">
-                                <span class="badge-article" data-lang-key="art5Badge">Article 5</span>
-                                <span data-lang-key="art5Title">Free Financial Assistance (Emergency Support)</span>
-                            </h3>
-                            <button class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#article5Content">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                        </div>
-                        <div class="article-content collapse" id="article5Content">
-                            <p data-lang-key="art5_intro">This article defines the emergencies for which a member may receive financial assistance without repayment obligations, the amounts, and processing timelines.</p>
-                            
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-ambulance"></i> <span data-lang-key="art5_1_title">5.1 Eligible Emergencies</span></div>
-                                <ul data-lang-key="art5_1_text">
-                                    <li><strong>Serious Disease/Hospitalization:</strong> Medical condition requiring inpatient treatment or major surgery, confirmed by a medical certificate from a recognized health facility.</li>
-                                    <li><strong>Accident:</strong> Physical injury resulting from unforeseen events (road traffic accident, fall, fire, etc.) requiring medical attention; excludes self-inflicted harm or injuries from criminal activity.</li>
-                                    <li><strong>Funeral Costs:</strong> Death of a member, spouse, child, or parent of a member. Assistance covers burial expenses.</li>
-                                    <li><strong>Natural Disaster:</strong> Loss or damage to member's primary residence due to flood, fire, earthquake, or other natural calamities, verified by local authorities.</li>
-                                </ul>
-                            </div>
-                            
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-chart-simple"></i> <span data-lang-key="art5_2_title">5.2 Assistance Amounts and Limits</span></div>
-                                <p data-lang-key="art5_2_note">The following caps apply per incident (subject to available fund balance):</p>
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr><th data-lang-key="emergencyType">Emergency Type</th><th data-lang-key="maxAmount">Maximum Assistance</th><th data-lang-key="notes">Notes</th></tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr><td data-lang-key="emergency1">Serious Disease/Hospitalization</td><td>TSh 500,000</td><td data-lang-key="emergency1_note">Per member per year; requires medical verification</td></tr>
-                                        <tr><td data-lang-key="emergency2">Accident</td><td>TSh 300,000</td><td data-lang-key="emergency2_note">Per incident; requires police or medical report</td></tr>
-                                        <tr><td data-lang-key="emergency3">Funeral Costs</td><td>TSh 200,000</td><td data-lang-key="emergency3_note">Per deceased; priority to immediate family of deceased member</td></tr>
-                                        <tr><td data-lang-key="emergency4">Natural Disaster</td><td>TSh 400,000</td><td data-lang-key="emergency4_note">Per event; requires official confirmation</td></tr>
-                                    </tbody>
-                                </table>
-                                <p class="small text-muted mt-2" data-lang-key="amountNote">* Amounts may be adjusted by a two-thirds member vote based on fund growth.</p>
-                            </div>
-                            
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-clock"></i> <span data-lang-key="art5_3_title">5.3 Processing Timeline</span></div>
-                                <p data-lang-key="art5_3_text">Once a request is submitted with all required documentation, the management team must decide and disburse within <strong>48 hours</strong> for urgent cases, or <strong>7 days</strong> for non-urgent.</p>
-                            </div>
-                            
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-file-alt"></i> <span data-lang-key="art5_4_title">5.4 Documentation and Verification</span></div>
-                                <p data-lang-key="art5_4_text">All requests must be accompanied by evidence (medical certificate, police report, death certificate, etc.) and must be witnessed by at least one other member. False claims will lead to immediate termination of membership and recovery of funds.</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Article 6: Loan Policies (with new annual interest rates 12% and 13%) -->
-                    <div class="article-card">
-                        <div class="article-header" id="article6Header">
-                            <h3 class="mb-0">
-                                <span class="badge-article" data-lang-key="art6Badge">Article 6</span>
-                                <span data-lang-key="art6Title">Loan Policies</span>
-                            </h3>
-                            <button class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#article6Content">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                        </div>
-                        <div class="article-content collapse" id="article6Content">
-                            <p data-lang-key="art6_intro">This article establishes the framework for loans, distinguishing between service loans and investment loans, with specific terms, annual interest rates (reducing balance), eligibility, and application processes.</p>
-                            
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-hand-holding-usd"></i> <span data-lang-key="art6_1_title">6.1 Loan Categories</span></div>
-                                <ul data-lang-key="art6_1_text">
-                                    <li><strong>Service Loans:</strong> For personal needs such as education fees, medical expenses (not covered under free assistance), home repairs, or other essential services. Must be supported by evidence.</li>
-                                    <li><strong>Investment Loans:</strong> For business or income-generating projects. Requires submission of a project proposal and business plan.</li>
-                                </ul>
-                            </div>
-                            
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-chart-line"></i> <span data-lang-key="art6_2_title">6.2 Interest Rates and Terms</span></div>
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th data-lang-key="loanType">Loan Type</th>
-                                            <th data-lang-key="interestRate">Annual Interest Rate (Reducing Balance)</th>
-                                            <th data-lang-key="maxAmount">Maximum Amount</th>
-                                            <th data-lang-key="repaymentPeriod">Repayment Period</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td data-lang-key="serviceLoan">Service Loan</td>
-                                            <td data-lang-key="serviceRate">12%</td>
-                                            <td>TSh 500,000</td>
-                                            <td data-lang-key="servicePeriod">Up to 12 months</td>
-                                        </tr>
-                                        <tr>
-                                            <td data-lang-key="investmentLoan">Investment Loan</td>
-                                            <td data-lang-key="investmentRate">13%</td>
-                                            <td>TSh 2,000,000</td>
-                                            <td data-lang-key="investmentPeriod">Up to 24 months</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <p class="small text-muted" data-lang-key="rateNote">* Interest rates may be reviewed annually.</p>
-                            </div>
-                            
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-clipboard-list"></i> <span data-lang-key="art6_3_title">6.3 Eligibility and Application</span></div>
-                                <ul data-lang-key="art6_3_text">
-                                    <li>Must be a member in good standing for at least 6 months.</li>
-                                    <li>No outstanding loan or default in the previous 12 months.</li>
-                                    <li>Service loans require a witness (another member) to verify the purpose.</li>
-                                    <li>Investment loans require a detailed project proposal and at least two witnesses.</li>
-                                    <li>Applications are submitted through the FamilyFund Management System.</li>
-                                </ul>
-                            </div>
-                            
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-search"></i> <span data-lang-key="art6_4_title">6.4 Project Proposal Analysis</span></div>
-                                <p data-lang-key="art6_4_text">For investment loans, the management team will critically analyze the proposal for viability, expected returns, and risk. Approval requires a majority vote of the management. The applicant may be invited to present the proposal in a meeting.</p>
-                            </div>
-                            
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-calendar-week"></i> <span data-lang-key="art6_5_title">6.5 Processing Time</span></div>
-                                <p data-lang-key="art6_5_text">Service loan decisions within 48 hours of complete submission; investment loans within 7 days.</p>
-                            </div>
-                            
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-exchange-alt"></i> <span data-lang-key="art6_6_title">6.6 Repayment and Default</span></div>
-                                <ul data-lang-key="art6_6_text">
-                                    <li>Repayments are made via the system, with automatic deductions from contributions or bank transfer.</li>
-                                    <li>Late payment penalty: 5% of monthly installment after 7 days grace period.</li>
-                                    <li>Default for more than 3 months leads to membership suspension and referral to the management for recovery action.</li>
-                                </ul>
-                            </div>
-                            
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-balance-scale"></i> <span data-lang-key="art6_7_title">6.7 Fairness and Anti‑favoritism</span></div>
-                                <p data-lang-key="art6_7_text">All loan applications are reviewed using a standardized scoring matrix that considers member contribution history, reason, and risk. No management member may influence the decision for their own benefit or for a relative.</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Article 7: Meetings -->
-                    <div class="article-card">
-                        <div class="article-header" id="article7Header">
-                            <h3 class="mb-0">
-                                <span class="badge-article" data-lang-key="art7Badge">Article 7</span>
-                                <span data-lang-key="art7Title">Meetings and Communication</span>
-                            </h3>
-                            <button class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#article7Content">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                        </div>
-                        <div class="article-content collapse" id="article7Content">
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-calendar-alt"></i> <span data-lang-key="art7_1_title">7.1 Annual General Meeting (AGM)</span></div>
-                                <p data-lang-key="art7_1_text">An AGM shall be held every December to review financial performance, approve reports, and discuss amendments. Notice must be given 14 days in advance.</p>
-                            </div>
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-video"></i> <span data-lang-key="art7_2_title">7.2 Special Meetings</span></div>
-                                <p data-lang-key="art7_2_text">Extraordinary meetings may be called by the management or by petition of at least 1/3 of members. Decisions require a simple majority unless stated otherwise.</p>
-                            </div>
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-comments"></i> <span data-lang-key="art7_3_title">7.3 Communication</span></div>
-                                <p data-lang-key="art7_3_text">All official communication shall be through the FamilyFund Management System, email, or a designated WhatsApp group. Meeting minutes and decisions will be published within 7 days.</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Article 8: Amendments and Dissolution -->
-                    <div class="article-card">
-                        <div class="article-header" id="article8Header">
-                            <h3 class="mb-0">
-                                <span class="badge-article" data-lang-key="art8Badge">Article 8</span>
-                                <span data-lang-key="art8Title">Amendments and Dissolution</span>
-                            </h3>
-                            <button class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#article8Content">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                        </div>
-                        <div class="article-content collapse" id="article8Content">
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-edit"></i> <span data-lang-key="art8_1_title">8.1 Amendments</span></div>
-                                <p data-lang-key="art8_1_text">This Constitution may be amended by a two-thirds majority vote of all members present at a properly convened meeting, provided the proposed amendment has been circulated at least 14 days in advance.</p>
-                            </div>
-                            <div class="section-item">
-                                <div class="section-title"><i class="fas fa-handcuffs"></i> <span data-lang-key="art8_2_title">8.2 Dissolution</span></div>
-                                <p data-lang-key="art8_2_text">The Fund may be dissolved by a unanimous vote of all members. Upon dissolution, all assets shall be distributed to members in proportion to their total contributions after settling any outstanding liabilities.</p>
-                            </div>
-                        </div>
+
+                    <!-- Footer Note -->
+                    <div class="footer-note">
+                        <h4 class="mb-3" data-lang-key="footerTitle"><i class="fas fa-file-contract me-2"></i>Official Document Status</h4>
+                        <p class="mb-2" data-lang-key="footerAdopted">This Constitution was adopted and comes into force on <strong>December 22, 2025</strong>.</p>
+                        <p class="small text-muted mb-0" data-lang-key="footerNote">
+                            <i class="fas fa-info-circle me-1"></i>
+                            This document should be read in conjunction with the official <strong>FamilyFund Terms of Service</strong> and any operational <strong>Bylaws</strong> established by the Management Team.
+                        </p>
                     </div>
                 </div>
-                
-                <!-- Footer Note -->
-                <div class="footer-note">
-                    <h4 class="mb-3" data-lang-key="footerTitle"><i class="fas fa-file-contract me-2"></i>Official Document Status</h4>
-                    <p class="mb-2" data-lang-key="footerAdopted">This Constitution was adopted and comes into force on <strong>December 22, 2025</strong>.</p>
-                    <p class="small text-muted mb-0" data-lang-key="footerNote">
-                        <i class="fas fa-info-circle me-1"></i>
-                        This document should be read in conjunction with the official <strong>FamilyFund Terms of Service</strong> and any operational <strong>Bylaws</strong> established by the Management Team.
-                    </p>
-                </div>
-            </div>
-            
-            <!-- Navigation Sidebar -->
-            <div class="col-lg-3 d-none d-lg-block">
-                <div class="constitution-nav no-print">
-                    <h5 class="mb-3" data-lang-key="navTitle"><i class="fas fa-list-ol me-2"></i>Constitution Navigation</h5>
-                    <nav class="nav flex-column">
-                        <div class="nav-item"><a class="nav-link" href="#preambleHeader"><i class="fas fa-book-open"></i> <span data-lang-key="navPreamble">Preamble</span></a></div>
-                        <div class="nav-item"><a class="nav-link" href="#article1Header"><i class="fas fa-1"></i> <span data-lang-key="navArt1">Article 1: Name & Office</span></a></div>
-                        <div class="nav-item"><a class="nav-link" href="#article2Header"><i class="fas fa-2"></i> <span data-lang-key="navArt2">Article 2: Objectives</span></a></div>
-                        <div class="nav-item"><a class="nav-link" href="#article3Header"><i class="fas fa-3"></i> <span data-lang-key="navArt3">Article 3: Membership</span></a></div>
-                        <div class="nav-item"><a class="nav-link" href="#article4Header"><i class="fas fa-4"></i> <span data-lang-key="navArt4">Article 4: Management</span></a></div>
-                        <div class="nav-item"><a class="nav-link" href="#article5Header"><i class="fas fa-5"></i> <span data-lang-key="navArt5">Article 5: Free Assistance</span></a></div>
-                        <div class="nav-item"><a class="nav-link" href="#article6Header"><i class="fas fa-6"></i> <span data-lang-key="navArt6">Article 6: Loan Policies</span></a></div>
-                        <div class="nav-item"><a class="nav-link" href="#article7Header"><i class="fas fa-7"></i> <span data-lang-key="navArt7">Article 7: Meetings</span></a></div>
-                        <div class="nav-item"><a class="nav-link" href="#article8Header"><i class="fas fa-8"></i> <span data-lang-key="navArt8">Article 8: Amendments</span></a></div>
-                        <div class="nav-item mt-3">
-                            <button id="printPage" class="btn btn-outline-primary w-100">
-                                <i class="fas fa-print me-2"></i> <span data-lang-key="printBtn">Print Constitution</span>
-                            </button>
+
+                <!-- Navigation Sidebar (desktop) -->
+                <div class="col-lg-3 d-none d-lg-block">
+                    <div class="constitution-nav no-print">
+                        <h5 class="mb-3" data-lang-key="navTitle"><i class="fas fa-list-ol me-2"></i>Constitution Navigation</h5>
+                        <nav class="nav flex-column">
+                            <div class="nav-item"><a class="nav-link" href="#preambleHeader"><i class="fas fa-book-open"></i> <span data-lang-key="navPreamble">Preamble</span></a></div>
+                            <div class="nav-item"><a class="nav-link" href="#article1Header"><i class="fas fa-1"></i> <span data-lang-key="navArt1">Article 1: Name & Office</span></a></div>
+                            <div class="nav-item"><a class="nav-link" href="#article2Header"><i class="fas fa-2"></i> <span data-lang-key="navArt2">Article 2: Objectives</span></a></div>
+                            <div class="nav-item"><a class="nav-link" href="#article3Header"><i class="fas fa-3"></i> <span data-lang-key="navArt3">Article 3: Membership</span></a></div>
+                            <div class="nav-item"><a class="nav-link" href="#article4Header"><i class="fas fa-4"></i> <span data-lang-key="navArt4">Article 4: Management</span></a></div>
+                            <div class="nav-item"><a class="nav-link" href="#article5Header"><i class="fas fa-5"></i> <span data-lang-key="navArt5">Article 5: Free Assistance</span></a></div>
+                            <div class="nav-item"><a class="nav-link" href="#article6Header"><i class="fas fa-6"></i> <span data-lang-key="navArt6">Article 6: Loan Policies</span></a></div>
+                            <div class="nav-item"><a class="nav-link" href="#article7Header"><i class="fas fa-7"></i> <span data-lang-key="navArt7">Article 7: Meetings</span></a></div>
+                            <div class="nav-item"><a class="nav-link" href="#article8Header"><i class="fas fa-8"></i> <span data-lang-key="navArt8">Article 8: Amendments</span></a></div>
+                            <div class="nav-item mt-3">
+                                <button id="printPage" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-print me-2"></i> <span data-lang-key="printBtn">Print Constitution</span>
+                                </button>
+                            </div>
+                        </nav>
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h6 class="mb-2" data-lang-key="tipsTitle"><i class="fas fa-lightbulb me-2"></i>Quick Tips</h6>
+                            <ul class="small mb-0 ps-3">
+                                <li data-lang-key="tip1">Click on article headers to expand/collapse</li>
+                                <li data-lang-key="tip2">Use navigation for quick access</li>
+                                <li data-lang-key="tip3">Download PDF for offline reading</li>
+                                <li data-lang-key="tip4">Print for physical copies</li>
+                            </ul>
                         </div>
-                    </nav>
-                    
-                    <div class="mt-4 p-3 bg-light rounded">
-                        <h6 class="mb-2" data-lang-key="tipsTitle"><i class="fas fa-lightbulb me-2"></i>Quick Tips</h6>
-                        <ul class="small mb-0 ps-3">
-                            <li data-lang-key="tip1">Click on article headers to expand/collapse</li>
-                            <li data-lang-key="tip2">Use navigation for quick access</li>
-                            <li data-lang-key="tip3">Download PDF for offline reading</li>
-                            <li data-lang-key="tip4">Print for physical copies</li>
-                        </ul>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
+
+    <%- include('partials/footer') %>
+
+    <!-- Additional scripts for constitution -->
     <script>
-        // Translations object (unchanged, but we update the rate values)
+        // ---------- Translations (English / Kiswahili) ----------
         const translations = {
             // Header
             pageTitle: { en: "FamilyFund Constitution", sw: "Katiba ya FamilyFund" },
@@ -852,7 +846,7 @@
             art5_3_text: { en: "Once a request is submitted with all required documentation, the management team must decide and disburse within <strong>48 hours</strong> for urgent cases, or <strong>7 days</strong> for non-urgent.", sw: "Ombi likiwasilishwa pamoja na nyaraka zote zinazohitajika, timu ya usimamizi lazima iamue na itoe fedha ndani ya <strong>saa 48</strong> kwa kesi za dharura, au <strong>siku 7</strong> kwa zisizo za dharura." },
             art5_4_title: { en: "5.4 Documentation and Verification", sw: "5.4 Nyaraka na Uthibitishaji" },
             art5_4_text: { en: "All requests must be accompanied by evidence (medical certificate, police report, death certificate, etc.) and must be witnessed by at least one other member. False claims will lead to immediate termination of membership and recovery of funds.", sw: "Maombi yote lazima yaambatane na ushahidi (cheti cha matibabu, ripoti ya polisi, cheti cha kifo, n.k.) na lazima yashuhudiwe na angalau mwanachama mwingine mmoja. Madai ya uwongo yatasababisha kukatishwa kwa uanachama mara moja na kurudishwa kwa fedha." },
-            // Article 6 – updated rates
+            // Article 6
             art6Badge: { en: "Article 6", sw: "Kifungu cha 6" },
             art6Title: { en: "Loan Policies", sw: "Sera za Mikopo" },
             art6_intro: { en: "This article establishes the framework for loans, distinguishing between service loans and investment loans, with specific terms, annual interest rates (reducing balance), eligibility, and application processes.", sw: "Kifungu hiki kinaanzisha mfumo wa mikopo, ukibainisha tofauti kati ya mikopo ya huduma na mikopo ya uwekezaji, pamoja na masharti maalum, viwango vya riba vya mwaka (salio linalopungua), sifa, na taratibu za maombi." },
@@ -918,9 +912,9 @@
             tip3: { en: "Download PDF for offline reading", sw: "Pakua PDF kwa usomaji nje ya mtandao" },
             tip4: { en: "Print for physical copies", sw: "Chapisha kwa nakala halisi" }
         };
-        
+
         let currentLang = 'en';
-        
+
         function setLanguage(lang) {
             currentLang = lang;
             document.querySelectorAll('[data-lang-key]').forEach(el => {
@@ -941,20 +935,20 @@
             }
             localStorage.setItem('lang', lang);
         }
-        
+
         document.getElementById('langToggle').addEventListener('click', () => {
             const newLang = currentLang === 'en' ? 'sw' : 'en';
             setLanguage(newLang);
         });
-        
+
         const savedLang = localStorage.getItem('lang');
         if (savedLang && (savedLang === 'en' || savedLang === 'sw')) {
             setLanguage(savedLang);
         } else {
             setLanguage('en');
         }
-        
-        // PDF Download Functionality (unchanged)
+
+        // PDF Download
         const { jsPDF } = window.jspdf;
         document.getElementById('downloadPdf').addEventListener('click', function() {
             const btn = this;
@@ -989,7 +983,7 @@
                 showAlert('Error generating PDF. Please try again.', 'danger');
             });
         });
-        
+
         function showAlert(message, type) {
             const alertDiv = document.createElement('div');
             alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
@@ -998,18 +992,19 @@
             document.body.appendChild(alertDiv);
             setTimeout(() => alertDiv.remove(), 5000);
         }
-        
-        // Scroll Progress Bar
+
+        // Scroll progress
         window.addEventListener('scroll', function() {
             const winHeight = window.innerHeight;
             const docHeight = document.documentElement.scrollHeight;
             const scrollTop = window.pageYOffset;
             const trackLength = docHeight - winHeight;
             const progress = Math.floor((scrollTop / trackLength) * 100);
-            document.getElementById('scrollProgress').style.width = progress + '%';
+            const progressBar = document.getElementById('scrollProgress');
+            if (progressBar) progressBar.style.width = progress + '%';
         });
-        
-        // Back to Top Button
+
+        // Back to top
         const backToTop = document.getElementById('backToTop');
         window.addEventListener('scroll', function() {
             if (window.pageYOffset > 300) {
@@ -1022,8 +1017,8 @@
             e.preventDefault();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
-        
-        // Smooth scrolling for anchor links
+
+        // Smooth scrolling
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 const href = this.getAttribute('href');
@@ -1036,14 +1031,14 @@
                 }
             });
         });
-        
+
         // Toggle button rotation
         document.querySelectorAll('.toggle-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 this.classList.toggle('collapsed');
             });
         });
-        
+
         // Auto-expand article on navigation click
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', function() {
@@ -1063,7 +1058,7 @@
                 }
             });
         });
-        
+
         // Print button
         document.getElementById('printPage').addEventListener('click', function() {
             window.print();
