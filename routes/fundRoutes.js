@@ -627,6 +627,23 @@ doc.moveDown();
   }
 });
 
+
+
+// Loan Amortization Calculator
+router.get('/loan-amortization', requireAuth, async (req, res) => {
+  try {
+    res.render('loan_amortization', {
+      user: req.session.user,
+    });
+  } catch (err) {
+    console.error('Error loading loan amortization page:', err);
+    req.flash('error', 'Unable to load loan amortization calculator.');
+    res.redirect('/dashboard');
+  }
+});
+
+
+
 module.exports = router;
 
 
