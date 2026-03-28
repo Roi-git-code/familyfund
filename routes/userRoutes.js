@@ -153,6 +153,12 @@ router.get('/update-profile', requireAuth, async (req, res) => {
   }
 });
 
+// Ensure upload directory exists
+const uploadDir = path.join(__dirname, '../public/uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 // Configure multer for disk storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
