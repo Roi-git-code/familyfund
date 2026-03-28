@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -72,7 +71,7 @@
                 <div class="table-container mb-3">
                   <table class="table table-striped table-hover align-middle loan-table">
                     <thead class="table-dark">
-                      <tr><th>ID</th><th>Member</th><th>Type</th><th>Principal</th><th>Total Repayable</th><th>Paid</th><th>Outstanding</th><th>Rate</th><th>Status</th><th>Signatures</th><th>Actions</th><th>Date</th> </tr>
+                      <th>ID</th><th>Member</th><th>Type</th><th>Principal</th><th>Total Repayable</th><th>Paid</th><th>Outstanding</th><th>Rate</th><th>Status</th><th>Signatures</th><th>Actions</th><th>Date</th>
                     </thead>
                     <tbody id="loansTableBody"></tbody>
                    </table>
@@ -93,10 +92,10 @@
                 <div class="table-container">
                   <table class="table table-striped table-hover align-middle">
                     <thead class="table-dark">
-                      <tr><th>Request ID</th><th>Member</th><th>Loan ID</th><th>Current Tenure</th><th>New Tenure</th><th>Proposed Monthly</th><th>Status</th><th>Signatures</th><th>Actions</th><th>Date</th></tr>
+                      <th>Request ID</th><th>Member</th><th>Loan ID</th><th>Current Tenure</th><th>New Tenure</th><th>Proposed Monthly</th><th>Status</th><th>Signatures</th><th>Actions</th><th>Date</th>
                     </thead>
                     <tbody id="restructuringTableBody"></tbody>
-                  </table>
+                   </table>
                 </div>
                 <div class="pagination-container"><nav><ul class="pagination" id="restructuringPagination"></ul></nav></div>
               <% } else { %>
@@ -109,7 +108,7 @@
     </div>
   </main>
 
-  <!-- Loan Details Modal -->
+  <!-- Loan Details Modal (with Disbursement Reference Field) -->
   <div id="loanModal" class="modal fade" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
@@ -117,6 +116,12 @@
         <div class="modal-body">
           <dl id="loanDetails"></dl>
           <div id="signaturesSection" class="mt-4" style="display: none;"><h6>Officer Signatures:</h6><div id="signaturesList" class="signatures-grid"></div></div>
+          <!-- Disbursement Reference (only for approval) -->
+          <div id="disbursementTrnContainer" style="display:none; margin-top:20px;">
+            <label for="disbursementTrn" class="form-label"><strong>Disbursement Transaction Reference:</strong></label>
+            <input type="text" id="disbursementTrn" class="form-control" placeholder="e.g., M-Koba-12345 or bank reference">
+            <div class="form-text">Enter the transaction ID from the bank or payment system for this loan disbursement.</div>
+          </div>
           <div id="loanRejectReasonContainer" style="display:none;"><label><strong>Reason for Rejection:</strong></label><textarea id="loanRejectReason" class="form-control" rows="3"></textarea></div>
           <div id="alreadyReviewedMessage" class="already-reviewed-message" style="display: none;">This loan has already been reviewed and cannot be modified.</div>
         </div>
@@ -145,7 +150,12 @@
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header"><h5>Restructuring Request Details</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body"><dl id="restructuringDetails"></dl><div id="restructuringSignaturesSection" class="mt-4" style="display:none;"><h6>Officer Signatures:</h6><div id="restructuringSignaturesList"></div></div><div id="restructuringRejectReasonContainer" style="display:none;"><label>Rejection Reason:</label><textarea id="restructuringRejectReason" class="form-control" rows="3"></textarea></div><div id="restructuringAlreadyReviewed" class="already-reviewed-message" style="display:none;">This request has already been processed.</div></div>
+        <div class="modal-body">
+          <dl id="restructuringDetails"></dl>
+          <div id="restructuringSignaturesSection" class="mt-4" style="display:none;"><h6>Officer Signatures:</h6><div id="restructuringSignaturesList"></div></div>
+          <div id="restructuringRejectReasonContainer" style="display:none;"><label>Rejection Reason:</label><textarea id="restructuringRejectReason" class="form-control" rows="3"></textarea></div>
+          <div id="restructuringAlreadyReviewed" class="already-reviewed-message" style="display:none;">This request has already been processed.</div>
+        </div>
         <div class="modal-footer"><button class="btn btn-success btn-approve-restructuring">Approve</button><button class="btn btn-danger btn-reject-restructuring">Reject</button><button class="btn btn-outline-danger btn-confirm-reject-restructuring" style="display:none;">Confirm Rejection</button></div>
       </div>
     </div>
@@ -183,47 +193,43 @@
     let currentPage = 1;
     let currentRestructurePage = 1;
 
-    // ----------------------------- Loan Table Rendering -----------------------------
-// ----------------------------- Loan Table Rendering -----------------------------
-function renderLoansTable() {
-  const start = (currentPage - 1) * rowsPerPage;
-  const end = start + rowsPerPage;
-  const currentRows = allLoans.slice(start, end);
-  const tbody = document.getElementById('loansTableBody');
-  if (!tbody) return;
+    // ========== Loan Table Rendering ==========
+    function renderLoansTable() {
+      const start = (currentPage - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+      const currentRows = allLoans.slice(start, end);
+      const tbody = document.getElementById('loansTableBody');
+      if (!tbody) return;
 
-  let html = '';
-  currentRows.forEach(loan => {
-    const canSign = ['Pending', 'Under Review'].includes(loan.status) &&
-                    ['assistant_signatory', 'chief_signatory', 'chairman'].includes(userRole);
-    
-    // ✅ New condition: status must be Under Review, user must be the correct officer, and all 3 signatures must exist
-    const canReview = loan.status === 'Under Review' &&
-                      ((loan.loan_type === 'service' && userRole === 'chairman') ||
-                       (loan.loan_type === 'investment' && userRole === 'chief_signatory')) &&
-                      loan.vote_count >= 3;
+      let html = '';
+      currentRows.forEach(loan => {
+        const canSign = ['Pending', 'Under Review'].includes(loan.status) &&
+                        ['assistant_signatory', 'chief_signatory', 'chairman'].includes(userRole);
+        const canReview = loan.status === 'Under Review' &&
+                          ((loan.loan_type === 'service' && userRole === 'chairman') ||
+                           (loan.loan_type === 'investment' && userRole === 'chief_signatory')) &&
+                          loan.vote_count >= 3;
 
-    html += `
-      <tr data-loan='${JSON.stringify(loan)}'>
-        <td>${loan.id}</td>
-        <td>${loan.first_name} ${loan.sur_name}</td>
-        <td>${loan.loan_type === 'service' ? 'Service' : 'Investment'}</td>
-        <td>${Number(loan.amount).toLocaleString()}</td>
-        <td>${Number(loan.total_repayable).toLocaleString()}</td>
-        <td>${Number(loan.paid_amount).toLocaleString()}</td>
-        <td class="${loan.remaining_balance <= 0 ? 'text-success' : 'text-warning'}">${Number(loan.remaining_balance).toLocaleString()}</td>
-        <td>${loan.interest_rate}%</td>
-        <td><span class="badge ${loan.status === 'Approved' ? 'bg-success' : (loan.status === 'Rejected' ? 'bg-danger' : (loan.status === 'Completed' ? 'bg-secondary' : 'bg-warning text-dark'))}">${loan.status}</span></td>
-        <td><div class="signature-count"><span class="signature-up"><i class="fas fa-thumbs-up"></i> ${loan.up_votes}</span> | <span class="signature-down"><i class="fas fa-thumbs-down"></i> ${loan.down_votes}</span><br><small>${loan.vote_count}/3 signatures</small></div></td>
-        <td><div class="dropdown"><button class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown">Actions</button><ul class="dropdown-menu">${canSign ? `<li><button class="dropdown-item btn-sign-request" data-loan-id="${loan.id}"><i class="fas fa-signature me-2"></i>Sign</button></li>` : ''}${canReview ? `<li><button class="dropdown-item btn-review-loan" data-loan-id="${loan.id}"><i class="fas fa-clipboard-check me-2"></i>Review</button></li>` : ''}<li><a class="dropdown-item" href="/loans/${loan.id}/download" target="_blank"><i class="fas fa-download me-2"></i>Download Schedule</a></li></ul></div></td>
-        <td>${new Date(loan.created_at).toLocaleString()}</td>
-      </tr>
-    `;
-  });
-  tbody.innerHTML = html;
-  attachLoanActions();
-}
-      
+        html += `
+          <tr data-loan='${JSON.stringify(loan)}'>
+              <td>${loan.id}</td>
+              <td>${loan.first_name} ${loan.sur_name}</td>
+              <td>${loan.loan_type === 'service' ? 'Service' : 'Investment'}</td>
+              <td>${Number(loan.amount).toLocaleString()}</td>
+              <td>${Number(loan.total_repayable).toLocaleString()}</td>
+              <td>${Number(loan.paid_amount).toLocaleString()}</td>
+             <td class="${loan.remaining_balance <= 0 ? 'text-success' : 'text-warning'}">${Number(loan.remaining_balance).toLocaleString()}</td>
+              <td>${loan.interest_rate}%</td>
+              <td><span class="badge ${loan.status === 'Approved' ? 'bg-success' : (loan.status === 'Rejected' ? 'bg-danger' : (loan.status === 'Completed' ? 'bg-secondary' : 'bg-warning text-dark'))}">${loan.status}</span></td>
+              <td><div class="signature-count"><span class="signature-up"><i class="fas fa-thumbs-up"></i> ${loan.up_votes}</span> | <span class="signature-down"><i class="fas fa-thumbs-down"></i> ${loan.down_votes}</span><br><small>${loan.vote_count}/3 signatures</small></div></td>
+              <td><div class="dropdown"><button class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown">Actions</button><ul class="dropdown-menu">${canSign ? `<li><button class="dropdown-item btn-sign-request" data-loan-id="${loan.id}"><i class="fas fa-signature me-2"></i>Sign</button></li>` : ''}${canReview ? `<li><button class="dropdown-item btn-review-loan" data-loan-id="${loan.id}"><i class="fas fa-clipboard-check me-2"></i>Review</button></li>` : ''}<li><a class="dropdown-item" href="/loans/${loan.id}/download" target="_blank"><i class="fas fa-download me-2"></i>Download Schedule</a></li></ul></div></td>
+              <td>${new Date(loan.created_at).toLocaleString()}</td>
+            </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+      attachLoanActions();
+    }
 
     function renderLoansPagination() {
       const totalPages = Math.ceil(allLoans.length / rowsPerPage);
@@ -315,47 +321,55 @@ function renderLoansTable() {
       const btnReject = document.querySelector('.btn-reject-loan');
       const btnConfirm = document.querySelector('.btn-confirm-reject-loan');
       const alreadyMsg = document.getElementById('alreadyReviewedMessage');
+      const disbursementContainer = document.getElementById('disbursementTrnContainer');
+      const disbursementInput = document.getElementById('disbursementTrn');
+      if (disbursementInput) disbursementInput.value = '';
+
       const isReviewed = loan.status === 'Approved' || loan.status === 'Rejected' || loan.status === 'Completed';
       if (isReviewed) {
         btnApprove.disabled = true; btnReject.disabled = true; btnConfirm.disabled = true;
         alreadyMsg.style.display = 'block';
         btnApprove.textContent = 'Already Approved';
         btnReject.textContent = 'Already Rejected';
+        if (disbursementContainer) disbursementContainer.style.display = 'none';
       } else {
         btnApprove.disabled = false; btnReject.disabled = false; btnConfirm.disabled = false;
         alreadyMsg.style.display = 'none';
         btnApprove.textContent = 'Approve';
         btnReject.textContent = 'Reject';
+        const canApprove = (loan.loan_type === 'service' && userRole === 'chairman') ||
+                           (loan.loan_type === 'investment' && userRole === 'chief_signatory');
+        if (disbursementContainer) {
+          disbursementContainer.style.display = canApprove ? 'block' : 'none';
+        }
       }
       window.currentLoan = loan;
       const modal = new bootstrap.Modal(document.getElementById('loanModal'));
       modal.show();
     }
 
-    // Loan approve/reject handlers
+    // Loan approve/reject handlers (with X-Requested-With header)
     document.querySelector('.btn-approve-loan').addEventListener('click', async () => {
       if (!window.currentLoan) return;
-      if (!confirm('Approve this loan?')) return;
+      const disbursementTrn = document.getElementById('disbursementTrn').value.trim();
+      if (!disbursementTrn) {
+        alert('Please enter the disbursement transaction reference.');
+        return;
+      }
+      if (!confirm('Are you sure you want to APPROVE this loan?')) return;
       try {
         const res = await fetch('/admin/loans/update-status', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ loanId: window.currentLoan.id, status: 'Approved' })
-        });
-        const data = await res.json();
-        if (data.success) location.reload();
-        else alert(data.error);
-      } catch (err) { alert('Network error'); }
-    });
-    document.querySelector('.btn-reject-loan').addEventListener('click', () => {
-      document.getElementById('loanRejectReasonContainer').style.display = 'block';
-      document.querySelector('.btn-reject-loan').style.display = 'none';
-      document.querySelector('.btn-confirm-reject-loan').style.display = 'inline-block';
-    });
-    document.querySelector('.btn-confirm-reject-loan').addEventListener('click', async () => {
-      const reason = document.getElementById('loanRejectReason').value.trim();
-      if (!reason) return alert('Reason required');
-      try {
-        const res = await fetch('/admin/loans/update-status', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ loanId: window.currentLoan.id, status: 'Rejected', reason })
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'  // ✅ Added header
+          },
+          body: JSON.stringify({
+            loanId: window.currentLoan.id,
+            status: 'Approved',
+            reason: '',
+            disbursement_trn: disbursementTrn
+          })
         });
         const data = await res.json();
         if (data.success) location.reload();
@@ -363,7 +377,36 @@ function renderLoansTable() {
       } catch (err) { alert('Network error'); }
     });
 
-    // ----------------------------- Restructuring Table Rendering -----------------------------
+    document.querySelector('.btn-reject-loan').addEventListener('click', () => {
+      document.getElementById('loanRejectReasonContainer').style.display = 'block';
+      document.querySelector('.btn-reject-loan').style.display = 'none';
+      document.querySelector('.btn-confirm-reject-loan').style.display = 'inline-block';
+    });
+
+    document.querySelector('.btn-confirm-reject-loan').addEventListener('click', async () => {
+      const reason = document.getElementById('loanRejectReason').value.trim();
+      if (!reason) return alert('Reason required');
+      try {
+        const res = await fetch('/admin/loans/update-status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'  // ✅ Added header
+          },
+          body: JSON.stringify({
+            loanId: window.currentLoan.id,
+            status: 'Rejected',
+            reason: reason,
+            disbursement_trn: null
+          })
+        });
+        const data = await res.json();
+        if (data.success) location.reload();
+        else alert(data.error);
+      } catch (err) { alert('Network error'); }
+    });
+
+    // ========== Restructuring Table Rendering ==========
     function renderRestructuringTable() {
       const start = (currentRestructurePage - 1) * rowsPerPage;
       const end = start + rowsPerPage;
@@ -514,13 +557,15 @@ function renderLoansTable() {
       modal.show();
     }
 
-    // Restructuring approve/reject handlers
+    // Restructuring approve/reject handlers (unchanged – already use fetch with headers if needed)
     document.querySelector('.btn-approve-restructuring').addEventListener('click', async () => {
       if (!window.currentRestructureRequest) return;
       if (!confirm('Approve this restructuring request?')) return;
       try {
         const res = await fetch('/admin/restructuring/update-status', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requestId: window.currentRestructureRequest.id, status: 'Approved' })
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ requestId: window.currentRestructureRequest.id, status: 'Approved' })
         });
         const data = await res.json();
         if (data.success) location.reload();
@@ -537,7 +582,9 @@ function renderLoansTable() {
       if (!reason) return alert('Reason required');
       try {
         const res = await fetch('/admin/restructuring/update-status', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requestId: window.currentRestructureRequest.id, status: 'Rejected', reason })
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ requestId: window.currentRestructureRequest.id, status: 'Rejected', reason })
         });
         const data = await res.json();
         if (data.success) location.reload();
@@ -545,7 +592,7 @@ function renderLoansTable() {
       } catch (err) { alert('Network error'); }
     });
 
-    // Handle signing for loans (from loan signature modal)
+    // Global click listener for loan signing and restructuring signing
     document.addEventListener('click', async (e) => {
       if (e.target.closest('.btn-sign-loan')) {
         const btn = e.target.closest('.btn-sign-loan');
@@ -553,22 +600,24 @@ function renderLoansTable() {
         const loanId = document.getElementById('signatureLoanId').textContent;
         try {
           const res = await fetch('/loans/sign', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ loanId, voteType })
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ loanId, voteType })
           });
           const data = await res.json();
           if (data.success) location.reload();
           else alert(data.error);
         } catch (err) { alert('Network error'); }
       }
-
-      // Handle signing for restructuring
       if (e.target.closest('.btn-sign-restructuring')) {
         const btn = e.target.closest('.btn-sign-restructuring');
         const voteType = btn.dataset.signType;
         const requestId = document.getElementById('restructureSignRequestId').textContent;
         try {
           const res = await fetch('/restructuring/sign', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requestId, voteType })
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requestId, voteType })
           });
           const data = await res.json();
           if (data.success) location.reload();

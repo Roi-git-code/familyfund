@@ -2344,6 +2344,304 @@ const sendMonthlyContributionReminder = async (email, memberData) => {
   }
 };
 
+// Send Loan Application Submitted Email to Member
+const sendLoanApplicationSubmittedEmail = async (email, loanData) => {
+  const {
+    loanId,
+    loanType,
+    amount,
+    tenureMonths,
+    monthlyPayment,
+    totalRepayable,
+    purpose,
+    status,
+    dateSubmitted
+  } = loanData;
+
+  const mailOptions = {
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
+    to: email,
+    subject: `Loan Application Submitted - Family Fund`,
+    html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Application Received</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f8f9fa; }
+        .email-container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .email-header { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 30px 40px; text-align: center; }
+        .loan-details { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .loan-details table { width: 100%; border-collapse: collapse; }
+        .loan-details td { padding: 10px; border-bottom: 1px solid #dee2e6; }
+        .loan-details td:first-child { font-weight: 600; color: #2c3e50; width: 40%; }
+        .btn-report { display: inline-block; background: #dc3545; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; margin: 15px 0; }
+        .support-contact { background: #e8f4fd; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .support-item { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+        .no-reply-notice { background: #e9ecef; padding: 12px; text-align: center; font-size: 12px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>Family Fund Management System</h1>
+            <p>Loan Application Received</p>
+        </div>
+        <div style="padding: 40px;">
+            <p>Dear Member,</p>
+            <p>Your loan application has been successfully submitted and is now pending review.</p>
+            <div class="loan-details">
+                <h3>Loan Summary</h3>
+                <table>
+                    <tr><td>Loan ID:</td><td>#${loanId}</td></tr>
+                    <tr><td>Loan Type:</td><td>${loanType === 'service' ? 'Service Loan' : 'Investment Loan'}</td></tr>
+                    <tr><td>Amount:</td><td>TSh ${Number(amount).toLocaleString()}</td></tr>
+                    <tr><td>Tenure:</td><td>${tenureMonths} months</td></tr>
+                    <tr><td>Monthly Payment:</td><td>TSh ${Number(monthlyPayment).toLocaleString()}</td></tr>
+                    <tr><td>Total Repayable:</td><td>TSh ${Number(totalRepayable).toLocaleString()}</td></tr>
+                    <tr><td>Purpose:</td><td>${purpose}</td></tr>
+                    <tr><td>Status:</td><td><span style="color: #ffc107;">${status}</span></td></tr>
+                    <tr><td>Submitted:</td><td>${new Date(dateSubmitted).toLocaleString()}</td></tr>
+                </table>
+            </div>
+            <p><strong>What happens next?</strong><br>
+            Your application will be reviewed by the officers. You will receive notifications as it progresses through the approval process.</p>
+            <p>If you did not submit this application, please report it immediately:</p>
+            <div style="text-align: center;">
+                <a href="${process.env.BASE_URL || 'http://localhost:3000'}/support" class="btn-report">Report Unauthorized Application</a>
+            </div>
+            <div class="support-contact">
+                <h4>📞 Need Help?</h4>
+                <div class="support-item">📧 Email: itzfamilyfund@mail.com</div>
+                <div class="support-item">💬 WhatsApp: +255 782 702 502</div>
+                <div class="support-item">📞 Phone: +255 763 724 710</div>
+            </div>
+            <div class="no-reply-notice">This is an automated message. Please do not reply.</div>
+        </div>
+    </div>
+</body>
+</html>
+    `
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Loan application submitted email sent to ${email} for loan #${loanId}`);
+    return info;
+  } catch (error) {
+    console.error(`❌ Error sending loan application email:`, error);
+    throw new Error('Failed to send loan application notification');
+  }
+};
+
+// Send Loan Application Notification to Officers
+const sendLoanApplicationNotificationToOfficers = async (officerEmails, loanData) => {
+  const {
+    loanId,
+    memberName,
+    memberEmail,
+    loanType,
+    amount,
+    tenureMonths,
+    purpose
+  } = loanData;
+
+  const isService = loanType === 'service';
+  const responsibleRole = isService ? 'Chairman' : 'Chief Signatory';
+
+  const mailOptions = {
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
+    to: officerEmails.join(', '),
+    subject: `New Loan Application #${loanId} - Requires Review`,
+    html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Loan Application</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; background-color: #f8f9fa; }
+        .email-container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .email-header { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 30px 40px; text-align: center; }
+        .loan-details { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .loan-details table { width: 100%; border-collapse: collapse; }
+        .loan-details td { padding: 10px; border-bottom: 1px solid #dee2e6; }
+        .btn-action { display: inline-block; background: #28a745; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; margin: 15px 0; }
+        .btn-action.secondary { background: #dc3545; }
+        .support-contact { background: #e8f4fd; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .support-item { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+        .no-reply-notice { background: #e9ecef; padding: 12px; text-align: center; font-size: 12px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>Family Fund Management System</h1>
+            <p>New Loan Application</p>
+        </div>
+        <div style="padding: 40px;">
+            <p>Dear Officer,</p>
+            <p>A new loan application has been submitted and requires your attention.</p>
+            <div class="loan-details">
+                <h3>Loan Details</h3>
+                <table>
+                    <tr><td>Loan ID:</td><td>#${loanId}</td></tr>
+                    <tr><td>Member:</td><td>${memberName}</td></tr>
+                    <tr><td>Member Email:</td><td>${memberEmail}</td></tr>
+                    <tr><td>Loan Type:</td><td>${loanType === 'service' ? 'Service Loan' : 'Investment Loan'}</td></tr>
+                    <tr><td>Amount:</td><td>TSh ${Number(amount).toLocaleString()}</td></tr>
+                    <tr><td>Tenure:</td><td>${tenureMonths} months</td></tr>
+                    <tr><td>Purpose:</td><td>${purpose}</td></tr>
+                </table>
+            </div>
+            <p><strong>Responsible Officer:</strong> ${responsibleRole}</p>
+            <p><strong>Action Required:</strong> Please log in to the admin panel to review and sign this application.</p>
+            <div style="text-align: center;">
+                <a href="${process.env.BASE_URL || 'http://localhost:3000'}/admin/loans" class="btn-action">Review Application</a>
+            </div>
+            <div class="support-contact">
+                <h4>📞 Need Help?</h4>
+                <div class="support-item">📧 Email: itzfamilyfund@mail.com</div>
+                <div class="support-item">💬 WhatsApp: +255 782 702 502</div>
+                <div class="support-item">📞 Phone: +255 763 724 710</div>
+            </div>
+            <div class="no-reply-notice">This is an automated message. Please do not reply.</div>
+        </div>
+    </div>
+</body>
+</html>
+    `
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Loan application notification sent to officers for loan #${loanId}`);
+    return info;
+  } catch (error) {
+    console.error(`❌ Error sending officer notification:`, error);
+    throw new Error('Failed to send officer notification');
+  }
+};
+
+// Send Loan Decision Email to Member (Approved/Rejected)
+const sendLoanDecisionEmail = async (email, loanData) => {
+  const {
+    loanId,
+    loanType,
+    amount,
+    tenureMonths,
+    monthlyPayment,
+    totalRepayable,
+    status,
+    reason,
+    decisionDate,
+    decisionBy
+  } = loanData;
+
+  const isApproved = status === 'Approved';
+  const statusColor = isApproved ? '#28a745' : '#dc3545';
+  const statusIcon = isApproved ? '✅' : '❌';
+  const statusTitle = isApproved ? 'Approved' : 'Rejected';
+  const actionText = isApproved ? 'Your loan has been approved' : 'Your loan application has been rejected';
+
+  const mailOptions = {
+    from: process.env.SMTP_FROM || 'FamilyFund System <itzfamilyfund@gmail.com>',
+    to: email,
+    subject: `Loan Application ${statusTitle} - Family Fund`,
+    html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan ${statusTitle}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; background-color: #f8f9fa; }
+        .email-container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .email-header { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 30px 40px; text-align: center; }
+        .status-banner { background: ${statusColor}; color: white; padding: 25px; text-align: center; margin: 20px 0; border-radius: 8px; }
+        .loan-details { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .loan-details table { width: 100%; border-collapse: collapse; }
+        .loan-details td { padding: 10px; border-bottom: 1px solid #dee2e6; }
+        .reason-box { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 15px; margin: 20px 0; }
+        .next-steps { background: #d4edda; border: 1px solid #c3e6cb; border-radius: 6px; padding: 15px; margin: 20px 0; }
+        .btn-view { display: inline-block; background: #3498db; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; margin: 15px 0; }
+        .support-contact { background: #e8f4fd; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .support-item { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+        .no-reply-notice { background: #e9ecef; padding: 12px; text-align: center; font-size: 12px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>Family Fund Management System</h1>
+            <p>Loan Application Decision</p>
+        </div>
+        <div style="padding: 40px;">
+            <p>Dear Member,</p>
+            <div class="status-banner">
+                <h2 style="margin: 0;">${statusIcon} ${statusTitle}</h2>
+                <p style="margin: 10px 0 0 0;">${actionText}</p>
+            </div>
+            <div class="loan-details">
+                <h3>Loan Details</h3>
+                <table>
+                    <tr><td>Loan ID:</td><td>#${loanId}</td></tr>
+                    <tr><td>Loan Type:</td><td>${loanType === 'service' ? 'Service Loan' : 'Investment Loan'}</td></tr>
+                    <tr><td>Amount:</td><td>TSh ${Number(amount).toLocaleString()}</td></tr>
+                    <tr><td>Tenure:</td><td>${tenureMonths} months</td></tr>
+                    <tr><td>Monthly Payment:</td><td>TSh ${Number(monthlyPayment).toLocaleString()}</td></tr>
+                    <tr><td>Total Repayable:</td><td>TSh ${Number(totalRepayable).toLocaleString()}</td></tr>
+                    <tr><td>Decision Date:</td><td>${new Date(decisionDate).toLocaleString()}</td></tr>
+                    <tr><td>Decision By:</td><td>${decisionBy || 'System'}</td></tr>
+                </table>
+            </div>
+            ${!isApproved && reason ? `
+            <div class="reason-box">
+                <strong>Rejection Reason:</strong><br>
+                ${reason}
+            </div>
+            ` : ''}
+            ${isApproved ? `
+            <div class="next-steps">
+                <strong>✅ Next Steps:</strong><br>
+                Your loan funds will be disbursed to your bank account within 2-3 business days.<br>
+                A repayment schedule will be available in your dashboard.
+            </div>
+            ` : ''}
+            <div style="text-align: center;">
+                <a href="${process.env.BASE_URL || 'http://localhost:3000'}/my-loans" class="btn-view">View My Loans</a>
+            </div>
+            <div class="support-contact">
+                <h4>📞 Need Help?</h4>
+                <div class="support-item">📧 Email: itzfamilyfund@mail.com</div>
+                <div class="support-item">💬 WhatsApp: +255 782 702 502</div>
+                <div class="support-item">📞 Phone: +255 763 724 710</div>
+            </div>
+            <div class="no-reply-notice">This is an automated message. Please do not reply.</div>
+        </div>
+    </div>
+</body>
+</html>
+    `
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Loan ${statusTitle.toLowerCase()} email sent to ${email} for loan #${loanId}`);
+    return info;
+  } catch (error) {
+    console.error(`❌ Error sending loan decision email:`, error);
+    throw new Error('Failed to send loan decision email');
+  }
+};
+
 // Module Exports
 module.exports = { 
   sendResetEmail, 
@@ -2355,7 +2653,10 @@ module.exports = {
   sendMemberDeletionEmail,
   sendSupportNotificationEmail,
   sendSupportResponseEmail,
-  sendMonthlyContributionReminder
+  sendMonthlyContributionReminder,
+  sendLoanApplicationSubmittedEmail,
+  sendLoanApplicationNotificationToOfficers,
+  sendLoanDecisionEmail
 };
 
 

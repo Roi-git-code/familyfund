@@ -29,7 +29,6 @@ async function createLoan(memberId, loanData) {
     attachments
   } = loanData;
 
-  // Determine interest rate based on loan type (from constitution)
   let interest_rate;
   let max_amount;
   let max_tenure;
@@ -56,37 +55,36 @@ async function createLoan(memberId, loanData) {
   const totalRepayable = monthlyPayment * tenure_months;
   const totalInterest = totalRepayable - amount;
 
-  // Convert attachments array to JSON string for PostgreSQL
   const attachmentsJson = attachments && attachments.length > 0
     ? JSON.stringify(attachments)
     : null;
 
-const query = `
-  INSERT INTO loans (
-    member_id, loan_type, amount, interest_rate, tenure_months,
-    monthly_payment, total_interest, total_repayable, purpose,
-    bank_account, bank_name, additional_info, attachments,
-    paid_amount, remaining_balance
-  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-  RETURNING *
-`;
-const values = [
-  memberId,
-  loan_type,
-  amount,
-  interest_rate,
-  tenure_months,
-  monthlyPayment,
-  totalInterest,
-  totalRepayable,
-  purpose,
-  bank_account,
-  bank_name,
-  additional_info || null,
-  attachmentsJson,
-  0,                     // paid_amount
-  totalRepayable         // remaining_balance
-];
+  const query = `
+    INSERT INTO loans (
+      member_id, loan_type, amount, interest_rate, tenure_months,
+      monthly_payment, total_interest, total_repayable, purpose,
+      bank_account, bank_name, additional_info, attachments,
+      paid_amount, remaining_balance
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+    RETURNING *
+  `;
+  const values = [
+    memberId,
+    loan_type,
+    amount,
+    interest_rate,
+    tenure_months,
+    monthlyPayment,
+    totalInterest,
+    totalRepayable,
+    purpose,
+    bank_account,
+    bank_name,
+    additional_info || null,
+    attachmentsJson,
+    0,
+    totalRepayable
+  ];
 
   try {
     const result = await pool.query(query, values);
@@ -149,7 +147,6 @@ async function getAllLoans(filters = {}) {
   return result.rows;
 }
 
-// --- Get a single loan with details (including repayment schedule) -----------
 // --- Get a single loan with details (including repayment schedule and restructure links) -----------
 async function getLoanById(loanId) {
   const ts = new Date().toISOString();
@@ -176,7 +173,7 @@ async function getLoanById(loanId) {
   const repaymentsResult = await pool.query(repaymentsQuery, [loanId]);
   loan.repayments = repaymentsResult.rows;
 
-  // Calculate paid amount and remaining balance (in case columns not updated)
+  // Calculate paid amount and remaining balance
   let paidAmount = 0;
   for (const r of loan.repayments) {
     paidAmount += Number(r.amount_paid);
@@ -184,14 +181,12 @@ async function getLoanById(loanId) {
   loan.paid_amount = paidAmount;
   loan.remaining_balance = loan.total_repayable - paidAmount;
 
-  // ----- NEW: Restructuring relationships -----
-  // If this loan has a parent, fetch its basic info
+  // Restructuring relationships
   if (loan.parent_loan_id) {
     const parentQuery = `SELECT id, amount, total_repayable, paid_amount, status FROM loans WHERE id = $1`;
     const parentRes = await pool.query(parentQuery, [loan.parent_loan_id]);
     loan.parent_loan = parentRes.rows[0] || null;
   }
-  // If this loan is a parent, find its restructured children
   const childrenQuery = `SELECT id, amount, total_repayable, paid_amount, status FROM loans WHERE parent_loan_id = $1`;
   const childrenRes = await pool.query(childrenQuery, [loanId]);
   loan.restructured_loans = childrenRes.rows;
@@ -201,16 +196,17 @@ async function getLoanById(loanId) {
 }
 
 // --- Update loan status (approve/reject) --------------------------------------
-async function updateLoanStatus(loanId, status, reason, officerId) {
+async function updateLoanStatus(loanId, status, reason, officerId, disbursement_trn = null) {
   const ts = new Date().toISOString();
-  console.log(`[${ts}] [LOAN MODEL] updateLoanStatus called: loan=${loanId}, status=${status}, reason=${reason}, officer=${officerId}`);
+  console.log(`[${ts}] [LOAN MODEL] updateLoanStatus called: loan=${loanId}, status=${status}, reason=${reason}, officer=${officerId}, trn=${disbursement_trn}`);
   const query = `
     UPDATE loans
-    SET status = $1, reason = $2, reviewed_by = $3, reviewed_at = NOW(), updated_at = NOW()
+    SET status = $1, reason = $2, reviewed_by = $3, reviewed_at = NOW(), updated_at = NOW(),
+        disbursement_trn = COALESCE($5, disbursement_trn)
     WHERE id = $4
     RETURNING *
   `;
-  const result = await pool.query(query, [status, reason, officerId, loanId]);
+  const result = await pool.query(query, [status, reason, officerId, loanId, disbursement_trn]);
   if (result.rows.length === 0) {
     console.error(`[${ts}] [LOAN MODEL] Loan not found when updating status`);
     throw new Error('Loan not found');
@@ -236,7 +232,7 @@ function generateAmortizationSchedule(loan) {
     balance -= principal;
     schedule.push({
       installment_no: i,
-      due_date: new Date(Date.now() + i * 30 * 24 * 60 * 60 * 1000), // approximate
+      due_date: new Date(Date.now() + i * 30 * 24 * 60 * 60 * 1000),
       payment_due: monthly_payment,
       interest,
       principal,
@@ -246,33 +242,11 @@ function generateAmortizationSchedule(loan) {
   return schedule;
 }
 
-// --- Create repayment records when loan is approved --------------------------
-/*async function createRepaymentSchedule(loanId, startDate = new Date()) {
-  const ts = new Date().toISOString();
-  console.log(`[${ts}] [LOAN MODEL] createRepaymentSchedule called for loan ${loanId}`);
-  const loan = await getLoanById(loanId);
-  if (!loan) throw new Error('Loan not found');
-
-  const schedule = generateAmortizationSchedule(loan);
-  for (const inst of schedule) {
-    const dueDate = new Date(startDate);
-    dueDate.setMonth(dueDate.getMonth() + inst.installment_no);
-    await pool.query(
-      `INSERT INTO loan_repayments (loan_id, due_date, amount_due)
-       VALUES ($1, $2, $3)`,
-      [loanId, dueDate, inst.payment_due]
-    );
-  }
-  console.log(`[${ts}] [LOAN MODEL] Created ${schedule.length} repayment records for loan ${loanId}`);
-}
-*/
-
 // --- Create repayment records when loan is approved (idempotent) ----------
 async function createRepaymentSchedule(loanId, startDate = new Date()) {
   const ts = new Date().toISOString();
   console.log(`[${ts}] [LOAN MODEL] createRepaymentSchedule called for loan ${loanId}`);
-  
-  // Delete any existing repayment records for this loan (prevents duplicates)
+
   await pool.query('DELETE FROM loan_repayments WHERE loan_id = $1', [loanId]);
 
   const loan = await getLoanById(loanId);
@@ -309,7 +283,6 @@ async function recordRepayment(repaymentId, amount, transactionId = null) {
   `;
   const result = await pool.query(query, [newPaid, newStatus, transactionId, repaymentId]);
 
-  // Update loan's paid_amount and remaining_balance
   const loan = await getLoanById(rec.loan_id);
   const newPaidTotal = (loan.paid_amount || 0) + amount;
   const newRemaining = loan.total_repayable - newPaidTotal;
@@ -318,7 +291,6 @@ async function recordRepayment(repaymentId, amount, transactionId = null) {
     [newPaidTotal, newRemaining, rec.loan_id]
   );
 
-  // Update loan status if all repayments are paid
   const allPaid = loan.repayments.every(r => r.status === 'Paid');
   if (allPaid) {
     await updateLoanStatus(rec.loan_id, 'Completed', null, null);
@@ -328,11 +300,10 @@ async function recordRepayment(repaymentId, amount, transactionId = null) {
 }
 
 // --- Record a repayment that may cover multiple installments ---------------
-async function recordRepaymentMultiple(loanId, amount, transactionId = null, notes = null) {
+async function recordRepaymentMultiple(loanId, amount, transactionId = null, notes = null, repayment_trn = null) {
   const ts = new Date().toISOString();
-  console.log(`[${ts}] [LOAN MODEL] recordRepaymentMultiple called for loan ${loanId}, amount=${amount}`);
+  console.log(`[${ts}] [LOAN MODEL] recordRepaymentMultiple called for loan ${loanId}, amount=${amount}, trn=${repayment_trn}`);
 
-  // 1. Get all pending repayments (not fully paid), ordered by due date
   const pendingQuery = `
     SELECT * FROM loan_repayments
     WHERE loan_id = $1 AND status != 'Paid'
@@ -347,7 +318,6 @@ async function recordRepaymentMultiple(loanId, amount, transactionId = null, not
 
   let remainingAmount = amount;
 
-  // 2. Update repayments in order until amount exhausted
   for (const repayment of pending) {
     const due = Number(repayment.amount_due);
     const alreadyPaid = Number(repayment.amount_paid);
@@ -361,9 +331,10 @@ async function recordRepaymentMultiple(loanId, amount, transactionId = null, not
 
     await pool.query(
       `UPDATE loan_repayments
-       SET amount_paid = $1, payment_date = NOW(), status = $2, transaction_id = $3, notes = $4
-       WHERE id = $5`,
-      [newPaid, newStatus, transactionId, notes, repayment.id]
+       SET amount_paid = $1, payment_date = NOW(), status = $2, transaction_id = $3, notes = $4,
+           repayment_trn = COALESCE($5, repayment_trn)
+       WHERE id = $6`,
+      [newPaid, newStatus, transactionId, notes, repayment_trn, repayment.id]
     );
 
     remainingAmount -= payAmount;
@@ -373,7 +344,6 @@ async function recordRepaymentMultiple(loanId, amount, transactionId = null, not
     throw new Error('Payment amount exceeds total remaining balance');
   }
 
-  // 3. Update loan's paid_amount and remaining_balance
   const loan = await pool.query('SELECT total_repayable, paid_amount FROM loans WHERE id = $1', [loanId]);
   const currentPaid = Number(loan.rows[0].paid_amount);
   const newPaidTotal = currentPaid + amount;
@@ -384,7 +354,6 @@ async function recordRepaymentMultiple(loanId, amount, transactionId = null, not
     [newPaidTotal, remainingBalance, loanId]
   );
 
-  // 4. Check if loan is now fully repaid
   if (remainingBalance <= 0) {
     await pool.query(
       `UPDATE loans SET status = 'Completed', updated_at = NOW() WHERE id = $1`,
@@ -450,7 +419,6 @@ async function getVotingSummary(loanId) {
   `;
   const result = await pool.query(query, [loanId]);
   const row = result.rows[0];
-  // Convert to numbers to avoid string comparison issues
   const summary = {
     total_votes: Number(row.total_votes),
     up_votes: Number(row.up_votes),
@@ -508,16 +476,49 @@ async function canRejectLoan(loanId) {
   return canReject;
 }
 
-// --- Get eligible officers ----------------------------------------------------
+// --- Get eligible officers (with email) ------------------------------------
+
+/*
 async function getEligibleOfficers() {
   const ts = new Date().toISOString();
   console.log(`[${ts}] [LOAN MODEL] getEligibleOfficers called`);
   const query = `
-    SELECT m.id, m.first_name, m.middle_name, m.sur_name, u.role
+    SELECT m.id, m.first_name, m.middle_name, m.sur_name, u.role, u.email
     FROM member m
     JOIN users u ON u.member_id = m.id
     WHERE u.role IN ('assistant_signatory', 'chief_signatory', 'chairman')
     AND u.status = 'active'
+  `;
+  const result = await pool.query(query);
+  console.log(`[${ts}] [LOAN MODEL] Found ${result.rows.length} eligible officers`);
+  return result.rows;
+}
+*/
+/*
+async function getEligibleOfficers() {
+  const ts = new Date().toISOString();
+  console.log(`[${ts}] [LOAN MODEL] getEligibleOfficers called`);
+  const query = `
+    SELECT m.id, m.first_name, m.middle_name, m.sur_name, u.role, m.email
+    FROM member m
+    JOIN users u ON u.member_id = m.id
+    WHERE u.role IN ('assistant_signatory', 'chief_signatory', 'chairman')
+    AND u.status = 'active'
+  `;
+  const result = await pool.query(query);
+  console.log(`[${ts}] [LOAN MODEL] Found ${result.rows.length} eligible officers`);
+  return result.rows;
+}
+*/
+
+async function getEligibleOfficers() {
+  const ts = new Date().toISOString();
+  console.log(`[${ts}] [LOAN MODEL] getEligibleOfficers called`);
+  const query = `
+    SELECT m.id, m.first_name, m.middle_name, m.sur_name, u.role, m.email
+    FROM member m
+    JOIN users u ON u.member_id = m.id
+    WHERE u.role IN ('assistant_signatory', 'chief_signatory', 'chairman')
   `;
   const result = await pool.query(query);
   console.log(`[${ts}] [LOAN MODEL] Found ${result.rows.length} eligible officers`);
@@ -566,11 +567,12 @@ async function getLoansForRepayment() {
   console.log(`[${ts}] [LOAN MODEL] getLoansForRepayment called`);
   const query = `
     SELECT l.id, l.member_id, l.amount, l.interest_rate, l.tenure_months, l.monthly_payment,
-           l.total_repayable, l.paid_amount, l.remaining_balance,
+           l.total_repayable, l.paid_amount,
+           (l.total_repayable - l.paid_amount) as remaining_balance,
            m.first_name, m.sur_name
     FROM loans l
     JOIN member m ON l.member_id = m.id
-    WHERE l.status = 'Approved' AND l.remaining_balance > 0
+    WHERE l.status = 'Approved' AND (l.total_repayable - l.paid_amount) > 0
     ORDER BY l.id
   `;
   const result = await pool.query(query);
@@ -585,21 +587,18 @@ async function createRestructuringRequest(memberId, loanId, newTenure, reason) {
     const ts = new Date().toISOString();
     console.log(`[${ts}] [LOAN MODEL] createRestructuringRequest: member=${memberId}, loan=${loanId}, newTenure=${newTenure}`);
     
-    // Fetch current loan
     const loan = await getLoanById(loanId);
     if (!loan) throw new Error('Loan not found');
     if (loan.status !== 'Approved') throw new Error('Only approved loans can be restructured');
     if (loan.member_id !== memberId) throw new Error('Unauthorized');
 
-    // Validate new tenure against limits (same as original)
     let maxTenure;
     if (loan.loan_type === 'service') maxTenure = 12;
     else maxTenure = 24;
     if (newTenure > maxTenure) throw new Error(`Maximum tenure for ${loan.loan_type} loans is ${maxTenure} months`);
     if (newTenure <= 0) throw new Error('Tenure must be positive');
 
-    // Calculate new repayment details based on current outstanding balance
-    const remainingBalance = loan.remaining_balance; // already computed in getLoanById
+    const remainingBalance = loan.remaining_balance;
     const monthlyRate = loan.interest_rate / 100 / 12;
     let newMonthlyPayment, newTotalInterest, newTotalRepayable;
 
@@ -613,7 +612,6 @@ async function createRestructuringRequest(memberId, loanId, newTenure, reason) {
     }
     newTotalRepayable = remainingBalance + newTotalInterest;
 
-    // Insert request
     const query = `
         INSERT INTO loan_restructuring_requests
         (loan_id, member_id, new_tenure_months, current_tenure_months,
@@ -761,7 +759,6 @@ async function updateRestructuringRequestStatus(requestId, status, officerId, re
     return result.rows[0];
 }
 
-// Apply restructuring: update loan and regenerate repayments
 // Get restructuring history for a loan
 async function getRestructuringHistoryByLoan(loanId) {
     const query = `
@@ -775,305 +772,10 @@ async function getRestructuringHistoryByLoan(loanId) {
     return result.rows;
 }
 
-// Modified applyRestructuring to insert history record
-/*
-// Apply restructuring: create a new loan for the remaining balance
-async function applyRestructuring(requestId, officerId) {
-    const ts = new Date().toISOString();
-    // Fetch the request with loan details
-    const requestQuery = `
-        SELECT r.*, l.id as old_loan_id, l.member_id, l.loan_type,
-               l.interest_rate, l.remaining_balance,
-               l.paid_amount, l.total_repayable as old_total,
-               l.tenure_months as old_tenure
-        FROM loan_restructuring_requests r
-        JOIN loans l ON r.loan_id = l.id
-        WHERE r.id = $1
-    `;
-    const requestResult = await pool.query(requestQuery, [requestId]);
-    if (requestResult.rows.length === 0) throw new Error('Request not found');
-    const req = requestResult.rows[0];
-
-    // 1. Mark the original loan as 'Restructured'
-    await pool.query(
-        `UPDATE loans SET status = 'Restructured', updated_at = NOW() WHERE id = $1`,
-        [req.old_loan_id]
-    );
-
-    // 2. Create a new loan for the remaining balance
-    const newLoanQuery = `
-        INSERT INTO loans (
-            member_id, loan_type, amount, interest_rate, tenure_months,
-            monthly_payment, total_interest, total_repayable, purpose,
-            bank_account, bank_name, additional_info, attachments,
-            status, reviewed_by, reviewed_at, parent_loan_id,
-            paid_amount, remaining_balance, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-                  'Approved', $14, NOW(), $15, 0, $16, NOW(), NOW())
-        RETURNING id
-    `;
-    const newLoanValues = [
-        req.member_id,
-        req.loan_type,
-        req.remaining_balance,           // principal = remaining balance
-        req.interest_rate,
-        req.new_tenure_months,
-        req.proposed_monthly_payment,
-        req.proposed_total_interest,
-        req.proposed_total_repayable,
-        `Restructured from loan #${req.old_loan_id}: ${req.purpose || 'Original purpose'}`,
-        req.bank_account,
-        req.bank_name,
-        req.additional_info,
-        req.attachments,
-        officerId,                       // reviewed_by
-        req.proposed_total_repayable,    // remaining_balance = new total repayable
-        req.old_loan_id                  // parent_loan_id
-    ];
-    const newLoanResult = await pool.query(newLoanQuery, newLoanValues);
-    const newLoanId = newLoanResult.rows[0].id;
-
-    // 3. Insert history record
-    const historyQuery = `
-        INSERT INTO loan_restructuring_history
-        (loan_id, request_id, new_loan_id, restructured_at,
-         old_tenure_months, new_tenure_months,
-         old_monthly_payment, new_monthly_payment,
-         old_total_interest, new_total_interest,
-         old_total_repayable, new_total_repayable,
-         old_paid_amount, remaining_balance_at_restructure,
-         reason, approved_by)
-        VALUES ($1, $2, $3, NOW(),
-                $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-    `;
-    await pool.query(historyQuery, [
-        req.old_loan_id, requestId, newLoanId,
-        req.old_tenure, req.new_tenure_months,
-        req.old_monthly_payment, req.proposed_monthly_payment,
-        req.old_total_interest, req.proposed_total_interest,
-        req.old_total, req.proposed_total_repayable,
-        req.paid_amount, req.remaining_balance,
-        req.reason, officerId
-    ]);
-
-    // 4. Generate repayment schedule for the new loan
-    await createRepaymentSchedule(newLoanId, new Date());
-
-    // 5. Notify member
-    const message = `Your loan #${req.old_loan_id} has been restructured. A new loan (#${newLoanId}) of TSh ${Number(req.remaining_balance).toLocaleString()} with ${req.new_tenure_months} months tenure has been created.`;
-    await notificationModel.createNotification(req.member_id, message);
-
-    console.log(`[${ts}] Restructuring applied: old loan ${req.old_loan_id} → new loan ${newLoanId}`);
-    return { oldLoanId: req.old_loan_id, newLoanId };
-}
-*/
-
-/*
-async function applyRestructuring(requestId, officerId) {
-    const ts = new Date().toISOString();
-    // Fetch the request with original loan details
-    const requestQuery = `
-        SELECT r.*, l.id as old_loan_id, l.member_id, l.loan_type,
-               l.interest_rate, l.remaining_balance,
-               l.paid_amount, l.total_repayable as old_total,
-               l.tenure_months as old_tenure, l.bank_account, l.bank_name,
-               l.additional_info, l.attachments, l.purpose
-        FROM loan_restructuring_requests r
-        JOIN loans l ON r.loan_id = l.id
-        WHERE r.id = $1
-    `;
-    const requestResult = await pool.query(requestQuery, [requestId]);
-    if (requestResult.rows.length === 0) throw new Error('Request not found');
-    const req = requestResult.rows[0];
-
-    // 1. Mark original loan as 'Restructured'
-    await pool.query(
-        `UPDATE loans SET status = 'Restructured', updated_at = NOW() WHERE id = $1`,
-        [req.old_loan_id]
-    );
-
-    // 2. Create new loan with remaining_balance as principal
-    const newLoanQuery = `
-        INSERT INTO loans (
-            member_id, loan_type, amount, interest_rate, tenure_months,
-            monthly_payment, total_interest, total_repayable, purpose,
-            bank_account, bank_name, additional_info, attachments,
-            status, reviewed_by, reviewed_at, parent_loan_id,
-            paid_amount, remaining_balance, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-                  'Approved', $14, NOW(), $15, 0, $16, NOW(), NOW())
-        RETURNING id
-    `;
-    const newLoanValues = [
-        req.member_id,
-        req.loan_type,
-        req.remaining_balance,                    // principal = remaining balance
-        req.interest_rate,
-        req.new_tenure_months,
-        req.proposed_monthly_payment,
-        req.proposed_total_interest,
-        req.proposed_total_repayable,
-        `Restructured from loan #${req.old_loan_id}: ${req.purpose}`,
-        req.bank_account,
-        req.bank_name,
-        req.additional_info,
-        req.attachments,
-        officerId,
-        req.proposed_total_repayable,             // remaining_balance (new loan's total)
-        req.old_loan_id
-    ];
-    const newLoanResult = await pool.query(newLoanQuery, newLoanValues);
-    const newLoanId = newLoanResult.rows[0].id;
-
-    // 3. Insert history record
-    const historyQuery = `
-        INSERT INTO loan_restructuring_history
-        (loan_id, request_id, new_loan_id, restructured_at,
-         old_tenure_months, new_tenure_months,
-         old_monthly_payment, new_monthly_payment,
-         old_total_interest, new_total_interest,
-         old_total_repayable, new_total_repayable,
-         old_paid_amount, remaining_balance_at_restructure,
-         reason, approved_by)
-        VALUES ($1, $2, $3, NOW(),
-                $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-    `;
-    await pool.query(historyQuery, [
-        req.old_loan_id, requestId, newLoanId,
-        req.old_tenure, req.new_tenure_months,
-        req.old_monthly_payment, req.proposed_monthly_payment,
-        req.old_total_interest, req.proposed_total_interest,
-        req.old_total, req.proposed_total_repayable,
-        req.paid_amount, req.remaining_balance,
-        req.reason, officerId
-    ]);
-
-    // 4. Generate repayment schedule for the new loan (clears old ones)
-    await createRepaymentSchedule(newLoanId, new Date());
-
-    // 5. Notify member
-    const message = `Your loan #${req.old_loan_id} has been restructured. A new loan (#${newLoanId}) of TSh ${Number(req.remaining_balance).toLocaleString()} with ${req.new_tenure_months} months tenure has been created.`;
-    await notificationModel.createNotification(req.member_id, message);
-
-    console.log(`[${ts}] Restructuring applied: old loan ${req.old_loan_id} → new loan ${newLoanId}`);
-    return { oldLoanId: req.old_loan_id, newLoanId };
-}
-*/
-/*
-// Apply restructuring: create a new loan with the current remaining balance as principal
+// Apply restructuring: create new loan with remaining balance as principal
 async function applyRestructuring(requestId, officerId) {
     const ts = new Date().toISOString();
     
-    // Fetch the request with original loan details, and compute current remaining balance
-    const requestQuery = `
-        SELECT r.*, l.id as old_loan_id, l.member_id, l.loan_type,
-               l.interest_rate, l.paid_amount, l.total_repayable as old_total,
-               l.tenure_months as old_tenure, l.bank_account, l.bank_name,
-               l.additional_info, l.attachments, l.purpose,
-               (l.total_repayable - l.paid_amount) as current_remaining_balance
-        FROM loan_restructuring_requests r
-        JOIN loans l ON r.loan_id = l.id
-        WHERE r.id = $1
-    `;
-    const requestResult = await pool.query(requestQuery, [requestId]);
-    if (requestResult.rows.length === 0) throw new Error('Request not found');
-    const req = requestResult.rows[0];
-
-    // Use the current remaining balance (recalculated at approval time)
-    const remainingBalance = Number(req.current_remaining_balance);
-
-    // Recalculate new terms based on this remaining balance and requested tenure
-    const monthlyRate = req.interest_rate / 100 / 12;
-    let newMonthlyPayment, newTotalInterest, newTotalRepayable;
-    if (monthlyRate === 0) {
-        newMonthlyPayment = remainingBalance / req.new_tenure_months;
-        newTotalInterest = 0;
-    } else {
-        newMonthlyPayment = remainingBalance * monthlyRate *
-                            Math.pow(1 + monthlyRate, req.new_tenure_months) /
-                            (Math.pow(1 + monthlyRate, req.new_tenure_months) - 1);
-        newTotalInterest = newMonthlyPayment * req.new_tenure_months - remainingBalance;
-    }
-    newTotalRepayable = remainingBalance + newTotalInterest;
-
-    // 1. Mark original loan as 'Restructured'
-    await pool.query(
-        `UPDATE loans SET status = 'Restructured', updated_at = NOW() WHERE id = $1`,
-        [req.old_loan_id]
-    );
-
-    // 2. Create new loan with current remaining balance as principal
-    const newLoanQuery = `
-        INSERT INTO loans (
-            member_id, loan_type, amount, interest_rate, tenure_months,
-            monthly_payment, total_interest, total_repayable, purpose,
-            bank_account, bank_name, additional_info, attachments,
-            status, reviewed_by, reviewed_at, parent_loan_id,
-            paid_amount, remaining_balance, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-                  'Approved', $14, NOW(), $15, 0, $16, NOW(), NOW())
-        RETURNING id
-    `;
-    const newLoanValues = [
-        req.member_id,
-        req.loan_type,
-        remainingBalance,                     // amount = current remaining balance
-        req.interest_rate,
-        req.new_tenure_months,
-        newMonthlyPayment,
-        newTotalInterest,
-        newTotalRepayable,
-        `Restructured from loan #${req.old_loan_id}: ${req.purpose}`,
-        req.bank_account,
-        req.bank_name,
-        req.additional_info,
-        req.attachments,
-        officerId,
-        newTotalRepayable,                    // remaining_balance for new loan
-        req.old_loan_id
-    ];
-    const newLoanResult = await pool.query(newLoanQuery, newLoanValues);
-    const newLoanId = newLoanResult.rows[0].id;
-
-    // 3. Insert history record (using the freshly calculated values)
-    const historyQuery = `
-        INSERT INTO loan_restructuring_history
-        (loan_id, request_id, new_loan_id, restructured_at,
-         old_tenure_months, new_tenure_months,
-         old_monthly_payment, new_monthly_payment,
-         old_total_interest, new_total_interest,
-         old_total_repayable, new_total_repayable,
-         old_paid_amount, remaining_balance_at_restructure,
-         reason, approved_by)
-        VALUES ($1, $2, $3, NOW(),
-                $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-    `;
-    await pool.query(historyQuery, [
-        req.old_loan_id, requestId, newLoanId,
-        req.old_tenure, req.new_tenure_months,
-        req.old_monthly_payment, newMonthlyPayment,
-        req.old_total_interest, newTotalInterest,
-        req.old_total, newTotalRepayable,
-        req.paid_amount, remainingBalance,
-        req.reason, officerId
-    ]);
-
-    // 4. Generate repayment schedule for the new loan (clears old ones first)
-    await createRepaymentSchedule(newLoanId, new Date());
-
-    // 5. Notify member
-    const message = `Your loan #${req.old_loan_id} has been restructured. A new loan (#${newLoanId}) of TSh ${remainingBalance.toLocaleString()} with ${req.new_tenure_months} months tenure has been created.`;
-    await notificationModel.createNotification(req.member_id, message);
-
-    console.log(`[${ts}] Restructuring applied: old loan ${req.old_loan_id} → new loan ${newLoanId}`);
-    return { oldLoanId: req.old_loan_id, newLoanId };
-}
-*/
-
-async function applyRestructuring(requestId, officerId) {
-    const ts = new Date().toISOString();
-    
-    // 1. Get the restructuring request with the latest loan data
     const requestQuery = `
         SELECT r.*, l.id as old_loan_id, l.member_id, l.loan_type,
                l.interest_rate, l.paid_amount, l.total_repayable as old_total,
@@ -1090,11 +792,9 @@ async function applyRestructuring(requestId, officerId) {
     if (requestResult.rows.length === 0) throw new Error('Request not found');
     const req = requestResult.rows[0];
 
-    // 2. Use the current remaining balance (recalculated at approval time)
     const remainingBalance = Number(req.current_remaining_balance);
     if (remainingBalance <= 0) throw new Error('Loan already fully paid, cannot restructure');
 
-    // 3. Recalculate new terms based on remaining balance and requested tenure
     const monthlyRate = req.interest_rate / 100 / 12;
     let newMonthlyPayment, newTotalInterest, newTotalRepayable;
     if (monthlyRate === 0) {
@@ -1108,13 +808,13 @@ async function applyRestructuring(requestId, officerId) {
     }
     newTotalRepayable = remainingBalance + newTotalInterest;
 
-    // 4. Mark original loan as 'Restructured'
+    // Mark original loan as 'Restructured'
     await pool.query(
         `UPDATE loans SET status = 'Restructured', updated_at = NOW() WHERE id = $1`,
         [req.old_loan_id]
     );
 
-    // 5. Create new loan with the recalculated values
+    // Create new loan
     const newLoanQuery = `
         INSERT INTO loans (
             member_id, loan_type, amount, interest_rate, tenure_months,
@@ -1129,7 +829,7 @@ async function applyRestructuring(requestId, officerId) {
     const newLoanValues = [
         req.member_id,
         req.loan_type,
-        remainingBalance,                     // amount = current remaining balance
+        remainingBalance,
         req.interest_rate,
         req.new_tenure_months,
         newMonthlyPayment,
@@ -1141,13 +841,13 @@ async function applyRestructuring(requestId, officerId) {
         req.additional_info,
         req.attachments,
         officerId,
-        newTotalRepayable,                    // remaining_balance for new loan
+        newTotalRepayable,
         req.old_loan_id
     ];
     const newLoanResult = await pool.query(newLoanQuery, newLoanValues);
     const newLoanId = newLoanResult.rows[0].id;
 
-    // 6. Insert history record
+    // Insert history record
     const historyQuery = `
         INSERT INTO loan_restructuring_history
         (loan_id, request_id, new_loan_id, restructured_at,
@@ -1170,10 +870,10 @@ async function applyRestructuring(requestId, officerId) {
         req.reason, officerId
     ]);
 
-    // 7. Generate repayment schedule for the new loan (clears old ones first)
+    // Generate repayment schedule for new loan
     await createRepaymentSchedule(newLoanId, new Date());
 
-    // 8. Notify member
+    // Notify member
     const message = `Your loan #${req.old_loan_id} has been restructured. A new loan (#${newLoanId}) of TSh ${remainingBalance.toLocaleString()} with ${req.new_tenure_months} months tenure has been created.`;
     await notificationModel.createNotification(req.member_id, message);
 
@@ -1181,9 +881,7 @@ async function applyRestructuring(requestId, officerId) {
     return { oldLoanId: req.old_loan_id, newLoanId };
 }
 
-
-
-// Add this function near the other restructuring methods
+// Get restructuring request by ID
 async function getRestructuringRequestById(requestId) {
     const query = `
         SELECT r.*, l.loan_type, l.interest_rate, l.amount as original_amount,
@@ -1198,6 +896,7 @@ async function getRestructuringRequestById(requestId) {
     return result.rows[0];
 }
 
+// --- Exports ----------------------------------------------------------------
 module.exports = {
   createLoan,
   getLoansByMember,
@@ -1206,7 +905,7 @@ module.exports = {
   updateLoanStatus,
   createRepaymentSchedule,
   recordRepayment,
-  recordRepaymentMultiple,   // <-- new function
+  recordRepaymentMultiple,
   createVote,
   getVotesByLoan,
   getVoteByOfficer,
@@ -1224,7 +923,7 @@ module.exports = {
   createRestructuringRequest,
   getAllRestructuringRequests,
   getRestructuringRequestsByMember,
-  getRestructuringRequestById,      // If you have this helper
+  getRestructuringRequestById,
   createRestructuringVote,
   getRestructuringVotes,
   getRestructuringVotingSummary,

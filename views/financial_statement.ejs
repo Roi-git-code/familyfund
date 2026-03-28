@@ -1,4 +1,5 @@
 
+        
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -126,6 +127,14 @@
       background: #27ae60 !important;
       color: #fff !important;
     }
+    .badge-loan-disbursement {
+      background: #f39c12 !important;
+      color: #000 !important;
+    }
+    .badge-loan-repayment {
+      background: #9b59b6 !important;
+      color: #fff !important;
+    }
     .summary-card { 
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
       color: white; 
@@ -157,6 +166,12 @@
     }
     tr.contribution-transaction {
       background-color: rgba(39, 174, 96, 0.1) !important;
+    }
+    tr.loan-disbursement-transaction {
+      background-color: rgba(243, 156, 18, 0.1) !important;
+    }
+    tr.loan-repayment-transaction {
+      background-color: rgba(155, 89, 182, 0.1) !important;
     }
     
     /* Transaction type badges */
@@ -341,7 +356,6 @@
 
 <!-- Password Change Modal -->
 <%- include('partials/change_password_modal', { user: user }) %>
-
 <div class="main-content">
   <%- include('partials/flash') %>
     
@@ -381,7 +395,7 @@
       </div>
     </div>
 
-    <!-- Transaction Legend -->
+    <!-- Transaction Legend (updated with loan types) -->
     <div class="transaction-legend">
       <div class="legend-item">
         <div class="legend-color" style="background-color: #27ae60;"></div>
@@ -389,7 +403,7 @@
       </div>
       <div class="legend-item">
         <div class="legend-color" style="background-color: #f39c12;"></div>
-        <span>ROI Payment (Overall only)</span>
+        <span>ROI Payment</span>
       </div>
       <div class="legend-item">
         <div class="legend-color" style="background-color: #3498db;"></div>
@@ -398,6 +412,14 @@
       <div class="legend-item">
         <div class="legend-color" style="background-color: #e74c3c;"></div>
         <span>Fund Request (Debit)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #f39c12;"></div>
+        <span>Loan Disbursement</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #9b59b6;"></div>
+        <span>Loan Repayment</span>
       </div>
     </div>
 
@@ -457,67 +479,78 @@
       </div>
       <div class="toggle-content" id="statsToggleContent">
         <div class="card-body">
-          <!-- Summary Cards -->
-          <div class="row mb-4">
-            <div class="col-md-4">
-              <div class="summary-card text-center">
-                <i class="fas fa-hand-holding-usd fa-2x mb-2"></i>
-                <div>Total Credits</div>
-                <div class="summary-value">TSh <%= totalCredits.toLocaleString() %></div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="summary-card text-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                <i class="fas fa-money-bill-wave fa-2x mb-2"></i>
-                <div>Total Debits</div>
-                <div class="summary-value">TSh <%= totalDebits.toLocaleString() %></div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="summary-card text-center" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                <i class="fas fa-scale-balanced fa-2x mb-2"></i>
-                <div>Net Balance</div>
-                <div class="summary-value">TSh <%= netBalance.toLocaleString() %></div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Transaction Breakdown -->
-          <div class="row">
-            <div class="col-md-6">
-              <div class="card">
-                <div class="card-header bg-success text-white">
-                  <i class="fas fa-arrow-up me-2"></i>Credit Breakdown
-                </div>
-                <div class="card-body">
-                  <% 
-                    const contributionTotal = individualTransactions.filter(t => t.request_type === 'Contribution').reduce((sum, t) => sum + Number(t.amount), 0);
-                    const refundTotal = individualTransactions.filter(t => t.request_type === 'Refund').reduce((sum, t) => sum + Number(t.amount), 0);
-                    const roiTotal = individualTransactions.filter(t => t.request_type === 'ROI Payment').reduce((sum, t) => sum + Number(t.amount), 0);
-                  %>
-                  <p><i class="fas fa-circle text-success me-2"></i>Contributions: <strong>TSh <%= contributionTotal.toLocaleString() %></strong></p>
-                  <p><i class="fas fa-circle text-primary me-2"></i>Refunds: <strong>TSh <%= refundTotal.toLocaleString() %></strong></p>
-                  <% if (isOfficial && roiTotal > 0) { %>
-                    <p><i class="fas fa-circle text-warning me-2"></i>ROI Payments: <strong>TSh <%= roiTotal.toLocaleString() %></strong></p>
-                  <% } %>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="card">
-                <div class="card-header bg-danger text-white">
-                  <i class="fas fa-arrow-down me-2"></i>Debit Breakdown
-                </div>
-                <div class="card-body">
-                  <%
-                    const fundRequestTotal = individualTransactions.filter(t => t.type === 'debit').reduce((sum, t) => sum + Number(t.amount), 0);
-                  %>
-                  <p><i class="fas fa-circle text-danger me-2"></i>Fund Requests: <strong>TSh <%= fundRequestTotal.toLocaleString() %></strong></p>
-                </div>
-              </div>
-            </div>
-          </div>
+ 
+  <!-- Summary Cards -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="summary-card text-center">
+        <i class="fas fa-hand-holding-usd fa-2x mb-2"></i>
+        <div>Total Credits</div>
+        <div class="summary-value">TSh <%= totalCredits.toLocaleString() %></div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="summary-card text-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+        <i class="fas fa-money-bill-wave fa-2x mb-2"></i>
+        <div>Total Debits</div>
+        <div class="summary-value">TSh <%= totalDebits.toLocaleString() %></div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="summary-card text-center" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+        <i class="fas fa-scale-balanced fa-2x mb-2"></i>
+        <div>Net Balance</div>
+        <div class="summary-value">TSh <%= netBalance.toLocaleString() %></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Transaction Breakdown -->
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-success text-white">
+          <i class="fas fa-arrow-up me-2"></i>Credit Breakdown
         </div>
+        <div class="card-body">
+          <%
+            // Use breakdownTransactions for stats (overall for officials, individual for members)
+            const breakdown = breakdownTransactions || (isOfficial ? overallTransactions : individualTransactions);
+            const contributionTotal = breakdown.filter(t => t.request_type === 'Contribution').reduce((sum, t) => sum + Number(t.amount), 0);
+            const refundTotal = breakdown.filter(t => t.request_type === 'Refund').reduce((sum, t) => sum + Number(t.amount), 0);
+            const roiTotal = breakdown.filter(t => t.request_type === 'ROI Payment').reduce((sum, t) => sum + Number(t.amount), 0);
+            const loanRepaymentTotal = breakdown.filter(t => t.request_type === 'Loan Repayment').reduce((sum, t) => sum + Number(t.amount), 0);
+          %>
+          <p><i class="fas fa-circle text-success me-2"></i>Contributions: <strong>TSh <%= contributionTotal.toLocaleString() %></strong></p>
+          <p><i class="fas fa-circle text-primary me-2"></i>Refunds: <strong>TSh <%= refundTotal.toLocaleString() %></strong></p>
+          <% if (isOfficial && roiTotal > 0) { %>
+            <p><i class="fas fa-circle text-warning me-2"></i>ROI Payments: <strong>TSh <%= roiTotal.toLocaleString() %></strong></p>
+          <% } %>
+          <% if (loanRepaymentTotal > 0) { %>
+            <p><i class="fas fa-circle text-purple me-2" style="color: #9b59b6;"></i>Loan Repayments: <strong>TSh <%= loanRepaymentTotal.toLocaleString() %></strong></p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-danger text-white">
+          <i class="fas fa-arrow-down me-2"></i>Debit Breakdown
+        </div>
+        <div class="card-body">
+          <%
+            const fundRequestTotal = breakdown.filter(t => t.type === 'debit' && t.request_type !== 'Loan Disbursement').reduce((sum, t) => sum + Number(t.amount), 0);
+            const loanDisbursementTotal = breakdown.filter(t => t.request_type === 'Loan Disbursement').reduce((sum, t) => sum + Number(t.amount), 0);
+          %>
+          <p><i class="fas fa-circle text-danger me-2"></i>Fund Requests: <strong>TSh <%= fundRequestTotal.toLocaleString() %></strong></p>
+          <% if (loanDisbursementTotal > 0) { %>
+            <p><i class="fas fa-circle text-warning me-2"></i>Loan Disbursements: <strong>TSh <%= loanDisbursementTotal.toLocaleString() %></strong></p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
       </div>
     </div>
 
@@ -560,7 +593,7 @@
                         <th width="10%" class="text-end">Credit (TSh)</th>
                         <th width="10%" class="text-end">Debit (TSh)</th>
                         <th width="10%" class="text-end">Balance (TSh)</th>
-                      </tr>
+                       </tr>
                     </thead>
                     <tbody>
                       <% let runningMonthBalance = monthData.openingBalance; %>
@@ -570,6 +603,8 @@
                           if (t.request_type === 'ROI Payment') rowClass = 'roi-transaction';
                           else if (t.request_type === 'Refund') rowClass = 'refund-transaction';
                           else if (t.request_type === 'Contribution') rowClass = 'contribution-transaction';
+                          else if (t.request_type === 'Loan Disbursement') rowClass = 'loan-disbursement-transaction';
+                          else if (t.request_type === 'Loan Repayment') rowClass = 'loan-repayment-transaction';
                       %>
                         <tr class="<%= rowClass %>">
                           <td class="fw-bold"><%= index + 1 %></td>
@@ -582,6 +617,10 @@
                                 <span class="badge badge-refund"><%= t.txn_trn %></span>
                               <% } else if (t.request_type === 'Contribution') { %>
                                 <span class="badge badge-contribution"><%= t.txn_trn %></span>
+                              <% } else if (t.request_type === 'Loan Disbursement') { %>
+                                <span class="badge badge-loan-disbursement"><%= t.txn_trn %></span>
+                              <% } else if (t.request_type === 'Loan Repayment') { %>
+                                <span class="badge badge-loan-repayment"><%= t.txn_trn %></span>
                               <% } else { %>
                                 <span class="badge bg-secondary"><%= t.txn_trn %></span>
                               <% } %>
@@ -601,11 +640,17 @@
                                 <span class="badge badge-refund transaction-type-badge">REF</span>
                               <% } else if (t.request_type === 'Contribution') { %>
                                 <span class="badge badge-contribution transaction-type-badge">C</span>
+                              <% } else if (t.request_type === 'Loan Repayment') { %>
+                                <span class="badge badge-loan-repayment transaction-type-badge">LR</span>
                               <% } else { %>
                                 <span class="badge badge-credit transaction-type-badge">CR</span>
                               <% } %>
                             <% } else { %>
-                              <span class="badge badge-debit transaction-type-badge">DR</span>
+                              <% if (t.request_type === 'Loan Disbursement') { %>
+                                <span class="badge badge-loan-disbursement transaction-type-badge">LD</span>
+                              <% } else { %>
+                                <span class="badge badge-debit transaction-type-badge">DR</span>
+                              <% } %>
                             <% } %>
                           </td>
                           <td class="text-end credit">
@@ -644,8 +689,8 @@
       <p class="text-muted">Period: <%= timeRange %></p>
       <div class="alert alert-info">
         <i class="fas fa-info-circle me-2"></i>
-        <strong>Note:</strong> ROI payments are only shown in overall statements (available to officials only). 
-        Refunds and contributions are included in both individual and overall statements.
+        <strong>Note:</strong> ROI payments and Loan Disbursements are shown in overall statements (available to officials only). 
+        Refunds, contributions, and loan repayments are included in both individual and overall statements.
       </div>
       
       <% if (!individualTransactions || individualTransactions.length === 0) { %>
@@ -669,7 +714,7 @@
               <div class="table-responsive">
                 <table class="table table-hover table-sm">
                   <thead>
-                    <tr>
+                     <tr>
                       <th width="5%">#</th>
                       <th width="15%">Date</th>
                       <th width="20%">Transaction ID</th>
@@ -677,15 +722,15 @@
                       <th width="15%" class="text-end">Credit (TSh)</th>
                       <th width="15%" class="text-end">Debit (TSh)</th>
                       <th width="15%" class="text-end">Balance (TSh)</th>
-                    </tr>
+                     </tr>
                   </thead>
                   <tbody>
                     <% let runningMonthBalance = monthData.openingBalance; %>
                     <% monthData.transactions.forEach((t, index) => { 
-                        // Determine row class based on transaction type
                         let rowClass = '';
                         if (t.request_type === 'Refund') rowClass = 'refund-transaction';
                         else if (t.request_type === 'Contribution') rowClass = 'contribution-transaction';
+                        else if (t.request_type === 'Loan Repayment') rowClass = 'loan-repayment-transaction';
                     %>
                       <tr class="<%= rowClass %>">
                         <td class="fw-bold"><%= index + 1 %></td>
@@ -696,6 +741,8 @@
                               <span class="badge badge-refund"><%= t.txn_trn %></span>
                             <% } else if (t.request_type === 'Contribution') { %>
                               <span class="badge badge-contribution"><%= t.txn_trn %></span>
+                            <% } else if (t.request_type === 'Loan Repayment') { %>
+                              <span class="badge badge-loan-repayment"><%= t.txn_trn %></span>
                             <% } else { %>
                               <span class="badge bg-secondary"><%= t.txn_trn %></span>
                             <% } %>
@@ -710,6 +757,8 @@
                               <span class="badge badge-refund transaction-type-badge">REF</span>
                             <% } else if (t.request_type === 'Contribution') { %>
                               <span class="badge badge-contribution transaction-type-badge">C</span>
+                            <% } else if (t.request_type === 'Loan Repayment') { %>
+                              <span class="badge badge-loan-repayment transaction-type-badge">LR</span>
                             <% } else { %>
                               <span class="badge badge-credit transaction-type-badge">CR</span>
                             <% } %>
@@ -786,7 +835,6 @@
 <script src="/script/sidebar.js"></script>
 <script src="/script/passwordModal.js"></script>
  <script src="/js/flash.js"></script>
-
 
 <script>
   // Auto-dismiss flash messages after 5 seconds
@@ -1057,5 +1105,5 @@
 </script>
 </body>
 </html>
-
-
+        
+        

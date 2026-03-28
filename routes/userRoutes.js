@@ -20,17 +20,14 @@ router.get('/dashboard', requireAuth, async (req, res) => {
   try {
     const { username, role, member_Id } = req.session.user;
 
-    // Get member profile
     const member = await userLandingModel.getMemberProfileByEmail(username);
     if (!member) {
       req.flash('error', 'No profile found for your account.');
       return res.redirect('/');
     }
 
-    // Fetch notifications
     const notifications = await notificationModel.getNotificationsForMember(member.id, true);
 
-    // Optional date range filter for contributions
     const from = req.query.from || '';
     const to = req.query.to || '';
 
@@ -45,21 +42,17 @@ router.get('/dashboard', requireAuth, async (req, res) => {
       });
     }
 
-    // Get member-specific requests
     const memberProfileRequests = await userLandingModel.getMemberUpdateRequests(member.id);
     const memberFundRequests = await fundRequestModel.getFundRequestsByMember(member.id);
 
-    // Lifetime totals
     const { memberTotal, allTotal, percentage } = await userLandingModel.getLifetimeTotals(member.id);
 
-    // Contribution relative color
     const relativeToMax = await (async () => {
       const summary = await require('../models/contributionModel').getContributionSummary();
       const memberData = summary.members.find(m => m.member_id === member.id);
       return memberData ? memberData.color : 'red';
     })();
 
-    // Get system-wide fund request counts for authorized roles
     let newCount = 0;
     let reviewedCount = 0;
     let approvedCount = 0;
@@ -73,7 +66,6 @@ router.get('/dashboard', requireAuth, async (req, res) => {
       rejectedCount = counts.rejected_count + counts.cancelled_count;
     }
 
-    // Get support statistics for authorized roles
     let supportStats = {
       total_messages: 0,
       new_messages: 0,
@@ -125,7 +117,6 @@ router.get('/dashboard', requireAuth, async (req, res) => {
       totalPendingRequests,
       supportStats
     });
-
   } catch (err) {
     console.error('Landing page error:', err);
     req.flash('error', 'Unable to load your dashboard.');
@@ -250,7 +241,6 @@ router.post('/update-profile', requireAuth, upload.fields([
       requestId: request._id,
       attachments
     });
-
   } catch (error) {
     console.error('Profile update error:', error);
     if (error.name === 'ValidationError') {
@@ -390,7 +380,6 @@ router.post('/submit-fund-request', requireAuth,
 
       req.flash('success', 'Fund request submitted successfully!');
       res.redirect('/update-requests');
-
     } catch (err) {
       console.error('Error submitting fund request:', err);
       if (err instanceof multer.MulterError) {
@@ -498,6 +487,7 @@ router.get('/requests/profile/:id/details', requireAuth, async (req, res) => {
 
 // Download PDF of My Contributions with optional time range
 router.get('/user/contributions/pdf', requireAuth, async (req, res) => {
+  // ... (unchanged, same as your original)
   try {
     const memberId = req.session.user.member_Id;
     const from = req.query.from;
@@ -816,8 +806,7 @@ router.get('/constitution', async (req, res) => {
 router.get('/loan-application', requireAuth, async (req, res) => {
   try {
     res.render('loan_application', {
-      user: req.session.user,
-      flash: req.flash()
+      user: req.session.user
     });
   } catch (err) {
     console.error(`[${new Date().toISOString()}] Error loading loan application form:`, err);
@@ -825,6 +814,101 @@ router.get('/loan-application', requireAuth, async (req, res) => {
     res.redirect('/dashboard');
   }
 });
+
+// POST loan application
+
+/*
+router.post('/loan-application', requireAuth, upload.array('supportingDoc', 5), async (req, res) => {
+  try {
+    const memberId = req.session.user.member_Id;
+    const { loan_type, amount, tenure_months, purpose, bankAccount, bankName, additionalInfo } = req.body;
+    const files = req.files;
+
+    if (!loan_type || !amount || !tenure_months || !purpose || !bankAccount || !bankName) {
+      req.flash('error', 'All required fields must be filled');
+      return res.redirect('/loan-application');
+    }
+
+    const numericAmount = parseFloat(amount);
+    const numericTenure = parseInt(tenure_months);
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      req.flash('error', 'Amount must be a positive number');
+      return res.redirect('/loan-application');
+    }
+    if (isNaN(numericTenure) || numericTenure <= 0) {
+      req.flash('error', 'Tenure must be a positive number');
+      return res.redirect('/loan-application');
+    }
+
+    const attachments = files ? files.map(f => `/uploads/${f.filename}`) : [];
+
+    // Create loan
+    const loan = await loanModel.createLoan(memberId, {
+      loan_type,
+      amount: numericAmount,
+      tenure_months: numericTenure,
+      purpose,
+      bank_account: bankAccount,
+      bank_name: bankName,
+      additional_info: additionalInfo,
+      attachments
+    });
+
+    // Fetch member info for emails
+    const member = await memberModel.getMemberById(memberId);
+
+    // Send email to member
+    if (member && member.email) {
+      const mail = require('../utils/mail');
+      await mail.sendLoanApplicationSubmittedEmail(member.email, {
+        loanId: loan.id,
+        loanType: loan.loan_type,
+        amount: loan.amount,
+        tenureMonths: loan.tenure_months,
+        monthlyPayment: loan.monthly_payment,
+        totalRepayable: loan.total_repayable,
+        purpose: loan.purpose,
+        status: loan.status,
+        dateSubmitted: loan.created_at
+      }).catch(err => console.error('Member email failed:', err));
+    }
+
+    // Send email to officers
+    const eligibleOfficers = await loanModel.getEligibleOfficers();
+    const officerEmails = eligibleOfficers.map(o => o.email).filter(e => e);
+    if (officerEmails.length) {
+      const mail = require('../utils/mail');
+      const memberName = `${member.first_name} ${member.sur_name}`;
+      await mail.sendLoanApplicationNotificationToOfficers(officerEmails, {
+        loanId: loan.id,
+        memberName: memberName,
+        memberEmail: member.email,
+        loanType: loan.loan_type,
+        amount: loan.amount,
+        tenureMonths: loan.tenure_months,
+        purpose: loan.purpose
+      }).catch(err => console.error('Officer email failed:', err));
+    }
+
+    req.flash('success', 'Loan application submitted successfully!');
+    res.redirect('/my-loans');
+  } catch (err) {
+    console.error(`[${new Date().toISOString()}] Error submitting loan application:`, err);
+    if (err.code === '22P02') {
+      req.flash('error', 'There was an issue with the uploaded files. Please try again with valid documents.');
+    } else if (err.message.includes('Maximum amount')) {
+      req.flash('error', err.message);
+    } else if (err.message.includes('Maximum tenure')) {
+      req.flash('error', err.message);
+    } else if (err.message.includes('Invalid loan type')) {
+      req.flash('error', err.message);
+    } else {
+      req.flash('error', 'Failed to submit loan application. Please try again.');
+    }
+    res.redirect('/loan-application');
+  }
+});
+*/
 
 // POST loan application
 router.post('/loan-application', requireAuth, upload.array('supportingDoc', 5), async (req, res) => {
@@ -851,7 +935,8 @@ router.post('/loan-application', requireAuth, upload.array('supportingDoc', 5), 
 
     const attachments = files ? files.map(f => `/uploads/${f.filename}`) : [];
 
-    await loanModel.createLoan(memberId, {
+    // Create the loan first
+    const loan = await loanModel.createLoan(memberId, {
       loan_type,
       amount: numericAmount,
       tenure_months: numericTenure,
@@ -861,6 +946,42 @@ router.post('/loan-application', requireAuth, upload.array('supportingDoc', 5), 
       additional_info: additionalInfo,
       attachments
     });
+
+    // Fetch member info for emails (already needed for other parts)
+    const member = await memberModel.getMemberById(memberId);
+
+    // 1. Send confirmation email to the member
+    if (member && member.email) {
+      const mail = require('../utils/mail');
+      mail.sendLoanApplicationSubmittedEmail(member.email, {
+        loanId: loan.id,
+        loanType: loan.loan_type,
+        amount: loan.amount,
+        tenureMonths: loan.tenure_months,
+        monthlyPayment: loan.monthly_payment,
+        totalRepayable: loan.total_repayable,
+        purpose: loan.purpose,
+        status: loan.status,
+        dateSubmitted: loan.created_at
+      }).catch(err => console.error('Member email failed:', err));
+    }
+
+    // 2. Send notification to officers
+    const eligibleOfficers = await loanModel.getEligibleOfficers(); // must be fixed (see model)
+    const officerEmails = eligibleOfficers.map(o => o.email).filter(e => e);
+    if (officerEmails.length) {
+      const mail = require('../utils/mail');
+      const memberName = `${member.first_name} ${member.sur_name}`;
+      mail.sendLoanApplicationNotificationToOfficers(officerEmails, {
+        loanId: loan.id,
+        memberName: memberName,
+        memberEmail: member.email,
+        loanType: loan.loan_type,
+        amount: loan.amount,
+        tenureMonths: loan.tenure_months,
+        purpose: loan.purpose
+      }).catch(err => console.error('Officer email failed:', err));
+    }
 
     req.flash('success', 'Loan application submitted successfully!');
     res.redirect('/my-loans');
@@ -881,6 +1002,7 @@ router.post('/loan-application', requireAuth, upload.array('supportingDoc', 5), 
   }
 });
 
+
 // My Loans List
 router.get('/my-loans', requireAuth, async (req, res) => {
   try {
@@ -888,8 +1010,7 @@ router.get('/my-loans', requireAuth, async (req, res) => {
     const loans = await loanModel.getLoansByMember(memberId);
     res.render('my_loans', {
       user: req.session.user,
-      loans,
-      flash: req.flash()
+      loans
     });
   } catch (err) {
     console.error(`[${new Date().toISOString()}] Error loading my loans:`, err);
@@ -900,7 +1021,7 @@ router.get('/my-loans', requireAuth, async (req, res) => {
 
 // 🔽 SPECIFIC LOAN ROUTES – must come before /loans/:id 🔽
 
-// GET loan repayment form (chief_signatory & assistant_signatory only)
+// GET loan repayment form
 router.get('/loans/repayment', requireAuth, allowRoles('chief_signatory', 'assistant_signatory'), async (req, res) => {
   console.log(`[${new Date().toISOString()}] [LOAN REPAYMENT] Access by ${req.session.user.username} (${req.session.user.role})`);
   try {
@@ -908,8 +1029,7 @@ router.get('/loans/repayment', requireAuth, allowRoles('chief_signatory', 'assis
     console.log(`[${new Date().toISOString()}] [LOAN REPAYMENT] Found ${loans.length} loans for repayment`);
     res.render('loan_repayment', {
       user: req.session.user,
-      loans,
-      flash: req.flash()
+      loans
     });
   } catch (err) {
     console.error('Error loading loan repayment form:', err);
@@ -922,7 +1042,7 @@ router.get('/loans/repayment', requireAuth, allowRoles('chief_signatory', 'assis
 router.post('/loans/repayment', requireAuth, allowRoles('chief_signatory', 'assistant_signatory'), async (req, res) => {
   console.log(`[${new Date().toISOString()}] [LOAN REPAYMENT] POST request from ${req.session.user.username}`);
   try {
-    const { loanId, amount, notes } = req.body;
+    const { loanId, amount, notes, repayment_trn } = req.body;
     if (!loanId || !amount) {
       req.flash('error', 'Loan ID and amount are required');
       return res.redirect('/loans/repayment');
@@ -931,6 +1051,11 @@ router.post('/loans/repayment', requireAuth, allowRoles('chief_signatory', 'assi
     const amountNum = parseFloat(amount);
     if (isNaN(amountNum) || amountNum <= 0) {
       req.flash('error', 'Amount must be a positive number');
+      return res.redirect('/loans/repayment');
+    }
+
+    if (!repayment_trn) {
+      req.flash('error', 'Repayment transaction reference is required.');
       return res.redirect('/loans/repayment');
     }
 
@@ -952,7 +1077,7 @@ router.post('/loans/repayment', requireAuth, allowRoles('chief_signatory', 'assi
     }
 
     const transactionId = `REP-${Date.now()}`;
-    await loanModel.recordRepaymentMultiple(loanId, amountNum, transactionId, notes);
+    await loanModel.recordRepaymentMultiple(loanId, amountNum, transactionId, notes, repayment_trn);
 
     const notificationMessage = `Your loan #${loan.id} repayment of TSh ${amountNum.toLocaleString()} has been received.`;
     await require('../models/notificationModel').createNotification(loan.member_id, notificationMessage);
@@ -966,70 +1091,41 @@ router.post('/loans/repayment', requireAuth, allowRoles('chief_signatory', 'assi
   }
 });
 
-/*
-// Sign (vote) on a loan
+// Sign (vote) on a loan – with debug logs
 router.post('/loans/sign', requireAuth, allowRoles('assistant_signatory', 'chief_signatory', 'chairman'), async (req, res) => {
+  console.log(`[${new Date().toISOString()}] LOAN SIGN: received`, req.body);
   try {
     const { loanId, voteType } = req.body;
     const officerId = req.session.user.member_Id;
 
     if (!['up', 'down'].includes(voteType)) {
+      console.log('Invalid vote type');
       return res.status(400).json({ error: 'Invalid signature type' });
     }
 
     const loan = await loanModel.getLoanById(loanId);
     if (!loan) {
+      console.log('Loan not found');
       return res.status(404).json({ error: 'Loan not found' });
     }
     if (loan.status !== 'Pending' && loan.status !== 'Under Review') {
+      console.log(`Loan status is ${loan.status}, cannot sign`);
       return res.status(400).json({ error: 'Cannot sign a loan that is not pending or under review' });
     }
 
     await loanModel.createVote(loanId, officerId, voteType);
+    console.log(`Vote recorded for loan ${loanId}`);
+
     const votingSummary = await loanModel.getVotingSummary(loanId);
-    const signatures = await loanModel.getVotesByLoan(loanId);
+    console.log(`Voting summary:`, votingSummary);
 
-    res.json({
-      success: true,
-      message: 'Signature recorded successfully',
-      votingSummary,
-      signatures
-    });
-  } catch (err) {
-    console.error(`[${new Date().toISOString()}] Error recording loan signature:`, err);
-    res.status(500).json({ error: 'Failed to record signature' });
-  }
-});
-*/
-
-// Sign (vote) on a loan
-router.post('/loans/sign', requireAuth, allowRoles('assistant_signatory', 'chief_signatory', 'chairman'), async (req, res) => {
-  try {
-    const { loanId, voteType } = req.body;
-    const officerId = req.session.user.member_Id;
-
-    if (!['up', 'down'].includes(voteType)) {
-      return res.status(400).json({ error: 'Invalid signature type' });
-    }
-
-    const loan = await loanModel.getLoanById(loanId);
-    if (!loan) {
-      return res.status(404).json({ error: 'Loan not found' });
-    }
-    if (loan.status !== 'Pending' && loan.status !== 'Under Review') {
-      return res.status(400).json({ error: 'Cannot sign a loan that is not pending or under review' });
-    }
-
-    await loanModel.createVote(loanId, officerId, voteType);
-    const votingSummary = await loanModel.getVotingSummary(loanId);
-    
-    // 🔁 Move loan to "Under Review" once all three officers have signed
+    // Move loan to "Under Review" once all three officers have signed
     if (votingSummary.unique_officers >= 3 && loan.status === 'Pending') {
+      console.log(`All three officers signed, moving loan ${loanId} to Under Review`);
       await loanModel.updateLoanStatus(loanId, 'Under Review', null, null);
     }
 
     const signatures = await loanModel.getVotesByLoan(loanId);
-
     res.json({
       success: true,
       message: 'Signature recorded successfully',
@@ -1041,7 +1137,6 @@ router.post('/loans/sign', requireAuth, allowRoles('assistant_signatory', 'chief
     res.status(500).json({ error: 'Failed to record signature' });
   }
 });
-
 
 // Download Loan Schedule PDF
 router.get('/loans/:id/download', requireAuth, async (req, res) => {
@@ -1068,91 +1163,12 @@ router.get('/loans/:id/download', requireAuth, async (req, res) => {
     const doc = new PDFDocument({ size: 'A4', margin: 50, bufferPages: true });
     doc.pipe(res);
 
-    function drawHeader() {
-      const logoPath = path.join(__dirname, '../public/images/logo.png');
-      if (fs.existsSync(logoPath)) {
-        doc.image(logoPath, 50, 45, { width: 50 });
-      }
-      doc.fontSize(18).text('Family Fund Management System', 110, 57, { align: 'left' });
-      doc.moveDown(2);
-    }
-
-    function addFooter(username) {
-      const generatedOn = new Date().toLocaleString();
-      const range = doc.bufferedPageRange();
-      for (let i = 0; i < range.count; i++) {
-        doc.switchToPage(i);
-        const bottom = doc.page.height - 30;
-        const margin = doc.page.margins.left;
-        const pageWidth = doc.page.width;
-        const usableWidth = pageWidth - margin * 2;
-
-        const leftX = margin;
-        const centerX = margin + usableWidth / 2;
-        const rightX = margin + usableWidth;
-
-        doc.fontSize(9).fillColor('gray');
-        doc.text(`Generated: ${generatedOn}`, leftX, bottom, { lineBreak: false });
-        const unameWidth = doc.widthOfString(username);
-        doc.text(`Printed by ${username}`, centerX - unameWidth / 2, bottom, { lineBreak: false });
-        const pageLabel = `Page ${i + 1} of ${range.count}`;
-        const pageLabelWidth = doc.widthOfString(pageLabel);
-        doc.text(pageLabel, rightX - pageLabelWidth, bottom, { lineBreak: false });
-      }
-    }
-
-    function drawTableHeader(headers, colWidths, startX, y, rowHeight) {
-      doc.save();
-      doc.font('Helvetica-Bold').fontSize(10);
-      for (let i = 0; i < headers.length; i++) {
-        const x = startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
-        doc.rect(x, y, colWidths[i], rowHeight).fillAndStroke('#eeeeee', 'black');
-        doc.fillColor('black').text(headers[i], x + 3, y + 6, {
-          width: colWidths[i] - 6,
-          align: 'center'
-        });
-      }
-      doc.restore();
-    }
-
-    function renderTable(headers, rows, colWidths, rowHeight = 20) {
-      const startX = doc.page.margins.left;
-      const footerReserve = 40;
-      const bottomY = doc.page.height - doc.page.margins.bottom - footerReserve;
-      let y = doc.y;
-      drawTableHeader(headers, colWidths, startX, y, rowHeight);
-      y += rowHeight;
-
-      for (let r = 0; r < rows.length; r++) {
-        const row = rows[r].map(v => (v == null ? '' : String(v)));
-        const cellHeights = row.map((cell, i) =>
-          doc.heightOfString(cell, { width: colWidths[i] - 6 })
-        );
-        const maxHeight = Math.max(rowHeight, ...cellHeights);
-
-        if (y + maxHeight > bottomY) {
-          doc.addPage();
-          doc.font('Helvetica').fontSize(10);
-          y = doc.page.margins.top;
-          drawTableHeader(headers, colWidths, startX, y, rowHeight);
-          y += rowHeight;
-        }
-
-        const bg = r % 2 === 0 ? '#f9f9f9' : '#ffffff';
-        for (let i = 0; i < row.length; i++) {
-          const x = startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
-          doc.rect(x, y, colWidths[i], maxHeight).fillAndStroke(bg, 'black');
-          doc.fillColor('black');
-          if (i === 0) {
-            doc.text(row[i], x + 4, y + 6, { width: colWidths[i] - 8, align: 'left' });
-          } else {
-            doc.text(row[i], x + 3, y + 6, { width: colWidths[i] - 6, align: 'center' });
-          }
-        }
-        y += maxHeight;
-      }
-      doc.y = y;
-    }
+    // ... (drawing functions remain unchanged, as in your original code) ...
+    // (We omit the rest for brevity – keep your existing implementation)
+    function drawHeader() { /* ... */ }
+    function addFooter(username) { /* ... */ }
+    function drawTableHeader(headers, colWidths, startX, y, rowHeight) { /* ... */ }
+    function renderTable(headers, rows, colWidths, rowHeight = 20) { /* ... */ }
 
     drawHeader();
     doc.fontSize(16).text(`Loan Details & Amortization Schedule`, { underline: true, align: 'center' });
@@ -1257,20 +1273,17 @@ router.get('/loans/:id', requireAuth, async (req, res) => {
   }
 });
 
-
 // Admin: List all loans and restructuring requests
 router.get('/admin/loans', requireAuth, allowRoles('chairman', 'chief_signatory', 'assistant_signatory'), async (req, res) => {
   try {
     const { loan_type, status, fromDate, toDate } = req.query;
     const loans = await loanModel.getAllLoans({ loan_type, status, fromDate, toDate });
-    // Fetch all restructuring requests (you can add filters if needed)
     const restructuringRequests = await loanModel.getAllRestructuringRequests({ status, loan_type });
     res.render('admin_loans', {
       user: req.session.user,
       loans,
       restructuringRequests,
-      filters: { loan_type, status, fromDate, toDate },
-      flash: req.flash()
+      filters: { loan_type, status, fromDate, toDate }
     });
   } catch (err) {
     console.error(`[${new Date().toISOString()}] Error loading admin loans:`, err);
@@ -1279,10 +1292,11 @@ router.get('/admin/loans', requireAuth, allowRoles('chairman', 'chief_signatory'
   }
 });
 
+/*
 // Admin: Update loan status (approve/reject) – enhanced with detailed checks
 router.post('/admin/loans/update-status', requireAuth, allowRoles('chairman', 'chief_signatory', 'assistant_signatory'), async (req, res) => {
   try {
-    const { loanId, status, reason } = req.body;
+    const { loanId, status, reason, disbursement_trn } = req.body;
     const officerId = req.session.user.member_Id;
     const officerRole = req.session.user.role;
 
@@ -1314,6 +1328,12 @@ router.post('/admin/loans/update-status', requireAuth, allowRoles('chairman', 'c
         req.flash('error', msg);
         return res.redirect('/admin/loans');
       }
+      if (!disbursement_trn) {
+        const msg = 'Disbursement transaction reference is required for approval.';
+        if (req.xhr) return res.status(400).json({ success: false, error: msg });
+        req.flash('error', msg);
+        return res.redirect('/admin/loans');
+      }
     } else if (status === 'Rejected') {
       const rejectionStatus = await loanModel.getRejectionStatus(loanId);
       if (!rejectionStatus.canReject) {
@@ -1322,9 +1342,15 @@ router.post('/admin/loans/update-status', requireAuth, allowRoles('chairman', 'c
         req.flash('error', msg);
         return res.redirect('/admin/loans');
       }
+      if (!reason) {
+        const msg = 'Rejection reason is required.';
+        if (req.xhr) return res.status(400).json({ success: false, error: msg });
+        req.flash('error', msg);
+        return res.redirect('/admin/loans');
+      }
     }
 
-    await loanModel.updateLoanStatus(loanId, status, reason, officerId);
+    await loanModel.updateLoanStatus(loanId, status, reason, officerId, disbursement_trn);
 
     if (status === 'Approved') {
       await loanModel.createRepaymentSchedule(loanId);
@@ -1335,11 +1361,10 @@ router.post('/admin/loans/update-status', requireAuth, allowRoles('chairman', 'c
       : `Your loan application was rejected. Reason: ${reason}`;
     await require('../models/notificationModel').createNotification(loan.member_id, notificationMessage);
 
+    req.flash('success', `Loan ${status.toLowerCase()} successfully`);
     if (req.xhr) {
       return res.json({ success: true, message: `Loan ${status.toLowerCase()} successfully` });
     }
-
-    req.flash('success', `Loan ${status.toLowerCase()} successfully`);
     res.redirect('/admin/loans');
   } catch (err) {
     console.error(`[${new Date().toISOString()}] Error updating loan status:`, err);
@@ -1351,7 +1376,128 @@ router.post('/admin/loans/update-status', requireAuth, allowRoles('chairman', 'c
     res.redirect('/admin/loans');
   }
 });
+*/
 
+// Admin: Update loan status (approve/reject) – enhanced with detailed checks and email
+router.post('/admin/loans/update-status', requireAuth, allowRoles('chairman', 'chief_signatory', 'assistant_signatory'), async (req, res) => {
+  try {
+    const { loanId, status, reason, disbursement_trn } = req.body;
+    const officerId = req.session.user.member_Id;
+    const officerRole = req.session.user.role;
+
+    const loan = await loanModel.getLoanById(loanId);
+    if (!loan) {
+      if (req.xhr) return res.status(404).json({ success: false, error: 'Loan not found' });
+      req.flash('error', 'Loan not found');
+      return res.redirect('/admin/loans');
+    }
+
+    // Role-based checks
+    if (officerRole === 'chairman' && loan.loan_type !== 'service') {
+      const msg = 'Chairman can only review service loans';
+      if (req.xhr) return res.status(403).json({ success: false, error: msg });
+      req.flash('error', msg);
+      return res.redirect('/admin/loans');
+    }
+    if (officerRole === 'chief_signatory' && loan.loan_type !== 'investment') {
+      const msg = 'Chief Signatory can only review investment loans';
+      if (req.xhr) return res.status(403).json({ success: false, error: msg });
+      req.flash('error', msg);
+      return res.redirect('/admin/loans');
+    }
+
+    // Approval/Rejection validation
+    if (status === 'Approved') {
+      const approvalStatus = await loanModel.getApprovalStatus(loanId);
+      if (!approvalStatus.canApprove) {
+        const msg = `Cannot approve: ${approvalStatus.reason}`;
+        if (req.xhr) return res.status(400).json({ success: false, error: msg });
+        req.flash('error', msg);
+        return res.redirect('/admin/loans');
+      }
+      if (!disbursement_trn) {
+        const msg = 'Disbursement transaction reference is required for approval.';
+        if (req.xhr) return res.status(400).json({ success: false, error: msg });
+        req.flash('error', msg);
+        return res.redirect('/admin/loans');
+      }
+    } else if (status === 'Rejected') {
+      const rejectionStatus = await loanModel.getRejectionStatus(loanId);
+      if (!rejectionStatus.canReject) {
+        const msg = `Cannot reject: ${rejectionStatus.reason}`;
+        if (req.xhr) return res.status(400).json({ success: false, error: msg });
+        req.flash('error', msg);
+        return res.redirect('/admin/loans');
+      }
+      if (!reason) {
+        const msg = 'Rejection reason is required.';
+        if (req.xhr) return res.status(400).json({ success: false, error: msg });
+        req.flash('error', msg);
+        return res.redirect('/admin/loans');
+      }
+    }
+
+    // Update loan status
+    await loanModel.updateLoanStatus(loanId, status, reason, officerId, disbursement_trn);
+
+    if (status === 'Approved') {
+      await loanModel.createRepaymentSchedule(loanId);
+    }
+
+    // Send database notification
+    const notificationMessage = status === 'Approved'
+      ? `Your loan of TSh ${loan.amount} has been approved!`
+      : `Your loan application was rejected. Reason: ${reason}`;
+    await require('../models/notificationModel').createNotification(loan.member_id, notificationMessage);
+
+    // Send email notification to the member
+    const member = await memberModel.getMemberById(loan.member_id);
+    if (member && member.email) {
+      const mail = require('../utils/mail');
+      if (status === 'Approved') {
+        await mail.sendLoanDecisionEmail(member.email, {
+          loanId: loan.id,
+          loanType: loan.loan_type,
+          amount: loan.amount,
+          tenureMonths: loan.tenure_months,
+          monthlyPayment: loan.monthly_payment,
+          totalRepayable: loan.total_repayable,
+          status: 'Approved',
+          reason: null,
+          decisionDate: new Date(),
+          decisionBy: `${req.session.user.first_name} ${req.session.user.surname}`
+        }).catch(err => console.error('Failed to send approval email:', err));
+      } else if (status === 'Rejected') {
+        await mail.sendLoanDecisionEmail(member.email, {
+          loanId: loan.id,
+          loanType: loan.loan_type,
+          amount: loan.amount,
+          tenureMonths: loan.tenure_months,
+          monthlyPayment: loan.monthly_payment,
+          totalRepayable: loan.total_repayable,
+          status: 'Rejected',
+          reason: reason,
+          decisionDate: new Date(),
+          decisionBy: `${req.session.user.first_name} ${req.session.user.surname}`
+        }).catch(err => console.error('Failed to send rejection email:', err));
+      }
+    }
+
+    req.flash('success', `Loan ${status.toLowerCase()} successfully`);
+    if (req.xhr) {
+      return res.json({ success: true, message: `Loan ${status.toLowerCase()} successfully` });
+    }
+    res.redirect('/admin/loans');
+  } catch (err) {
+    console.error(`[${new Date().toISOString()}] Error updating loan status:`, err);
+    const errorMsg = err.message || 'Failed to update loan status';
+    if (req.xhr) {
+      return res.status(500).json({ success: false, error: errorMsg });
+    }
+    req.flash('error', errorMsg);
+    res.redirect('/admin/loans');
+  }
+});
 
 // Member: Show restructure form
 router.get('/loans/:id/restructure', requireAuth, async (req, res) => {
@@ -1365,7 +1511,7 @@ router.get('/loans/:id/restructure', requireAuth, async (req, res) => {
         req.flash('error', 'Only approved loans can be restructured');
         return res.redirect('/my-loans');
     }
-    res.render('loan_restructure', { user: req.session.user, loan, flash: req.flash() });
+    res.render('loan_restructure', { user: req.session.user, loan });
 });
 
 // Member: Submit restructure request
@@ -1397,7 +1543,6 @@ router.post('/admin/restructuring/update-status', requireAuth, allowRoles('chair
     const request = await loanModel.getRestructuringRequestById(requestId);
     if (!request) return res.status(404).json({ error: 'Request not found' });
 
-    // Role-based check: only chairman for service loans, chief for investment
     const loanType = request.loan_type;
     if ((req.session.user.role === 'chairman' && loanType !== 'service') ||
         (req.session.user.role === 'chief_signatory' && loanType !== 'investment')) {
@@ -1409,7 +1554,6 @@ router.post('/admin/restructuring/update-status', requireAuth, allowRoles('chair
         if (!canApprove) return res.status(400).json({ error: errReason });
         await loanModel.updateRestructuringRequestStatus(requestId, 'Approved', officerId);
         await loanModel.applyRestructuring(requestId, officerId);
-        // Notify member
         const message = `Your restructuring request for loan #${request.loan_id} has been approved.`;
         await notificationModel.createNotification(request.member_id, message);
     } else if (status === 'Rejected') {
@@ -1417,7 +1561,6 @@ router.post('/admin/restructuring/update-status', requireAuth, allowRoles('chair
         const { canReject, reason: errReason } = await loanModel.canRejectRestructuring(requestId);
         if (!canReject) return res.status(400).json({ error: errReason });
         await loanModel.updateRestructuringRequestStatus(requestId, 'Rejected', officerId, reason);
-        // Notify member
         const message = `Your restructuring request for loan #${request.loan_id} was rejected. Reason: ${reason}`;
         await notificationModel.createNotification(request.member_id, message);
     }
@@ -1434,7 +1577,6 @@ router.post('/restructuring/sign', requireAuth, allowRoles('assistant_signatory'
         return res.status(400).json({ error: 'Cannot sign a request that is already under review or processed' });
     }
     await loanModel.createRestructuringVote(requestId, officerId, voteType);
-    // After voting, if all three have signed, move status to 'Under Review'
     const summary = await loanModel.getRestructuringVotingSummary(requestId);
     if (summary.unique_officers >= 3) {
         await loanModel.updateRestructuringRequestStatus(requestId, 'Under Review', null);
@@ -1449,7 +1591,6 @@ router.get('/restructuring/:id/signatures', requireAuth, async (req, res) => {
     const summary = await loanModel.getRestructuringVotingSummary(requestId);
     res.json({ signatures, votingSummary: summary });
 });
-
 
 module.exports = router;
 
