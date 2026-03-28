@@ -1,0 +1,225 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Loans - FamilyFund</title>
+  <!-- Bootstrap, Font Awesome, etc. -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="/css/app.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/flash.css">
+  <style>
+    .loan-card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; transition: all 0.3s; }
+    .loan-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+    .loan-header { background: #f8f9fa; padding: 15px; border-bottom: 2px solid #dee2e6; border-radius: 10px 10px 0 0; }
+    .loan-body { padding: 20px; }
+    .badge-status { font-size: 0.9rem; padding: 5px 12px; border-radius: 20px; }
+    .status-Pending { background: #ffc107; color: #856404; }
+    .status-Under-Review { background: #17a2b8; color: white; }
+    .status-Approved { background: #28a745; color: white; }
+    .status-Rejected { background: #dc3545; color: white; }
+    .status-Completed { background: #6c757d; color: white; }
+    .status-Restructured { background: #6f42c1; color: white; }
+    .progress { height: 8px; border-radius: 4px; background-color: #e9ecef; }
+    .progress-bar { background-color: #28a745; }
+    .loan-stats { display: flex; justify-content: space-between; margin-top: 10px; }
+    .btn-restructure { font-size: 0.85rem; padding: 0.25rem 0.5rem; }
+  </style>
+</head>
+<body>
+  <%- include('partials/header') %>
+  <%- include('partials/sidebar', { user: user }) %>
+
+  <main class="main-content">
+    <div class="container-fluid pt-5 mt-3">
+      <div class="row">
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+          <%- include('partials/flash') %>
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-hand-holding-usd me-2"></i>My Loans</h2>
+            <a href="/loan-application" class="btn btn-primary"><i class="fas fa-plus me-1"></i> Apply for Loan</a>
+          </div>
+
+          <% const activeLoans = loans.filter(l => l.status !== 'Restructured'); %>
+          <% const restructuredLoans = loans.filter(l => l.status === 'Restructured'); %>
+
+          <% if (activeLoans.length === 0 && restructuredLoans.length === 0) { %>
+            <div class="alert alert-info">You have not applied for any loans yet.</div>
+          <% } else { %>
+
+            <!-- Active Loans Section -->
+            <% if (activeLoans.length > 0) { %>
+              <h4 class="mb-3">Active Loans</h4>
+              <div class="row">
+                <% activeLoans.forEach(loan => { %>
+                  <div class="col-md-6 col-lg-4">
+                    <div class="loan-card">
+                      <div class="loan-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <strong>#<%= loan.id %></strong>
+                          <span class="badge-status status-<%= loan.status.replace(' ', '-') %>"><%= loan.status %></span>
+                        </div>
+                        <div class="mt-2">
+                          <span class="badge bg-secondary"><%= loan.loan_type === 'service' ? 'Service Loan' : 'Investment Loan' %></span>
+                          <span class="badge bg-info text-dark">Rate: <%= loan.interest_rate %>%</span>
+                        </div>
+                      </div>
+                      <div class="loan-body">
+                        <h5 class="text-primary">TSh <%= Number(loan.amount).toLocaleString() %></h5>
+                        <div class="mt-3">
+                          <div class="d-flex justify-content-between">
+                            <span>Repayment Progress</span>
+                            <span><%= ((loan.paid_amount || 0) / loan.total_repayable * 100).toFixed(0) %>%</span>
+                          </div>
+                          <div class="progress">
+                            <div class="progress-bar" style="width: <%= ((loan.paid_amount || 0) / loan.total_repayable * 100) %>%"></div>
+                          </div>
+                          <div class="loan-stats">
+                            <small><i class="fas fa-money-bill-wave"></i> Paid: TSh <%= (loan.paid_amount || 0).toLocaleString() %></small>
+                            <small><i class="fas fa-chart-line"></i> Remaining: TSh <%= (loan.total_repayable - (loan.paid_amount || 0)).toLocaleString() %></small>
+                          </div>
+                        </div>
+                        <div class="mt-3">
+                          <div><small>Tenure: <%= loan.tenure_months %> months</small></div>
+                          <div><small>Monthly Payment: TSh <%= Number(loan.monthly_payment).toLocaleString() %></small></div>
+                        </div>
+                        <div class="d-flex gap-2 mt-3">
+                          <a href="/loans/<%= loan.id %>" class="btn btn-sm btn-outline-primary flex-grow-1">View Details</a>
+                          <% if (loan.status === 'Approved' && loan.remaining_balance > 0 && loan.status !== 'Restructured') { %>
+                            <button type="button" class="btn btn-sm btn-outline-warning btn-restructure" data-loan-id="<%= loan.id %>" data-loan-type="<%= loan.loan_type %>" data-current-tenure="<%= loan.tenure_months %>" data-max-tenure="<%= loan.loan_type === 'service' ? 12 : 24 %>">
+                              <i class="fas fa-sync-alt me-1"></i> Restructure
+                            </button>
+                          <% } %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+            <% } %>
+
+            <!-- Restructured Loans Section -->
+            <% if (restructuredLoans.length > 0) { %>
+              <h4 class="mb-3 mt-5">Restructured Loans (Closed)</h4>
+              <div class="alert alert-secondary">These loans have been restructured and are no longer active. New loans were created for the remaining balance.</div>
+              <div class="row">
+                <% restructuredLoans.forEach(loan => { %>
+                  <div class="col-md-6 col-lg-4">
+                    <div class="loan-card">
+                      <div class="loan-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <strong>#<%= loan.id %></strong>
+                          <span class="badge-status status-<%= loan.status.replace(' ', '-') %>"><%= loan.status %></span>
+                        </div>
+                        <div class="mt-2">
+                          <span class="badge bg-secondary"><%= loan.loan_type === 'service' ? 'Service Loan' : 'Investment Loan' %></span>
+                          <span class="badge bg-info text-dark">Rate: <%= loan.interest_rate %>%</span>
+                        </div>
+                      </div>
+                      <div class="loan-body">
+                        <h5 class="text-primary">TSh <%= Number(loan.amount).toLocaleString() %></h5>
+                        <div class="mt-3">
+                          <div class="d-flex justify-content-between">
+                            <span>Final Repayment Progress</span>
+                            <span><%= ((loan.paid_amount || 0) / loan.total_repayable * 100).toFixed(0) %>%</span>
+                          </div>
+                          <div class="progress">
+                            <div class="progress-bar" style="width: <%= ((loan.paid_amount || 0) / loan.total_repayable * 100) %>%"></div>
+                          </div>
+                          <div class="loan-stats">
+                            <small><i class="fas fa-money-bill-wave"></i> Paid: TSh <%= (loan.paid_amount || 0).toLocaleString() %></small>
+                            <small><i class="fas fa-chart-line"></i> Remaining: TSh <%= (loan.total_repayable - (loan.paid_amount || 0)).toLocaleString() %></small>
+                          </div>
+                        </div>
+                        <div class="mt-3">
+                          <div><small>Original Tenure: <%= loan.tenure_months %> months</small></div>
+                          <div><small>Monthly Payment: TSh <%= Number(loan.monthly_payment).toLocaleString() %></small></div>
+                        </div>
+                        <div class="d-flex gap-2 mt-3">
+                          <a href="/loans/<%= loan.id %>" class="btn btn-sm btn-outline-primary flex-grow-1">View Details</a>
+                          <!-- No restructure button for closed loans -->
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+            <% } %>
+          <% } %>
+        </main>
+      </div>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <!-- Restructuring Request Modal (unchanged) -->
+  <div class="modal fade" id="restructureModal" tabindex="-1" aria-labelledby="restructureModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="restructureModalLabel">Request Loan Restructuring</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="restructureForm" action="" method="POST">
+          <div class="modal-body">
+            <p>You are requesting to restructure loan <strong id="restructureLoanId"></strong>.</p>
+            <p><strong>Current tenure:</strong> <span id="currentTenure"></span> months</p>
+            <p><strong>Maximum allowed:</strong> <span id="maxTenure"></span> months</p>
+            <div class="mb-3">
+              <label for="new_tenure" class="form-label">New Tenure (months)</label>
+              <input type="number" class="form-control" id="new_tenure" name="new_tenure" min="1" required>
+              <div class="form-text">Enter the new repayment period. A new monthly payment will be calculated based on the remaining balance.</div>
+            </div>
+            <div class="mb-3">
+              <label for="reason" class="form-label">Reason for restructuring</label>
+              <textarea class="form-control" id="reason" name="reason" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Submit Request</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/script/dashboard.js"></script>
+  <script src="/script/sidebar.js"></script>
+  <script src="/js/flash.js"></script>
+  <script>
+    // Restructuring modal logic (unchanged)
+    const restructureModal = new bootstrap.Modal(document.getElementById('restructureModal'));
+    const restructureForm = document.getElementById('restructureForm');
+    const restructureLoanIdSpan = document.getElementById('restructureLoanId');
+    const currentTenureSpan = document.getElementById('currentTenure');
+    const maxTenureSpan = document.getElementById('maxTenure');
+    const newTenureInput = document.getElementById('new_tenure');
+
+    document.querySelectorAll('.btn-restructure').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const loanId = this.dataset.loanId;
+        const loanType = this.dataset.loanType;
+        const currentTenure = this.dataset.currentTenure;
+        const maxTenure = this.dataset.maxTenure;
+
+        restructureLoanIdSpan.textContent = loanId;
+        currentTenureSpan.textContent = currentTenure;
+        maxTenureSpan.textContent = maxTenure;
+        newTenureInput.max = maxTenure;
+        newTenureInput.min = 1;
+        restructureForm.action = `/loans/${loanId}/restructure`;
+        restructureModal.show();
+      });
+    });
+  </script>
+</body>
+</html>
+
+

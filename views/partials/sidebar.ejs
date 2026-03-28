@@ -1,6 +1,5 @@
 
-
- <% if (user) { %>
+<% if (user) { %>
 <!-- Sidebar Toggle Button (visible only on small screens) -->
 <button id="sidebarToggle" class="sidebar-toggle d-md-none">
   ☰
@@ -53,7 +52,7 @@
         </a>
         <a href="/update-profile">Requesting System</a>
         
-        <!-- Member Requests (Chairman, Chief Signatory, Signatory) -->
+        <!-- Member Requests (Chairman, Chief Signatory, Assistant Signatory) -->
         <% if (['chairman', 'chief_signatory', 'assistant_signatory'].includes(user.role)) { %>
           <a href="/user-requests">
             <span class="icon">👥</span>
@@ -80,11 +79,11 @@
           <span class="title">My Contributions</span>
         </a>
 
-    <!-- Constitution link -->
-    <a href="/constitution">
-      <span class="icon">📜</span>
-      <span class="title">Constitution</span>
-    </a>
+        <!-- Constitution link -->
+        <a href="/constitution">
+          <span class="icon">📜</span>
+          <span class="title">Constitution</span>
+        </a>
         
         <!-- Chief Signatory - Add Contributions -->
         <% if (user.role === 'chief_signatory') { %>
@@ -111,18 +110,50 @@
           <span class="icon">📈</span>
           <span class="title">Financial Statement</span>
         </a>
-
-   <!-- Loan Amortization Calculator (All Members) -->
-    <a href="/loan-amortization">
-      <span class="icon">🧮</span>
-      <span class="title">Loan Amortization</span>
-    </a>
         
         <!-- Fund Management (Chairman, Chief Signatory, Assistant Signatory) -->
         <% if (['chairman', 'chief_signatory', 'assistant_signatory'].includes(user.role)) { %>
           <a href="/fund-management">
             <span class="icon">💰</span>
             <span class="title">Fund Management</span>
+          </a>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- LOAN SECTION -->
+    <div class="sidebar-group">
+      <div class="sidebar-group-header">
+        <span class="icon">🤝</span>
+        <span class="title">Loan</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="sidebar-group-content">
+        <!-- Loan Amortization Calculator (All Members) -->
+        <a href="/loan-amortization">
+          <span class="icon">🧮</span>
+          <span class="title">Loan Amortization</span>
+        </a>
+        <a href="/loan-application">
+          <span class="icon">➕</span>
+          <span class="title">Apply for Loan</span>
+        </a>
+        <a href="/my-loans">
+          <span class="icon">📋</span>
+          <span class="title">My Loans</span>
+        </a>
+        <!-- Loan Repayment (chief_signatory & assistant_signatory only) -->
+    <% if (['chief_signatory', 'assistant_signatory'].includes(user.role)) { %>
+  <a href="/loans/repayment">
+    <span class="icon">💸</span>
+    <span class="title">Loan Repayment</span>
+  </a>
+        <% } %>
+        <!-- Manage Loans (all officers) -->
+        <% if (['chairman', 'chief_signatory', 'assistant_signatory'].includes(user.role)) { %>
+          <a href="/admin/loans">
+            <span class="icon">⚙️</span>
+            <span class="title">Manage Loans</span>
           </a>
         <% } %>
       </div>
@@ -164,14 +195,22 @@
     <% } %>
   <% } %>
 
-<% if (['chairman', 'chief_signatory', 'assistant_signatory', 'admin'].includes(user.role)) { %>
-  <li class="nav-item">
-    <a class="nav-link  href="/admin/support">
-      <i class="fas fa-headset me-2"></i>
-      Support Messages
-    </a>
-  </li>
-<% } %>
+  <!-- Support Messages (For officers and admin) -->
+  <% if (['chairman', 'chief_signatory', 'assistant_signatory', 'admin'].includes(user.role)) { %>
+    <div class="sidebar-group">
+      <div class="sidebar-group-header">
+        <span class="icon">📞</span>
+        <span class="title">Support</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="sidebar-group-content">
+        <a href="/admin/support">
+          <span class="icon">💬</span>
+          <span class="title">Support Messages</span>
+        </a>
+      </div>
+    </div>
+  <% } %>
 
   <!-- Password Management (All Users) -->
   <div class="sidebar-group">
@@ -185,6 +224,6 @@
   </div>
 </nav>
 
-
 <% } %>
+
 
