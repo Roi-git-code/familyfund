@@ -1,17 +1,12 @@
 
 <% if (user) { %>
-<!-- Sidebar Toggle Button (visible only on small screens) -->
-<button id="sidebarToggle" class="sidebar-toggle d-md-none">
-  ☰
-</button>
+<button id="sidebarToggle" class="sidebar-toggle d-md-none">☰</button>
 
-<!-- Sidebar -->
 <nav id="sidebar" class="sidebar">
   <h3>Menu</h3>
 
-  <!-- Admin Role - No Access to Content -->
   <% if (user.role === 'admin') { %>
-    <div class="sidebar-group">
+    <div class="sidebar-group" data-group="admin">
       <div class="sidebar-group-header">
         <span class="icon">⚙️</span>
         <span class="title">System Administration</span>
@@ -25,162 +20,106 @@
     </div>
   <% } %>
 
-  <!-- Non-Admin Users -->
   <% if (user.role !== 'admin') { %>
     <!-- Dashboard -->
-    <div class="sidebar-group">
+    <div class="sidebar-group" data-group="dashboard">
       <div class="sidebar-group-header">
         <span class="icon">📊</span>
         <span class="title">Dashboard</span>
+        <span class="arrow">▼</span>
       </div>
       <div class="sidebar-group-content">
         <a href="/dashboard">Main Dashboard</a>
       </div>
     </div>
 
-    <!-- Requests Section -->
-    <div class="sidebar-group">
+    <!-- Requests -->
+    <div class="sidebar-group" data-group="requests">
       <div class="sidebar-group-header">
         <span class="icon">📝</span>
         <span class="title">Requests</span>
         <span class="arrow">▼</span>
       </div>
       <div class="sidebar-group-content">
-        <a href="/update-requests">
-          <span class="icon">📋</span>
-          <span class="title">My Requests</span>
-        </a>
+        <a href="/update-requests">My Requests</a>
         <a href="/update-profile">Requesting System</a>
-        
-        <!-- Member Requests (Chairman, Chief Signatory, Assistant Signatory) -->
         <% if (['chairman', 'chief_signatory', 'assistant_signatory'].includes(user.role)) { %>
-          <a href="/user-requests">
-            <span class="icon">👥</span>
-            <span class="title">Member Requests</span>
-          </a>
-          <a href="/fund-requests">
-            <span class="icon">💰</span>
-            <span class="title">Fund Requests</span>
-          </a>
+          <a href="/user-requests">Member Requests</a>
+          <a href="/fund-requests">Fund Requests</a>
         <% } %>
       </div>
     </div>
 
-    <!-- Contributions Section -->
-    <div class="sidebar-group">
+    <!-- Contributions -->
+    <div class="sidebar-group" data-group="contributions">
       <div class="sidebar-group-header">
         <span class="icon">💵</span>
         <span class="title">Contributions</span>
         <span class="arrow">▼</span>
       </div>
       <div class="sidebar-group-content">
-        <a href="/my-contributions">
-          <span class="icon">📊</span>
-          <span class="title">My Contributions</span>
-        </a>
-
-        <!-- Constitution link -->
-        <a href="/constitution">
-          <span class="icon">📜</span>
-          <span class="title">Constitution</span>
-        </a>
-        
-        <!-- Chief Signatory - Add Contributions -->
+        <a href="/my-contributions">My Contributions</a>
+        <a href="/constitution">Constitution</a>
         <% if (user.role === 'chief_signatory') { %>
           <a href="/contributions/form">Add Contribution</a>
           <a href="/contributions">Manage Contributions</a>
         <% } %>
-        
-        <!-- Chairman & Assistant Signatory - View Contributions -->
         <% if (['chairman', 'assistant_signatory'].includes(user.role)) { %>
           <a href="/contributions">View Contributions</a>
         <% } %>
       </div>
     </div>
 
-    <!-- Financial Section -->
-    <div class="sidebar-group">
+    <!-- Financial -->
+    <div class="sidebar-group" data-group="financial">
       <div class="sidebar-group-header">
         <span class="icon">🏦</span>
         <span class="title">Financial</span>
         <span class="arrow">▼</span>
       </div>
       <div class="sidebar-group-content">
-        <a href="/financial-statement">
-          <span class="icon">📈</span>
-          <span class="title">Financial Statement</span>
-        </a>
-        
-        <!-- Fund Management (Chairman, Chief Signatory, Assistant Signatory) -->
+        <a href="/financial-statement">Financial Statement</a>
         <% if (['chairman', 'chief_signatory', 'assistant_signatory'].includes(user.role)) { %>
-          <a href="/fund-management">
-            <span class="icon">💰</span>
-            <span class="title">Fund Management</span>
-          </a>
+          <a href="/fund-management">Fund Management</a>
         <% } %>
       </div>
     </div>
 
-    <!-- LOAN SECTION -->
-    <div class="sidebar-group">
+    <!-- Loan -->
+    <div class="sidebar-group" data-group="loan">
       <div class="sidebar-group-header">
         <span class="icon">🤝</span>
         <span class="title">Loan</span>
         <span class="arrow">▼</span>
       </div>
       <div class="sidebar-group-content">
-        <!-- Loan Amortization Calculator (All Members) -->
-        <a href="/loan-amortization">
-          <span class="icon">🧮</span>
-          <span class="title">Loan Amortization</span>
-        </a>
-        <a href="/loan-application">
-          <span class="icon">➕</span>
-          <span class="title">Apply for Loan</span>
-        </a>
-        <a href="/my-loans">
-          <span class="icon">📋</span>
-          <span class="title">My Loans</span>
-        </a>
-        <!-- Loan Repayment (chief_signatory & assistant_signatory only) -->
-    <% if (['chief_signatory', 'assistant_signatory'].includes(user.role)) { %>
-  <a href="/loans/repayment">
-    <span class="icon">💸</span>
-    <span class="title">Loan Repayment</span>
-  </a>
+        <a href="/loan-amortization">Loan Amortization</a>
+        <a href="/loan-application">Apply for Loan</a>
+        <a href="/my-loans">My Loans</a>
+        <% if (['chief_signatory', 'assistant_signatory'].includes(user.role)) { %>
+          <a href="/loans/repayment">Loan Repayment</a>
         <% } %>
-        <!-- Manage Loans (all officers) -->
         <% if (['chairman', 'chief_signatory', 'assistant_signatory'].includes(user.role)) { %>
-          <a href="/admin/loans">
-            <span class="icon">⚙️</span>
-            <span class="title">Manage Loans</span>
-          </a>
+          <a href="/admin/loans">Manage Loans</a>
         <% } %>
       </div>
     </div>
 
-    <!-- Payments Section -->
-    <div class="sidebar-group">
+    <!-- Payments -->
+    <div class="sidebar-group" data-group="payments">
       <div class="sidebar-group-header">
         <span class="icon">💳</span>
         <span class="title">Payments</span>
         <span class="arrow">▼</span>
       </div>
       <div class="sidebar-group-content">
-        <a href="/payments">
-          <span class="icon">💳</span>
-          <span class="title">Make Payment</span>
-        </a>
-        <a href="/payments/history">
-          <span class="icon">📋</span>
-          <span class="title">Payment History</span>
-        </a>
+        <a href="/payments">Make Payment</a>
+        <a href="/payments/history">Payment History</a>
       </div>
     </div>
 
-    <!-- Member Management (Chairman only) -->
     <% if (user.role === 'chairman') { %>
-      <div class="sidebar-group">
+      <div class="sidebar-group" data-group="member-mgmt">
         <div class="sidebar-group-header">
           <span class="icon">👥</span>
           <span class="title">Member Management</span>
@@ -195,35 +134,70 @@
     <% } %>
   <% } %>
 
-  <!-- Support Messages (For officers and admin) -->
   <% if (['chairman', 'chief_signatory', 'assistant_signatory', 'admin'].includes(user.role)) { %>
-    <div class="sidebar-group">
+    <div class="sidebar-group" data-group="support">
       <div class="sidebar-group-header">
         <span class="icon">📞</span>
         <span class="title">Support</span>
         <span class="arrow">▼</span>
       </div>
       <div class="sidebar-group-content">
-        <a href="/admin/support">
-          <span class="icon">💬</span>
-          <span class="title">Support Messages</span>
-        </a>
+        <a href="/admin/support">Support Messages</a>
       </div>
     </div>
   <% } %>
 
-  <!-- Password Management (All Users) -->
-  <div class="sidebar-group">
+  <div class="sidebar-group" data-group="security">
     <div class="sidebar-group-header">
       <span class="icon">🔒</span>
       <span class="title">Security</span>
+      <span class="arrow">▼</span>
     </div>
     <div class="sidebar-group-content">
       <a href="#" id="changePasswordBtn">Manage Password</a>
     </div>
   </div>
-</nav>
 
+<script>
+  // Immediate sidebar group toggle (backup)
+  (function() {
+    function initLocalSidebar() {
+      const groups = document.querySelectorAll('.sidebar-group');
+      groups.forEach(group => {
+        const header = group.querySelector('.sidebar-group-header');
+        const content = group.querySelector('.sidebar-group-content');
+        if (!header || !content) return;
+        // Remove any existing listener to avoid duplicates
+        const newHeader = header.cloneNode(true);
+        header.parentNode.replaceChild(newHeader, header);
+        newHeader.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const isActive = group.classList.contains('active');
+          if (isActive) {
+            group.classList.remove('active');
+            content.style.display = 'none';
+          } else {
+            group.classList.add('active');
+            content.style.display = 'block';
+          }
+        });
+        // Set initial display
+        if (!group.classList.contains('active')) {
+          content.style.display = 'none';
+        } else {
+          content.style.display = 'block';
+        }
+      });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initLocalSidebar);
+    } else {
+      initLocalSidebar();
+    }
+  })();
+</script>
+
+</nav>
 <% } %>
 
 
